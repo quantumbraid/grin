@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GRIN Export Panel</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Panel scaffold for selecting group/lock options and triggering export. -->
+    <main class="panel">
+      <header class="panel__header">
+        <h1>GRIN Export</h1>
+        <p>Select a group ID and lock state before export.</p>
+      </header>
+      <section class="panel__controls">
+        <label class="field">
+          <span class="field__label">Group ID</span>
+          <select id="groupSelect" class="field__input" aria-label="Group ID"></select>
+        </label>
+        <label class="field">
+          <span class="field__label">Lock pixels</span>
+          <input id="lockToggle" class="field__toggle" type="checkbox" />
+        </label>
+      </section>
+      <section class="panel__actions">
+        <button id="exportButton" class="button" type="button">Export GRIN</button>
+        <button id="validateButton" class="button button--secondary" type="button">
+          Validate Export
+        </button>
+      </section>
+      <section class="panel__status" aria-live="polite">
+        <p id="statusText">Ready for export.</p>
+      </section>
+    </main>
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>

@@ -142,6 +142,15 @@ grin/
 ├── grin_technical_specification_v_2.md
 ├── immediatetodo.txt
 ├── package-lock.json
+├── plugins
+│   └── photoshop
+│       ├── manifest.json
+│       ├── package.json
+│       └── src
+│           ├── index.html
+│           ├── main.js
+│           ├── panel.js
+│           └── styles.css
 ├── samples
 │   ├── README.md
 │   ├── all_opcodes.grin
@@ -22789,4 +22798,220 @@ if (document.readyState === "loading") {
 } else {
   init();
 }
+#####/plugins/photoshop/manifest.json#####
+{
+  "manifestVersion": 5,
+  "id": "io.grin.photoshop.panel",
+  "name": "GRIN Export",
+  "version": "0.1.0",
+  "host": [
+    {
+      "app": "PS",
+      "minVersion": "23.0.0"
+    }
+  ],
+  "main": "src/main.js",
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "grinPanel",
+      "label": {
+        "default": "GRIN Export"
+      },
+      "minimumSize": {
+        "width": 280,
+        "height": 320
+      },
+      "maximumSize": {
+        "width": 800,
+        "height": 800
+      },
+      "panel": "src/index.html"
+    }
+  ]
+}
 
+#####/plugins/photoshop/package.json#####
+{
+  "name": "grin-photoshop-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GRIN Photoshop UXP panel scaffold.",
+  "scripts": {
+    "uxp:dev": "echo \"Load plugins/photoshop/manifest.json in the UXP Developer Tool.\""
+  }
+}
+
+#####/plugins/photoshop/src/index.html#####
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GRIN Export Panel</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Panel scaffold for selecting group/lock options and triggering export. -->
+    <main class="panel">
+      <header class="panel__header">
+        <h1>GRIN Export</h1>
+        <p>Select a group ID and lock state before export.</p>
+      </header>
+      <section class="panel__controls">
+        <label class="field">
+          <span class="field__label">Group ID</span>
+          <select id="groupSelect" class="field__input" aria-label="Group ID"></select>
+        </label>
+        <label class="field">
+          <span class="field__label">Lock pixels</span>
+          <input id="lockToggle" class="field__toggle" type="checkbox" />
+        </label>
+      </section>
+      <section class="panel__actions">
+        <button id="exportButton" class="button" type="button">Export GRIN</button>
+        <button id="validateButton" class="button button--secondary" type="button">
+          Validate Export
+        </button>
+      </section>
+      <section class="panel__status" aria-live="polite">
+        <p id="statusText">Ready for export.</p>
+      </section>
+    </main>
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>
+
+#####/plugins/photoshop/src/main.js#####
+// Entry point for the Photoshop UXP plugin background context.
+// This file will eventually orchestrate document metadata and export workflows.
+console.log("GRIN Photoshop plugin loaded.");
+
+#####/plugins/photoshop/src/panel.js#####
+// Panel UI logic for the GRIN export scaffold.
+const GROUP_COUNT = 16;
+const groupSelect = document.getElementById("groupSelect");
+const lockToggle = document.getElementById("lockToggle");
+const exportButton = document.getElementById("exportButton");
+const validateButton = document.getElementById("validateButton");
+const statusText = document.getElementById("statusText");
+
+// Populate group IDs (0-15) for the selector.
+for (let groupId = 0; groupId < GROUP_COUNT; groupId += 1) {
+  const option = document.createElement("option");
+  option.value = String(groupId);
+  option.textContent = `Group ${groupId}`;
+  groupSelect.appendChild(option);
+}
+
+function updateStatus(message) {
+  // Surface status updates inside the panel.
+  statusText.textContent = message;
+}
+
+function getPanelState() {
+  // Capture the current UI selections for later export integration.
+  return {
+    groupId: Number(groupSelect.value),
+    lockPixels: lockToggle.checked,
+  };
+}
+
+exportButton.addEventListener("click", () => {
+  const state = getPanelState();
+  // Placeholder for export integration.
+  updateStatus(
+    `Export queued for Group ${state.groupId} (lock=${state.lockPixels}).`
+  );
+});
+
+validateButton.addEventListener("click", () => {
+  const state = getPanelState();
+  // Placeholder for validation integration.
+  updateStatus(
+    `Validation pending for Group ${state.groupId} (lock=${state.lockPixels}).`
+  );
+});
+
+updateStatus("Ready for export.");
+
+#####/plugins/photoshop/src/styles.css#####
+/* Basic styling for the GRIN panel scaffold. */
+:root {
+  color: #f4f4f4;
+  background-color: #2b2b2b;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.panel__header h1 {
+  margin: 0 0 4px 0;
+  font-size: 18px;
+}
+
+.panel__header p {
+  margin: 0;
+  color: #bdbdbd;
+  font-size: 12px;
+}
+
+.panel__controls {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-size: 12px;
+  color: #dcdcdc;
+}
+
+.field__input {
+  padding: 6px;
+  background-color: #3a3a3a;
+  border: 1px solid #4a4a4a;
+  color: #f4f4f4;
+}
+
+.field__toggle {
+  width: 18px;
+  height: 18px;
+}
+
+.panel__actions {
+  display: grid;
+  gap: 8px;
+}
+
+.button {
+  padding: 8px 12px;
+  border: 1px solid #5c5c5c;
+  background-color: #4c4c4c;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.button--secondary {
+  background-color: #3d3d3d;
+}
+
+.panel__status {
+  font-size: 12px;
+  color: #9edc90;
+}
