@@ -17,6 +17,7 @@ This folder contains Phase 12 documentation (plus Phase 14 foundations) that com
 - `docs/compatibility.md` - Android, browser, and Node.js compatibility matrix
 - `docs/creative-suite-foundations.md` - shared UX and interchange formats for plugins
 - `docs/ui-ux-audit.md` - UX audit inventory, checklist, and backlog (Phase 15.1)
+- `docs/android-grid-camera-ux.md` - UX flow and data model for the Android grid camera + gallery app
 - `docs/api/web/` - generated TypeDoc output (web library)
 - `docs/api/android/README.md` - Android API draft (Dokka output configured here)
 
