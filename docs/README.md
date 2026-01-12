@@ -1,6 +1,6 @@
 # GRIN Documentation
 
-This folder contains Phase 12 documentation that complements the core spec.
+This folder contains Phase 12 documentation (plus Phase 14 foundations) that complements the core spec.
 
 - `docs/format-diagram.md` - byte-level layout diagrams and validation notes
 - `docs/opcodes.md` - opcode set 0 reference and behavior notes
@@ -15,6 +15,7 @@ This folder contains Phase 12 documentation that complements the core spec.
 - `docs/security-audit-checklist.md` - audit checklist
 - `docs/release-preparation.md` - semantic versioning and release tagging
 - `docs/compatibility.md` - Android, browser, and Node.js compatibility matrix
+- `docs/creative-suite-foundations.md` - shared UX and interchange formats for plugins
 - `docs/api/web/` - generated TypeDoc output (web library)
 - `docs/api/android/README.md` - Android API draft (Dokka output configured here)
 
