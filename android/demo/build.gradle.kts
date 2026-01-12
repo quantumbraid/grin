@@ -87,6 +87,11 @@ dependencies {
     
     // Lifecycle for demo
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+
+    // CameraX for grid camera preview
+    implementation("androidx.camera:camera-core:1.3.2")
+    implementation("androidx.camera:camera-camera2:1.3.2")
+    implementation("androidx.camera:camera-lifecycle:1.3.2")
     
     // Testing
     testImplementation("junit:junit:4.13.2")

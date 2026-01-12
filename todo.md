@@ -635,12 +635,12 @@
   - [x] Specify GRIM/GRIN file metadata updates (header fields, channel settings)
   - [x] Define export options (GRIN header update, PNG snapshot with alpha, 12-15 frame GIF loop)
   - Summary: Documented UX flow, data model, palette strategy, and export requirements in `docs/android-grid-camera-ux.md`.
-- [ ] Implement posterized camera preview pipeline
-  - [ ] Add camera preview frame acquisition (CameraX ImageAnalysis, YUV->RGB conversion)
-  - [ ] Enforce grid-aligned output dimensions (crop/scale to N x M grid cells)
-  - [ ] Apply 12-14 color posterization shader (RenderScript/RenderEffect) or CPU pipeline (LUT + k-means fallback)
-  - [ ] Display posterized preview with live grid overlay (cell borders + channel labels)
-  - [ ] Document performance targets (30/60fps) and fallback quality settings (reduced grid, lower poster bins)
+- [x] Implement posterized camera preview pipeline
+  - [x] Add camera preview frame acquisition (CameraX ImageAnalysis, YUV->RGB conversion)
+  - [x] Enforce grid-aligned output dimensions (crop/scale to N x M grid cells)
+  - [x] Apply 12-14 color posterization shader (RenderScript/RenderEffect) or CPU pipeline (LUT + k-means fallback)
+  - [x] Display posterized preview with live grid overlay (cell borders + channel labels)
+  - [x] Document performance targets (30/60fps) and fallback quality settings (reduced grid, lower poster bins)
 - [ ] Implement capture flow and channel assignment
   - [ ] Capture posterized frame buffer and generate GRIM/GRIN payload (RGBA+C)
   - [ ] Build palette histogram and auto-assign bins to channels 0-9/A-F (stable sort by frequency)

@@ -59,6 +59,11 @@
 - For high-variance scenes, allow adaptive bin count within the 12-14 range.
 - Persist ordered palette bins for consistent channel mapping across edits/exports.
 
+### Preview Pipeline Targets
+- Aim for 30fps on mid-tier devices, with headroom for 60fps on flagship devices.
+- If analysis latency exceeds ~40ms, drop to a fallback profile (75% grid resolution, 12 bins).
+- Use CPU posterization with nearest-palette matching; keep frames capped by analysis FPS.
+
 ### Channel Mapping Rules
 - Assign bins to channels 0-9/A-F using stable sort by frequency, then luminance.
 - Keep a deterministic mapping table in `channelMap` to guarantee replayability.
