@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>GRIN Export</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- GRIN panel layout for Illustrator export workflows. -->
+    <div class="panel">
+      <header class="panel__header">
+        <h1>GRIN Export</h1>
+        <p>Flatten vectors, tag groups, and export GRIN-ready assets.</p>
+      </header>
+
+      <section class="panel__section">
+        <label for="groupSelect">Default Group</label>
+        <select id="groupSelect">
+          <!-- Group IDs are 0-15 per GRIN spec. -->
+          <option value="0">Group 0</option>
+          <option value="1">Group 1</option>
+          <option value="2">Group 2</option>
+          <option value="3">Group 3</option>
+          <option value="4">Group 4</option>
+          <option value="5">Group 5</option>
+          <option value="6">Group 6</option>
+          <option value="7">Group 7</option>
+          <option value="8">Group 8</option>
+          <option value="9">Group 9</option>
+          <option value="10">Group 10</option>
+          <option value="11">Group 11</option>
+          <option value="12">Group 12</option>
+          <option value="13">Group 13</option>
+          <option value="14">Group 14</option>
+          <option value="15">Group 15</option>
+        </select>
+      </section>
+
+      <section class="panel__section panel__section--row">
+        <label class="checkbox">
+          <input type="checkbox" id="lockToggle" />
+          <span>Default Locked</span>
+        </label>
+      </section>
+
+      <section class="panel__section">
+        <label for="resolutionInput">Rasterize Resolution (px)</label>
+        <input id="resolutionInput" type="number" min="16" max="8192" value="1024" />
+      </section>
+
+      <section class="panel__section panel__section--row">
+        <button id="previewButton">Preview Metadata</button>
+        <button id="exportButton" class="primary">Export Assets</button>
+      </section>
+
+      <footer class="panel__footer">
+        <span id="status">Ready.</span>
+      </footer>
+    </div>
+
+    <script src="main.js"></script>
+  </body>
+</html>
