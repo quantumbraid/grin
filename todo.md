@@ -1072,14 +1072,18 @@
 ## Phase 15: UI/UX Polish + Windows Desktop Integration
 
 ### 15.1 UX Audit + Requirements Backlog
-- [ ] Inventory all end-user surfaces: `web/demo/`, `android/demo/`, CLI help (`tools/bin/`), and docs onboarding (`docs/README.md`)
+- [x] Inventory all end-user surfaces: `web/demo/`, `android/demo/`, CLI help (`tools/bin/`), and docs onboarding (`docs/README.md`)
   - Capture screenshots, flows, and current pain points.
-- [ ] Create a UX heuristics checklist (navigation clarity, error states, keyboard/mouse affordances, accessibility)
+  - Summary: Captured the current UX surface inventory, flows, and pain points in `docs/ui-ux-audit.md`.
+- [x] Create a UX heuristics checklist (navigation clarity, error states, keyboard/mouse affordances, accessibility)
   - Store the checklist in `docs/ui-ux-audit.md` and link from `docs/README.md`.
-- [ ] Define core user journeys (open file, play animation, inspect groups, export) with success criteria
+  - Summary: Added a UX heuristics checklist to `docs/ui-ux-audit.md` and linked it from `docs/README.md`.
+- [x] Define core user journeys (open file, play animation, inspect groups, export) with success criteria
   - Add journey maps to `docs/ui-ux-audit.md`.
-- [ ] Prioritize the UX backlog with severity tags (P0/P1/P2) and platform labels (web/android/cli)
+  - Summary: Documented core journeys and success criteria in `docs/ui-ux-audit.md`.
+- [x] Prioritize the UX backlog with severity tags (P0/P1/P2) and platform labels (web/android/cli)
   - Maintain a prioritized list in `docs/ui-ux-audit.md`.
+  - Summary: Added a prioritized, labeled UX backlog to `docs/ui-ux-audit.md`.
 
 ### 15.2 Web Demo UI Polish (Web)
 - [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
