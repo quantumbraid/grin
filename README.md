@@ -1,27 +1,28 @@
-#GRIN
-##Graphic Readdressable Indexed Nodes
+# GRIN
 
-###⚠️ Gradle is still being fixed. Everything else should work.
+## Graphic Readdressable Indexed Nodes
 
-*GRIN is a deterministic image container format designed as an upgrade to traditional images and GIFs. Instead of storing static frames or frame sequences, GRIN treats an image as a programmable field of pixels that can be dynamically grouped, addressed, and modulated over time.
+### ⚠️ Gradle is still being fixed. Everything else should work.
 
-*Rather than thinking in layers or frames, GRIN addresses pixels in arbitrary programmable groups. A group can contain any pixels you want, regardless of color, spatial adjacency, or semantic meaning.
+* GRIN is a deterministic image container format designed as an upgrade to traditional images and GIFs. Instead of storing static frames or frame sequences, GRIN treats an image as a programmable field of pixels that can be dynamically grouped, addressed, and modulated over time.
 
-*A useful mental model is a DMX lighting controller, where each light is a pixel and groups of lights are driven by rules instead of timelines.
+* Rather than thinking in layers or frames, GRIN addresses pixels in arbitrary programmable groups. A group can contain any pixels you want, regardless of color, spatial adjacency, or semantic meaning.
 
-*Another way to think about GRIN is as a chroma-key-like system, but without visible colors. Each pixel carries an unseen control value with 16 possible states, plus a lock bit. Instead of keying on green or blue, rules key off this hidden channel. Pixels can be locked or unlocked, allowing rules to selectively affect them.
+* A useful mental model is a DMX lighting controller, where each light is a pixel and groups of lights are driven by rules instead of timelines.
 
-CORE CONCEPT
+* Another way to think about GRIN is as a chroma-key-like system, but without visible colors. Each pixel carries an unseen control value with 16 possible states, plus a lock bit. Instead of keying on green or blue, rules key off this hidden channel. Pixels can be locked or unlocked, allowing rules to selectively affect them.
 
-A .grin file is not a loop of frames.
+## CORE CONCEPT
 
-Nearly all animation logic lives in the file header. Narrow, bounded scripts operate on pixel groups and can shift colors, animate values, loop or diverge, and run once or indefinitely.
+- A .grin file is not a loop of frames.
 
-Because logic is embedded, a .grin file can branch, repeat, or evolve without duplicating image data. Rendering requires only minimal runtime code. For web playback, a small amount of JavaScript is sufficient.
+- Nearly all animation logic lives in the file header. Narrow, bounded scripts operate on pixel groups and can shift colors, animate values, loop or diverge, and run once or indefinitely.
 
-GRIN is designed to be artist-friendly, portable, and low-infrastructure, while remaining fully deterministic.
+- Because logic is embedded, a .grin file can branch, repeat, or evolve without duplicating image data. Rendering requires only minimal runtime code. For web playback, a small amount of JavaScript is sufficient.
 
-TECHNICAL SUMMARY
+- GRIN is designed to be artist-friendly, portable, and low-infrastructure, while remaining fully deterministic.
+
+## TECHNICAL SUMMARY
 
 Deterministic image container format
 5-byte pixels: RGBA + control byte
@@ -54,24 +55,24 @@ core/ - Reserved for a future cross-platform reference core
 
 CLI QUICK START (Node >= 18)
 
-\\\node tools/bin/grin-validate.js samples/minimal.grin
-\\\node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
-\\\node tools/bin/grin-encode.js input.png output.grin
-\\\node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
+\\\ node tools/bin/grin-validate.js samples/minimal.grin
+\\\ node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
+\\\ node tools/bin/grin-encode.js input.png output.grin
+\\\ node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
 
 ##WEB LIBRARY
 
-\\\cd web
-\\\npm install
-\\\npm test
-\\\npm run build
+\\\ cd web
+\\\ npm install
+\\\ npm test
+\\\ npm run build
 
 The demo lives in web/demo/. Build first so web/dist is available.
 
 ANDROID LIBRARY AND DEMO
 
-\\\cd android
-\\\./gradlew :demo:assembleDebug
+\\\ cd android
+\\\ ./gradlew :demo:assembleDebug
 
 The demo app loads sample files from android/demo/src/main/assets/samples.
 
@@ -79,7 +80,7 @@ SAMPLES
 
 Regenerate sample files with:
 
-\\\node scripts/generate-samples.mjs
+\\\ node scripts/generate-samples.mjs
 
 DOCUMENTATION
 
