@@ -124,6 +124,7 @@ grin/
 │   ├── baseline.json
 │   └── bench.js
 ├── docs
+│   ├── android-grid-camera-ux.md
 │   ├── README.md
 │   ├── compatibility.md
 │   ├── api-quickstart.md
@@ -8338,6 +8339,91 @@ function safeReadBaseline(baselinePath) {
   }
 }
 
+#####/docs/android-grid-camera-ux.md#####
+# Android Grid Camera + Gallery UX & Data Model
+
+## UX Flow Overview
+
+### Screen Map
+1. **Camera Preview**
+   - Live posterized preview with grid overlay.
+   - Primary actions: capture, toggle grid, palette view, settings.
+2. **Capture Review**
+   - Frozen posterized frame with channel mapping summary.
+   - Actions: accept (save GRIM/GRIN), retake, open editor.
+3. **Gallery Grid**
+   - Posterized thumbnails in a grid, with quick metadata badges (resolution, palette size).
+   - Actions: open editor, export, delete, share.
+4. **Editor**
+   - Channel selector (0-9/A-F) plus sliders for frequency, color intonation, transparency.
+   - Actions: apply, revert, export, back to gallery.
+
+### Navigation Rules
+- Camera Preview is the default entry point.
+- Capture Review is modal; accepting moves to Gallery and allows immediate Editor open.
+- Gallery is the primary browsing surface; Editor is a detail view scoped to one capture.
+
+## Data Model
+
+### Entities
+- **CaptureSession**
+  - `id` (UUID)
+  - `createdAt` (epoch millis)
+  - `width`, `height`
+  - `gridCols`, `gridRows`
+  - `paletteBins` (12-14)
+  - `sourceUri` (raw capture or temp buffer)
+- **GrinAsset**
+  - `id` (UUID)
+  - `fileUri` (GRIM/GRIN output path)
+  - `previewUri` (posterized PNG)
+  - `width`, `height`
+  - `tickMicros`
+  - `ruleCount`
+  - `channelMap` (ordered list of channel assignments)
+  - `paletteHistogram` (bin -> count)
+  - `createdAt`, `lastEditedAt`
+- **ChannelSetting**
+  - `channelId` (0-15)
+  - `frequency`
+  - `intonation`
+  - `alpha`
+
+### Storage Plan
+- Persist `GrinAsset` and `ChannelSetting` metadata in Room (SQLite).
+- Store GRIM/GRIN payloads and preview PNGs in app-scoped storage with stable file names.
+- Cache derived thumbnails; invalidate on edit export.
+
+## Posterization & Channel Mapping
+
+### Palette Handling
+- Target 12-14 color bins per capture; bins built from a posterization LUT.
+- For high-variance scenes, allow adaptive bin count within the 12-14 range.
+- Persist ordered palette bins for consistent channel mapping across edits/exports.
+
+### Channel Mapping Rules
+- Assign bins to channels 0-9/A-F using stable sort by frequency, then luminance.
+- Keep a deterministic mapping table in `channelMap` to guarantee replayability.
+- Provide editor overrides that reassign channels without re-running posterization.
+
+## GRIM/GRIN Metadata Updates
+- Update `TickMicros` based on capture preview cadence (e.g., 33_333 for 30fps).
+- Set `RuleCount` to the number of active channels.
+- Write channel metadata into rule block entries (group mask + opcode + timing) to reflect editor settings.
+- Ensure header `PixelDataLength` and `FileLength` reflect generated payload sizes.
+
+## Export Options
+
+### GRIM/GRIN
+- Persist updated header settings, channel map, and rules for playback parity.
+
+### PNG Snapshot
+- Export an ARGB_8888 bitmap with alpha preserved from the posterized preview.
+
+### GIF Loop
+- Render 12-15 frames from GRIN playback at fixed tick intervals.
+- Package as a looping GIF with consistent palette ordering.
+
 #####/docs/README.md#####
 # GRIN Documentation
 
@@ -8358,6 +8444,7 @@ This folder contains Phase 12 documentation (plus Phase 14 foundations) that com
 - `docs/compatibility.md` - Android, browser, and Node.js compatibility matrix
 - `docs/creative-suite-foundations.md` - shared UX and interchange formats for plugins
 - `docs/ui-ux-audit.md` - UX audit inventory, checklist, and backlog (Phase 15.1)
+- `docs/android-grid-camera-ux.md` - UX flow and data model for the Android grid camera + gallery app
 - `docs/api/web/` - generated TypeDoc output (web library)
 - `docs/api/android/README.md` - Android API draft (Dokka output configured here)
 
@@ -13284,34 +13371,36 @@ This directory contains shared fixtures for GRIN tests.
   - Summary: Metadata display implemented in `android/demo/src/main/kotlin/io/grin/demo/MainActivity.kt`.
 
 ### *** 7.8 Android Grid Camera + Gallery App
-- [ ] Define UX flow and data model for grid camera + gallery app
-  - [ ] Document screen map (camera preview, capture review, gallery grid, editor)
-  - [ ] Specify posterization palette handling (12-14 color groups) and channel mapping (0-9/A-F)
-  - [ ] Specify GRIM/GRIN file metadata updates (header fields, channel settings)
-  - [ ] Define export options (GRIN header update, PNG snapshot with alpha, 12-15 frame GIF loop)
+- [x] Define UX flow and data model for grid camera + gallery app
+  - [x] Document screen map (camera preview, capture review, gallery grid, editor)
+  - [x] Specify posterization palette handling (12-14 color groups) and channel mapping (0-9/A-F)
+  - [x] Specify GRIM/GRIN file metadata updates (header fields, channel settings)
+  - [x] Define export options (GRIN header update, PNG snapshot with alpha, 12-15 frame GIF loop)
+  - Summary: Documented UX flow, data model, palette strategy, and export requirements in `docs/android-grid-camera-ux.md`.
 - [ ] Implement posterized camera preview pipeline
-  - [ ] Add camera preview frame acquisition (CameraX) with grid-aligned output
-  - [ ] Apply 12-14 color posterization shader or CPU pipeline in preview
-  - [ ] Display posterized preview with live grid overlay
-  - [ ] Document performance targets and fallback quality settings
+  - [ ] Add camera preview frame acquisition (CameraX ImageAnalysis, YUV->RGB conversion)
+  - [ ] Enforce grid-aligned output dimensions (crop/scale to N x M grid cells)
+  - [ ] Apply 12-14 color posterization shader (RenderScript/RenderEffect) or CPU pipeline (LUT + k-means fallback)
+  - [ ] Display posterized preview with live grid overlay (cell borders + channel labels)
+  - [ ] Document performance targets (30/60fps) and fallback quality settings (reduced grid, lower poster bins)
 - [ ] Implement capture flow and channel assignment
-  - [ ] Capture posterized frame buffer and generate GRIM/GRIN payload
-  - [ ] Auto-assign posterized color bins to channels 0-9/A-F
-  - [ ] Persist GRIM/GRIN files with updated header settings
-  - [ ] Log capture metadata for gallery indexing
+  - [ ] Capture posterized frame buffer and generate GRIM/GRIN payload (RGBA+C)
+  - [ ] Build palette histogram and auto-assign bins to channels 0-9/A-F (stable sort by frequency)
+  - [ ] Persist GRIM/GRIN files with updated header settings (TickMicros, RuleCount, channel metadata)
+  - [ ] Log capture metadata for gallery indexing (timestamp, dimensions, palette bins)
 - [ ] Build gallery grid and editor UI
-  - [ ] Render gallery grid of GRIN/GRIM assets with posterized thumbnails
-  - [ ] Add channel selector dropdown (0-9/A-F) in editor
-  - [ ] Add sliders for frequency, color intonation, and transparency
-  - [ ] Apply edits to in-memory preview and persist to header settings
+  - [ ] Render gallery grid of GRIN/GRIM assets with posterized thumbnails (lazy paging, disk cache)
+  - [ ] Add channel selector dropdown (0-9/A-F) in editor (default to most frequent bin)
+  - [ ] Add sliders for frequency, color intonation, and transparency (live preview updates)
+  - [ ] Apply edits to in-memory preview and persist to header settings (rules + channel overrides)
 - [ ] Export workflows
-  - [ ] Export PNG snapshot with alpha from current GRIN state
-  - [ ] Export GIF loop (12-15 frames) derived from GRIN playback
-  - [ ] Export updated GRIN/GRIM file with new header settings
+  - [ ] Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
+  - [ ] Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
+  - [ ] Export updated GRIN/GRIM file with new header settings (channel metadata + rules)
 - [ ] Validation, tests, and documentation
-  - [ ] Validate posterization color bin counts and channel mapping
+  - [ ] Validate posterization color bin counts and channel mapping (unit tests for palette mapping)
   - [ ] Add unit tests for channel assignment and header updates
-  - [ ] Add integration tests for export formats
+  - [ ] Add integration tests for export formats (PNG/GIF round-trip)
   - [ ] Update docs for camera/gallery workflow and export options
 
 ---
