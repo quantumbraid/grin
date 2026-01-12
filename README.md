@@ -1,3 +1,5 @@
+*STILL FIXING GRADLE, EVERYTHING ELSE SHOULD WORK*
+
 # GRIN (Graphic Readdressable Indexed Nodes)
 
 Grin tries to conceptualy give an upgrade to the concept of images of gifs. 
@@ -90,7 +92,7 @@ Regenerate sample files with:
 node scripts/generate-samples.mjs
 ```
 
-
+Plans for future development include Photoshop, Illustrator, and Gimp plugins. Also planned is an app that translates .grin files for actual DMX stage ussage. .grin files should be highly compatible in being converted to a large videowall, or led arrays.
 
 THIS REPO IS CURRENTLY UNLICENSED, FOR USAGE CONTACT ME DIRECTLY AT QUANTUMBRAID@GMAIL.COM
 EVENTUALLY THIS CODE WILL PICK A LICENSE FOR WIDE GENERAL USAGE,
