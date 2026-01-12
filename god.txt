@@ -127,6 +127,7 @@ grin/
 │   ├── README.md
 │   ├── compatibility.md
 │   ├── api-quickstart.md
+│   ├── ui-ux-audit.md
 │   ├── format-diagram.md
 │   ├── migration-gif-apng.md
 │   ├── opcodes.md
@@ -141,6 +142,7 @@ grin/
 ├── grin_technical_specification.md
 ├── grin_technical_specification_v_2.md
 ├── immediatetodo.txt
+├── shortlist.Txt
 ├── package-lock.json
 ├── plugins
 │   ├── gimp
@@ -8355,6 +8357,7 @@ This folder contains Phase 12 documentation (plus Phase 14 foundations) that com
 - `docs/release-preparation.md` - semantic versioning and release tagging
 - `docs/compatibility.md` - Android, browser, and Node.js compatibility matrix
 - `docs/creative-suite-foundations.md` - shared UX and interchange formats for plugins
+- `docs/ui-ux-audit.md` - UX audit inventory, checklist, and backlog (Phase 15.1)
 - `docs/api/web/` - generated TypeDoc output (web library)
 - `docs/api/android/README.md` - Android API draft (Dokka output configured here)
 
@@ -8366,6 +8369,95 @@ Related docs outside this folder:
 - `ARCHITECTURE.md`
 - `SECURITY.md`
 - `samples/README.md`
+
+#####/docs/ui-ux-audit.md#####
+# GRIN UI/UX Audit (Phase 15.1)
+
+**Audit date:** 2025-09-28
+
+This audit inventories current user-facing surfaces, captures flows and pain points, and establishes a
+heuristics checklist, core journeys, and a prioritized UX backlog for Phase 15.
+
+## 1) Inventory of end-user surfaces
+
+| Surface | Location | Primary flows | Pain points | Screenshot notes |
+| --- | --- | --- | --- | --- |
+| Web demo | `web/demo/index.html`, `web/demo/demo.js`, `web/demo/styles.css` | Drag/drop `.grin` file, choose file, play/pause/stop, seek via slider, load bundled samples. | No visible validation errors, playback controls lack disabled states, metadata panel text-only without hierarchy, missing empty state for samples fetch errors. | Screenshot captured during audit run; not committed to repo to avoid binary artifacts. |
+| Android demo | `android/demo/src/main/kotlin/io/grin/demo/MainActivity.kt`, `android/demo/src/main/res/layout/activity_main.xml` | Launch app, load bundled sample, play/stop animation, view metadata. | No clear file-open CTA, limited affordances for scrub/seek, metadata readout dense, lacks error recovery UI. | Screenshots unavailable in current environment (no Android runtime). |
+| CLI tools | `tools/bin/grin-encode.js`, `tools/bin/grin-decode.js`, `tools/bin/grin-inspect.js`, `tools/bin/grin-validate.js` | Encode from PNG + rules, decode to PNG, inspect headers, validate files. | Usage output is terse, no examples, errors lack remediation steps, flags not surfaced consistently across tools. | CLI is text-only; captured output notes in this document. |
+| Docs onboarding | `docs/README.md` plus `docs/tutorial-first-file.md` | Discover documentation entry points, follow CLI quick start, find spec references. | No explicit “start here” ordering, no UX/UX checklist link before audit, missing callouts for demos. | Screenshots not required; doc navigation captured in audit notes. |
+
+### CLI help capture (sample)
+
+```
+Usage: grin-encode <input.png> <output.grin> [--groups <mask.png>] [--rules <rules.json>]
+```
+
+## 2) UX heuristics checklist
+
+| Heuristic | Web demo | Android demo | CLI | Docs |
+| --- | --- | --- | --- | --- |
+| Navigation clarity (clear next step) | Partial | Partial | Partial | Partial |
+| Error state clarity (actionable messaging) | Missing | Missing | Partial | Partial |
+| Keyboard/mouse affordances (shortcuts, focus) | Missing | Missing | Missing | Partial |
+| Accessibility (contrast, target size, labels) | Partial | Partial | N/A | Partial |
+| Feedback & system status (loading/progress) | Missing | Missing | Partial | Partial |
+| Consistent terminology across surfaces | Partial | Partial | Partial | Partial |
+| Discoverability of sample content | Partial | Partial | N/A | Partial |
+
+## 3) Core user journeys + success criteria
+
+### Journey A: Open file
+1. User finds the file-open entry point.
+2. User selects or drops a `.grin` file.
+3. UI validates and loads the file.
+
+**Success criteria**
+- Clear CTA for opening a file.
+- Validation errors are visible with next-step guidance.
+- The UI shows a loaded state with metadata.
+
+### Journey B: Play animation
+1. User presses play.
+2. Playback starts, status updates, and timing aligns with tick rate.
+3. User can pause/stop and resume without losing state.
+
+**Success criteria**
+- Playback controls show current state.
+- Seek/step is responsive with clear bounds.
+- No console-only errors.
+
+### Journey C: Inspect groups
+1. User finds group summary or mask information.
+2. User filters or inspects group counts.
+
+**Success criteria**
+- Group counts are visible.
+- Filters are discoverable and reversible.
+
+### Journey D: Export
+1. User selects export action.
+2. Validation runs and confirms output.
+3. User is notified of output location and success/failure.
+
+**Success criteria**
+- Export path is explicit.
+- Validation results are summarized.
+- Failure states provide remediation steps.
+
+## 4) Prioritized UX backlog
+
+| Priority | Platform | Backlog item |
+| --- | --- | --- |
+| P0 | Web | Add validation error panel with remediation and status indicators next to playback. |
+| P0 | Android | Add file-open CTA and error recovery UI when decode fails. |
+| P0 | CLI | Provide `--help` with examples for encode/decode/validate and align flag naming. |
+| P1 | Web | Add disabled/active states for playback controls and clearer seek bounds. |
+| P1 | Android | Introduce playback scrubber + speed controls with accessible touch targets. |
+| P1 | Docs | Add “Start here” block and demo links in `docs/README.md`. |
+| P2 | Web | Add keyboard shortcuts help modal for playback + group filters. |
+| P2 | CLI | Add consistent error taxonomy and remediation hints. |
+| P2 | Docs | Add quick UX FAQ and link to audit checklist. |
 
 #####/docs/creative-suite-foundations.md#####
 # Creative Suite + GIMP Plugin Foundations (Phase 14.1)
@@ -12535,6 +12627,31 @@ This directory contains shared fixtures for GRIN tests.
      npm publish --access public
      ```
 
+#####/shortlist.Txt#####
+- [ ] Add license headers to all source files
+- [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
+- [ ] Add accessibility coverage (ARIA labels, focus order, contrast checks)
+- [ ] Improve empty, loading, and error states (missing file, validation errors, decode failures)
+- [ ] Add keyboard shortcuts for playback, frame stepping, and group filtering
+- [ ] Add a validation summary panel (header warnings, rule count, invalid pixels)
+- [ ] Align the demo UI with Material 3 components in `android/demo/`
+- [ ] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
+- [ ] Add file-open flow with recent files and error recovery
+- [ ] Add in-app metadata viewer (header fields, rules summary, group counts)
+- [ ] Standardize iconography, labels, and terminology across web/android/docs
+- [ ] Consolidate error copy and remediation hints for validation failures
+- [ ] Add onboarding snippets (first-run guidance, sample file prompts)
+- [ ] Decide Windows UI stack (WinUI 3/.NET WPF/Electron) and document rationale
+- [ ] Create a Windows desktop viewer app capable of rendering `.grin` files
+- [ ] Implement `.grin` and `.grn` file association registration (ProgID, icons)
+- [ ] Implement Windows thumbnail and preview support
+- [ ] Enable Windows Photos gallery integration
+- [ ] Add installer packaging (MSI/EXE via WiX/NSIS) with clean uninstall
+- [ ] Add build pipeline for Windows artifacts (CI job + signed binaries)
+- [ ] Write Windows install & troubleshooting guide in `docs/windows-desktop.md`
+- [ ] Photoshop, Illustrator, and GIMP plugins (see Phase 14 for detailed plan)
+- [ ] Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
+
 #####/todo.md#####
 # GRIN Build Plan — Ultra-Detailed Agentic Implementation Guide
 
@@ -13610,14 +13727,18 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 15: UI/UX Polish + Windows Desktop Integration
 
 ### 15.1 UX Audit + Requirements Backlog
-- [ ] Inventory all end-user surfaces: `web/demo/`, `android/demo/`, CLI help (`tools/bin/`), and docs onboarding (`docs/README.md`)
+- [x] Inventory all end-user surfaces: `web/demo/`, `android/demo/`, CLI help (`tools/bin/`), and docs onboarding (`docs/README.md`)
   - Capture screenshots, flows, and current pain points.
-- [ ] Create a UX heuristics checklist (navigation clarity, error states, keyboard/mouse affordances, accessibility)
+  - Summary: Captured the current UX surface inventory, flows, and pain points in `docs/ui-ux-audit.md`.
+- [x] Create a UX heuristics checklist (navigation clarity, error states, keyboard/mouse affordances, accessibility)
   - Store the checklist in `docs/ui-ux-audit.md` and link from `docs/README.md`.
-- [ ] Define core user journeys (open file, play animation, inspect groups, export) with success criteria
+  - Summary: Added a UX heuristics checklist to `docs/ui-ux-audit.md` and linked it from `docs/README.md`.
+- [x] Define core user journeys (open file, play animation, inspect groups, export) with success criteria
   - Add journey maps to `docs/ui-ux-audit.md`.
-- [ ] Prioritize the UX backlog with severity tags (P0/P1/P2) and platform labels (web/android/cli)
+  - Summary: Documented core journeys and success criteria in `docs/ui-ux-audit.md`.
+- [x] Prioritize the UX backlog with severity tags (P0/P1/P2) and platform labels (web/android/cli)
   - Maintain a prioritized list in `docs/ui-ux-audit.md`.
+  - Summary: Added a prioritized, labeled UX backlog to `docs/ui-ux-audit.md`.
 
 ### 15.2 Web Demo UI Polish (Web)
 - [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)

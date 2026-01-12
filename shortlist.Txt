@@ -1,0 +1,23 @@
+- [ ] Add license headers to all source files
+- [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
+- [ ] Add accessibility coverage (ARIA labels, focus order, contrast checks)
+- [ ] Improve empty, loading, and error states (missing file, validation errors, decode failures)
+- [ ] Add keyboard shortcuts for playback, frame stepping, and group filtering
+- [ ] Add a validation summary panel (header warnings, rule count, invalid pixels)
+- [ ] Align the demo UI with Material 3 components in `android/demo/`
+- [ ] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
+- [ ] Add file-open flow with recent files and error recovery
+- [ ] Add in-app metadata viewer (header fields, rules summary, group counts)
+- [ ] Standardize iconography, labels, and terminology across web/android/docs
+- [ ] Consolidate error copy and remediation hints for validation failures
+- [ ] Add onboarding snippets (first-run guidance, sample file prompts)
+- [ ] Decide Windows UI stack (WinUI 3/.NET WPF/Electron) and document rationale
+- [ ] Create a Windows desktop viewer app capable of rendering `.grin` files
+- [ ] Implement `.grin` and `.grn` file association registration (ProgID, icons)
+- [ ] Implement Windows thumbnail and preview support
+- [ ] Enable Windows Photos gallery integration
+- [ ] Add installer packaging (MSI/EXE via WiX/NSIS) with clean uninstall
+- [ ] Add build pipeline for Windows artifacts (CI job + signed binaries)
+- [ ] Write Windows install & troubleshooting guide in `docs/windows-desktop.md`
+- [ ] Photoshop, Illustrator, and GIMP plugins (see Phase 14 for detailed plan)
+- [ ] Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
