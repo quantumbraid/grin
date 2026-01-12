@@ -991,11 +991,64 @@
 
 ---
 
+## Phase 14: Creative Suite + GIMP Plugins
+
+### 14.1 Shared foundations (all plugins)
+- [ ] Define the pixel-group editing model and UX goals for painting group IDs + lock bits
+  - Deliverable: a 1-page UX spec describing how artists select groups, toggle lock, and preview rules.
+- [ ] Decide on an interchange format between host apps and the GRIN toolchain
+  - Likely: export a layered PNG + JSON sidecar with group/lock metadata.
+- [ ] Create a shared validation CLI workflow for plugin export
+  - Use `tools/bin/grin-validate.js` and `tools/bin/grin-inspect.js` as post-export checks.
+- [ ] Draft a shared palette/legend for group IDs (0-15) and lock state overlays
+  - Define color mapping and UI affordances for every plugin.
+- [ ] Define output paths and naming conventions for exports (`.grin`, `.png`, `.json`)
+  - Make sure it matches `tools/bin/grin-encode.js` expectations.
+
+### 14.2 Photoshop plugin (UXP)
+- [ ] Set up `plugins/photoshop/` workspace with UXP manifest + dev tooling
+  - Include a simple panel scaffold for group/lock selection and export.
+- [ ] Implement layer metadata capture
+  - Map layer names or layer tags to group IDs (0-15) and lock bit.
+- [ ] Implement pixel-to-group map extraction
+  - Render a flattened bitmap with hidden metadata encoding group + lock values.
+- [ ] Implement export pipeline
+  - Generate a JSON sidecar and call `tools/bin/grin-encode.js`.
+- [ ] Add preview/validation step
+  - Use `grin-validate` and report errors in the panel UI.
+- [ ] Write Photoshop plugin README with install + usage steps
+
+### 14.3 Illustrator plugin (UXP)
+- [ ] Set up `plugins/illustrator/` workspace with UXP manifest + dev tooling
+  - Include a panel scaffold matching Photoshop UX.
+- [ ] Implement vector art flattening rules for GRIN export
+  - Define how artboards/paths map to pixels, group IDs, and lock bit.
+- [ ] Implement group/lock metadata tagging in document model
+  - Use layer names, object tags, or custom metadata fields.
+- [ ] Implement export pipeline
+  - Rasterize at user-specified resolution and call `grin-encode.js`.
+- [ ] Add preview/validation step
+  - Use `grin-validate` and surface errors to the panel.
+- [ ] Write Illustrator plugin README with install + usage steps
+
+### 14.4 GIMP plugin (Python)
+- [ ] Set up `plugins/gimp/` with Python-Fu entry point + menu registration
+  - Add configuration dialog for group/lock editing and export settings.
+- [ ] Implement group/lock editing overlays
+  - Use layer groups or selection masks to represent group IDs.
+- [ ] Implement pixel map extraction
+  - Read pixel data + custom metadata for group and lock state.
+- [ ] Implement export pipeline
+  - Export PNG + JSON sidecar and call `grin-encode.js`.
+- [ ] Add preview/validation step
+  - Use `grin-validate` and show errors in a dialog.
+- [ ] Write GIMP plugin README with install + usage steps
+
+---
+
 ## Planned Upgrades (Unimplemented)
 
-- [ ] Photoshop plugin for painting GRIN channel groups and lock bits as layers
-- [ ] Illustrator plugin for painting GRIN channel groups and lock bits as layers
-- [ ] GIMP plugin for painting GRIN channel groups and lock bits as layers
+- [ ] Photoshop, Illustrator, and GIMP plugins (see Phase 14 for detailed plan)
 - [ ] Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
 
 ---
