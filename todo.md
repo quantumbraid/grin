@@ -975,9 +975,9 @@
 - [x] Create CHANGELOG.md with release notes
 
 ### *** 13.2 Package Publishing
-- [ ] Publish Android library to Maven Central / JitPack
-- [ ] Publish JavaScript library to npm
-- [ ] Create GitHub Releases with artifacts
+- [x] Publish Android library to Maven Central / JitPack
+- [x] Publish JavaScript library to npm
+- [x] Create GitHub Releases with artifacts
 
 ### 13.3 Compatibility Matrix
 - [x] Document Android API level compatibility
