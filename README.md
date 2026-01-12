@@ -1,4 +1,24 @@
-# GRIN (Grouped Readdressable Indexed Nodes)
+# GRIN (Graphic Readdressable Indexed Nodes)
+
+Grin tries to conceptualy give an upgrade to the concept of images of gifs. 
+Rather than storing a still imgage, or a series of frames grin is about addressing
+pixles in programmable groups. These groups can be any pixels you desire, 
+they do not need to be the same color, object, or "layer."
+
+It is easiest to think of this like a dmx lighting controller, where lights are pixels.
+
+Another way to think about it, is simmilar to chroma key based graphics. 
+Rather than addressing colors, you address the value of an unseen property carried by every pixel.
+Instead of locking onto blue or green for instance, there is a unseen "color" with 16 possible values.
+Pixels can also be locked or unlocked.
+
+The header of the .grin file contains nearly all logic necessary to drive the animation.
+small narrow scripts are aloud to run on each chanel, doing things like shifting colors by group.
+each script can be timed, looped, or not.
+The file is not a loop of frames, it is capable of diverging, or a repeating pattern.
+This tool is intended to create a highly adoptable, low outside infrastructure, artist friend.
+.grin files contain most logic, and it would take only some minor JS to display them.
+
 
 GRIN is a deterministic image container format with 5-byte pixels (RGBA + control byte)
 and a fixed 128-byte header with a bounded rules block. This repo includes working
@@ -66,5 +86,18 @@ The demo app loads sample files from `android/demo/src/main/assets/samples`.
 Regenerate sample files with:
 
 ```bash
+
 node scripts/generate-samples.mjs
 ```
+
+
+
+THIS REPO IS CURRENTLY UNLICENSED, FOR USAGE CONTACT ME DIRECTLY AT QUANTUMBRAID@GMAIL.COM
+EVENTUALLY THIS CODE WILL PICK A LICENSE FOR WIDE GENERAL USAGE,
+UNTIL THEN, FEEL FREE TO BUILD USE AND PLAY WITH IT, BUT DO NOT DISTRIBUTE THE CODE
+DO NOT INCORPERATE THE CODE INTO OTHER UNRELATED PROJECTS. FOR RELATED PROJECTS, CONTACT DIRECTLY BEFORE RELEASING CODE.
+DO NOT USE THIS CODE OR IT'S OUTPUTS FOR COMERCIAL PURPOSES WITHOUT CONSENT, CONTACT DIRECTLY FOR COMERCIAL INFO.
+TO COLLABERATE PLEASE CONTACT ME, SAME GOES WITH IMPROVEMENT SUGGESTIONS.
+THIS STANDARD IS CONSTRAINED INTENTIONALLY. THESE CONSTRAINTS ARE SECURITY RELATED, HOWEVER DESIGNED TO INCREASE INGINUITY AND CREATIVITY.
+
+
