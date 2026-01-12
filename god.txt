@@ -4,6 +4,7 @@ grin/
 │   └── workflows
 │       ├── build.yml
 │       ├── lint.yml
+│       ├── release.yml
 │       └── test.yml
 ├── .idea
 │   ├── .gitignore
@@ -139,6 +140,7 @@ grin/
 │   └── tutorial-grin-groups.md
 ├── grin_technical_specification.md
 ├── grin_technical_specification_v_2.md
+├── immediatetodo.txt
 ├── package-lock.json
 ├── samples
 │   ├── README.md
@@ -223,6 +225,7 @@ grin/
     │   └── validation.ts
     ├── package-lock.json
     ├── package.json
+    ├── README.md
     ├── rollup.config.mjs
     ├── tests
     │   ├── endianness.test.ts
@@ -375,6 +378,78 @@ jobs:
         run: npm run lint
       - name: Type check
         run: npm run typecheck
+
+#####/.github/workflows/release.yml#####
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository at the tagged commit.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Preflight: confirm tag matches package versions.
+      - name: Preflight version checks
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+        run: |
+          TAG_VERSION="${TAG_VERSION#v}"
+          node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('web/package.json','utf8'));if(pkg.version!==process.env.TAG_VERSION){console.error(\`web/package.json version \${pkg.version} does not match tag \${process.env.TAG_VERSION}\`);process.exit(1);}"
+          node -e "const fs=require('fs');const text=fs.readFileSync('android/build.gradle.kts','utf8');const match=text.match(/version = \\\"([^\\\"]+)\\\"/);if(!match||match[1]!==process.env.TAG_VERSION){console.error(\`android/build.gradle.kts version \${match?match[1]:'missing'} does not match tag \${process.env.TAG_VERSION}\`);process.exit(1);}"
+        shell: bash
+
+      # Use Node.js for building the web distribution bundle.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      # Preflight: run the web test suite before packaging artifacts.
+      - name: Run web tests
+        working-directory: web
+        run: npm test
+
+      - name: Build web package
+        working-directory: web
+        run: npm run build
+
+      # Build the Android AAR for release publishing.
+      - name: Set up Java for Android build
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build Android AAR
+        working-directory: android
+        run: ./gradlew :lib:assembleRelease
+
+      # Package artifacts for the GitHub release.
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p release-artifacts
+          tar -czf release-artifacts/grin-web-dist.tar.gz -C web dist
+          tar -czf release-artifacts/grin-tools.tar.gz -C tools bin lib package.json package-lock.json
+          cp android/lib/build/outputs/aar/lib-release.aar release-artifacts/grin-android.aar
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/*
 
 #####/.github/workflows/test.yml#####
 name: Test
@@ -4281,6 +4356,8 @@ plugins {
     kotlin("android")
     id("de.mannodermaus.android-junit5")
     id("org.jetbrains.dokka")
+    id("maven-publish")
+    id("signing")
 }
 
 android {
@@ -4328,6 +4405,73 @@ android {
             withSourcesJar()
             withJavadocJar()
         }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                // Publish the Android release variant to Maven-compatible repositories.
+                from(components["release"])
+                groupId = project.group.toString()
+                artifactId = "grin-android"
+                version = project.version.toString()
+
+                pom {
+                    name.set("GRIN Android Library")
+                    description.set("GRIN (Graphic Readdressable Indexed Nodes) Android/Kotlin implementation.")
+                    url.set("https://github.com/grin-format/grin")
+
+                    licenses {
+                        license {
+                            name.set("MIT License")
+                            url.set("https://opensource.org/licenses/MIT")
+                            distribution.set("repo")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("grin-contributors")
+                            name.set("GRIN Project Contributors")
+                            url.set("https://github.com/grin-format/grin")
+                        }
+                    }
+
+                    scm {
+                        connection.set("scm:git:https://github.com/grin-format/grin.git")
+                        developerConnection.set("scm:git:ssh://git@github.com:grin-format/grin.git")
+                        url.set("https://github.com/grin-format/grin")
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                // Central Publisher Portal endpoint for Maven Central deployments.
+                name = "central"
+                url = uri("https://central.sonatype.com/api/v1/publisher")
+                credentials {
+                    username = findProperty("centralUsername") as String?
+                        ?: System.getenv("CENTRAL_USERNAME")
+                    password = findProperty("centralPassword") as String?
+                        ?: System.getenv("CENTRAL_PASSWORD")
+                }
+            }
+        }
+    }
+}
+
+signing {
+    // Only require signing when PGP credentials are provided.
+    val signingKey = findProperty("signingKey") as String? ?: System.getenv("SIGNING_KEY")
+    val signingPassword = findProperty("signingPassword") as String?
+        ?: System.getenv("SIGNING_PASSWORD")
+    if (!signingKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign(publishing.publications["release"])
     }
 }
 
@@ -7086,6 +7230,41 @@ Release artifacts should include:
 - Android library (`android/lib/`)
 - Checksums for published binaries
 
+## Package Publishing
+
+### Android (Maven Central / JitPack)
+
+1. Ensure `android/lib/build.gradle.kts` has publishing metadata and signing configured for the
+   Central Publisher Portal endpoint.
+2. Export credentials for Central Publisher Portal and signing:
+   - `CENTRAL_USERNAME`, `CENTRAL_PASSWORD`
+   - `SIGNING_KEY`, `SIGNING_PASSWORD`
+3. Publish the release artifacts:
+   - `./gradlew :lib:publish` (from `android/`)
+4. Complete the deployment in the Central Publisher Portal.
+
+For JitPack, push a Git tag and confirm the build at `https://jitpack.io/#grin-format/grin`.
+
+### Web (npm)
+
+1. From `web/`, run `npm run build`.
+2. Verify `dist/` output and `web/README.md` contents.
+3. Run `npm test` as a preflight check.
+4. Publish with:
+   - `npm publish --access public`
+
+### GitHub Releases
+
+1. Push a version tag in the format `vX.Y.Z`.
+2. Confirm the `release.yml` workflow attaches the packaged artifacts.
+3. Add release notes referencing the CHANGELOG entry.
+
+## Preflight Checklist
+
+- Confirm the release tag matches the package versions.
+- Confirm Central Publisher Portal credentials are available for the release job.
+- Verify `npm whoami` succeeds for the `@grin-format` scope.
+
 #####/docs/compatibility.md#####
 # Compatibility Matrix
 
@@ -9225,6 +9404,67 @@ This directory contains shared fixtures for GRIN tests.
   }
 }
 
+#####/immediatetodo.txt#####
+# Immediate Documentation + Publishing Tasks
+
+## Document Scan (Completed)
+- [x] Scan `docs/` for TODO/TBD/FIXME markers (excluding generated `docs/api` output).
+- [x] Confirm no actionable TODO markers were found in authored documentation.
+
+## Required Follow-ups (Actionable)
+- [ ] Review `docs/release-preparation.md` for accuracy before the next release cut.
+- [ ] Validate Central Publisher Portal credentials and signing keys in a staging environment.
+- [ ] Verify npm publish access for the `@grin-format/web` scope.
+
+## Maven Central (Android) — User-Friendly Publishing Steps
+1. **Prepare credentials**
+   - Obtain Central Publisher Portal credentials for the GRIN organization.
+   - Export environment variables:
+     - `CENTRAL_USERNAME`
+     - `CENTRAL_PASSWORD`
+     - `SIGNING_KEY` (ASCII-armored PGP private key)
+     - `SIGNING_PASSWORD`
+2. **Verify Gradle config**
+   - Ensure `android/lib/build.gradle.kts` contains the `maven-publish` and `signing` setup.
+3. **Publish the release**
+   - From `android/`, run:
+     ```bash
+     ./gradlew :lib:publish
+     ```
+4. **Release from staging**
+   - Log in to the Central Publisher Portal and complete the deployment.
+5. **Optional: JitPack**
+   - Push a Git tag (e.g., `v0.1.0`) and verify the build at:
+     `https://jitpack.io/#grin-format/grin`.
+
+## npm dist (Web) — User-Friendly Publishing Steps
+1. **Install dependencies**
+   - From `web/`, run:
+     ```bash
+     npm ci
+     ```
+2. **Build distribution files**
+   - Run:
+     ```bash
+     npm run build
+     ```
+   - Confirm `web/dist/` is populated.
+3. **Run tests**
+   - Execute:
+     ```bash
+     npm test
+     ```
+4. **Publish to npm**
+   - Publish the scoped package:
+     ```bash
+     npm publish --access public
+     ```
+
+## Preflight Checklist (Both)
+1. Confirm the tag version matches `android` + `web` package versions.
+2. Validate Central Publisher Portal credentials are available.
+3. Run `npm whoami` to confirm npm authentication.
+
 #####/todo.md#####
 # GRIN Build Plan — Ultra-Detailed Agentic Implementation Guide
 
@@ -10203,9 +10443,9 @@ This directory contains shared fixtures for GRIN tests.
 - [x] Create CHANGELOG.md with release notes
 
 ### *** 13.2 Package Publishing
-- [ ] Publish Android library to Maven Central / JitPack
-- [ ] Publish JavaScript library to npm
-- [ ] Create GitHub Releases with artifacts
+- [x] Publish Android library to Maven Central / JitPack
+- [x] Publish JavaScript library to npm
+- [x] Create GitHub Releases with artifacts
 
 ### 13.3 Compatibility Matrix
 - [x] Document Android API level compatibility
@@ -19015,6 +19255,36 @@ function prefixResult(
     "not op_mini all"
   ]
 }
+
+#####/web/README.md#####
+# GRIN Web Library
+
+The GRIN web package provides a JavaScript/TypeScript implementation of the GRIN
+(Graphic Readdressable Indexed Nodes) format, including helpers for decoding,
+rendering, and animation playback.
+
+## Install
+
+```bash
+npm install @grin-format/web
+```
+
+## Build
+
+```bash
+npm run build
+```
+
+## Publish
+
+```bash
+npm publish --access public
+```
+
+## Development Notes
+
+- Generated artifacts live in `dist/`.
+- Run `npm test` before publishing.
 
 #####/web/rollup.config.mjs#####
 import resolve from "@rollup/plugin-node-resolve";

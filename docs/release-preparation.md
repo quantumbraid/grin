@@ -24,3 +24,38 @@ Release artifacts should include:
 - CLI tool bundle (`tools/`)
 - Android library (`android/lib/`)
 - Checksums for published binaries
+
+## Package Publishing
+
+### Android (Maven Central / JitPack)
+
+1. Ensure `android/lib/build.gradle.kts` has publishing metadata and signing configured for the
+   Central Publisher Portal endpoint.
+2. Export credentials for Central Publisher Portal and signing:
+   - `CENTRAL_USERNAME`, `CENTRAL_PASSWORD`
+   - `SIGNING_KEY`, `SIGNING_PASSWORD`
+3. Publish the release artifacts:
+   - `./gradlew :lib:publish` (from `android/`)
+4. Complete the deployment in the Central Publisher Portal.
+
+For JitPack, push a Git tag and confirm the build at `https://jitpack.io/#grin-format/grin`.
+
+### Web (npm)
+
+1. From `web/`, run `npm run build`.
+2. Verify `dist/` output and `web/README.md` contents.
+3. Run `npm test` as a preflight check.
+4. Publish with:
+   - `npm publish --access public`
+
+### GitHub Releases
+
+1. Push a version tag in the format `vX.Y.Z`.
+2. Confirm the `release.yml` workflow attaches the packaged artifacts.
+3. Add release notes referencing the CHANGELOG entry.
+
+## Preflight Checklist
+
+- Confirm the release tag matches the package versions.
+- Confirm Central Publisher Portal credentials are available for the release job.
+- Verify `npm whoami` succeeds for the `@grin-format` scope.

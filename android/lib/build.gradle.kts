@@ -6,6 +6,8 @@ plugins {
     kotlin("android")
     id("de.mannodermaus.android-junit5")
     id("org.jetbrains.dokka")
+    id("maven-publish")
+    id("signing")
 }
 
 android {
@@ -53,6 +55,73 @@ android {
             withSourcesJar()
             withJavadocJar()
         }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                // Publish the Android release variant to Maven-compatible repositories.
+                from(components["release"])
+                groupId = project.group.toString()
+                artifactId = "grin-android"
+                version = project.version.toString()
+
+                pom {
+                    name.set("GRIN Android Library")
+                    description.set("GRIN (Graphic Readdressable Indexed Nodes) Android/Kotlin implementation.")
+                    url.set("https://github.com/grin-format/grin")
+
+                    licenses {
+                        license {
+                            name.set("MIT License")
+                            url.set("https://opensource.org/licenses/MIT")
+                            distribution.set("repo")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("grin-contributors")
+                            name.set("GRIN Project Contributors")
+                            url.set("https://github.com/grin-format/grin")
+                        }
+                    }
+
+                    scm {
+                        connection.set("scm:git:https://github.com/grin-format/grin.git")
+                        developerConnection.set("scm:git:ssh://git@github.com:grin-format/grin.git")
+                        url.set("https://github.com/grin-format/grin")
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                // Central Publisher Portal endpoint for Maven Central deployments.
+                name = "central"
+                url = uri("https://central.sonatype.com/api/v1/publisher")
+                credentials {
+                    username = findProperty("centralUsername") as String?
+                        ?: System.getenv("CENTRAL_USERNAME")
+                    password = findProperty("centralPassword") as String?
+                        ?: System.getenv("CENTRAL_PASSWORD")
+                }
+            }
+        }
+    }
+}
+
+signing {
+    // Only require signing when PGP credentials are provided.
+    val signingKey = findProperty("signingKey") as String? ?: System.getenv("SIGNING_KEY")
+    val signingPassword = findProperty("signingPassword") as String?
+        ?: System.getenv("SIGNING_PASSWORD")
+    if (!signingKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign(publishing.publications["release"])
     }
 }
 

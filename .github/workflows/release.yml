@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository at the tagged commit.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Preflight: confirm tag matches package versions.
+      - name: Preflight version checks
+        env:
+          TAG_VERSION: ${{ github.ref_name }}
+        run: |
+          TAG_VERSION="${TAG_VERSION#v}"
+          node -e "const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('web/package.json','utf8'));if(pkg.version!==process.env.TAG_VERSION){console.error(\`web/package.json version \${pkg.version} does not match tag \${process.env.TAG_VERSION}\`);process.exit(1);}"
+          node -e "const fs=require('fs');const text=fs.readFileSync('android/build.gradle.kts','utf8');const match=text.match(/version = \\\"([^\\\"]+)\\\"/);if(!match||match[1]!==process.env.TAG_VERSION){console.error(\`android/build.gradle.kts version \${match?match[1]:'missing'} does not match tag \${process.env.TAG_VERSION}\`);process.exit(1);}"
+        shell: bash
+
+      # Use Node.js for building the web distribution bundle.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      # Preflight: run the web test suite before packaging artifacts.
+      - name: Run web tests
+        working-directory: web
+        run: npm test
+
+      - name: Build web package
+        working-directory: web
+        run: npm run build
+
+      # Build the Android AAR for release publishing.
+      - name: Set up Java for Android build
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build Android AAR
+        working-directory: android
+        run: ./gradlew :lib:assembleRelease
+
+      # Package artifacts for the GitHub release.
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p release-artifacts
+          tar -czf release-artifacts/grin-web-dist.tar.gz -C web dist
+          tar -czf release-artifacts/grin-tools.tar.gz -C tools bin lib package.json package-lock.json
+          cp android/lib/build/outputs/aar/lib-release.aar release-artifacts/grin-android.aar
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/*
