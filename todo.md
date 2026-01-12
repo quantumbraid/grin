@@ -1030,17 +1030,23 @@
   - Summary: Documented installation, tagging, and export workflow in `plugins/photoshop/README.md`.
 
 ### 14.3 Illustrator plugin (UXP)
-- [ ] Set up `plugins/illustrator/` workspace with UXP manifest + dev tooling
+- [x] Set up `plugins/illustrator/` workspace with UXP manifest + dev tooling
   - Include a panel scaffold matching Photoshop UX.
-- [ ] Implement vector art flattening rules for GRIN export
+  - Summary: Added the Illustrator UXP panel scaffold, manifest, and package metadata in `plugins/illustrator/`.
+- [x] Implement vector art flattening rules for GRIN export
   - Define how artboards/paths map to pixels, group IDs, and lock bit.
-- [ ] Implement group/lock metadata tagging in document model
+  - Summary: Documented artboard-to-pixel flattening rules and resolution handling in `plugins/illustrator/src/main.js`.
+- [x] Implement group/lock metadata tagging in document model
   - Use layer names, object tags, or custom metadata fields.
-- [ ] Implement export pipeline
+  - Summary: Added name/note tag parsing for group and lock metadata in `plugins/illustrator/src/main.js`.
+- [x] Implement export pipeline
   - Rasterize at user-specified resolution and call `grin-encode.js`.
-- [ ] Add preview/validation step
+  - Summary: Added artboard PNG export, metadata map export, and CLI command guidance in `plugins/illustrator/src/main.js`.
+- [x] Add preview/validation step
   - Use `grin-validate` and surface errors to the panel.
-- [ ] Write Illustrator plugin README with install + usage steps
+  - Summary: Added preview summary output and validation command output in `plugins/illustrator/src/main.js`.
+- [x] Write Illustrator plugin README with install + usage steps
+  - Summary: Documented installation, flattening, tagging, and export workflow in `plugins/illustrator/README.md`.
 
 ### 14.4 GIMP plugin (Python)
 - [ ] Set up `plugins/gimp/` with Python-Fu entry point + menu registration

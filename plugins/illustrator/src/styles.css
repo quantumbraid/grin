@@ -1,0 +1,81 @@
+/* Panel styling for the Illustrator GRIN exporter. */
+
+:root {
+  font-family: "Adobe Clean", system-ui, sans-serif;
+  color: #f5f5f5;
+  background: #2b2b2b;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.panel {
+  padding: 16px;
+}
+
+.panel__header h1 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.panel__header p {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: #c5c5c5;
+}
+
+.panel__section {
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.panel__section--row {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+label {
+  font-size: 12px;
+}
+
+select,
+input[type="number"] {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #1e1e1e;
+  color: #f5f5f5;
+}
+
+button {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #3a3a3a;
+  color: #f5f5f5;
+  cursor: pointer;
+}
+
+button.primary {
+  border-color: #2680eb;
+  background: #2680eb;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel__footer {
+  margin-top: 16px;
+  font-size: 11px;
+  color: #b5b5b5;
+}

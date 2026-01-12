@@ -1,0 +1,10 @@
+{
+  "name": "@grin/illustrator-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GRIN Illustrator UXP panel scaffold.",
+  "scripts": {
+    "lint": "node -c src/main.js"
+  },
+  "license": "MIT"
+}
