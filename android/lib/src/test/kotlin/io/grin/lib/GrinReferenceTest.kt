@@ -7,6 +7,10 @@ class GrinReferenceTest {
     @Test
     fun `serializes minimal file to reference bytes`() {
         val header = GrinHeader(
+            magic = GrinFormat.MAGIC_BYTES,
+            versionMajor = GrinFormat.VERSION_MAJOR,
+            versionMinor = GrinFormat.VERSION_MINOR,
+            headerSize = GrinFormat.HEADER_SIZE_BYTES,
             width = 1,
             height = 1,
             tickMicros = 0,

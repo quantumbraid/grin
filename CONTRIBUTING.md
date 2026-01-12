@@ -1,6 +1,6 @@
 # Contributing to GRIN
 
-Thank you for your interest in contributing to GRIN (Grouped Readdressable Indexed Nodes). This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to GRIN (Graphic Readdressable Indexed Nodes). This document provides guidelines and instructions for contributing.
 
 ## Table of Contents
 

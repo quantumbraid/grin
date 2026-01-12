@@ -1,5 +1,5 @@
 // GRIN Android Library - Root Build Configuration
-// Grouped Readdressable Indexed Nodes - Android/Kotlin Implementation
+// Graphic Readdressable Indexed Nodes - Android/Kotlin Implementation
 
 plugins {
     id("com.android.library") version "8.2.0" apply false

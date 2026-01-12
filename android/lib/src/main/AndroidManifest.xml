@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   GRIN Android Library Manifest
-  Grouped Readdressable Indexed Nodes
+  Graphic Readdressable Indexed Nodes
   
   This library requires no special permissions.
   All GRIN file parsing is done in-memory with bounded resource consumption.

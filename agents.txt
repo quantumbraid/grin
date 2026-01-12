@@ -1,6 +1,6 @@
 ================================================================================
                     GRIN PROJECT — AGENTIC CONTRACT v1.0
-          Grouped Readdressable Indexed Nodes (.grin / .grn)
+          Graphic Readdressable Indexed Nodes (.grin / .grn)
 ================================================================================
 
 DOCUMENT PURPOSE
@@ -16,7 +16,7 @@ SECTION 1: PROJECT IDENTITY
 ================================================================================
 
 1.1 PROJECT NAME
-    Full Name: Grouped Readdressable Indexed Nodes
+    Full Name: Graphic Readdressable Indexed Nodes
     Short Name: GRIN
     File Extensions: .grin (primary), .grn (abbreviated)
 
@@ -731,7 +731,7 @@ SECTION 10: GLOSSARY
 
     Term            | Definition
     ----------------|------------------------------------------------------------
-    GRIN            | Grouped Readdressable Indexed Nodes (the format)
+    GRIN            | Graphic Readdressable Indexed Nodes (the format)
     Control Byte    | 5th byte of pixel, contains group ID and lock bit
     Group           | One of 16 addressable pixel categories (0-15)
     Group ID        | 4-bit identifier in control byte bits 0-3

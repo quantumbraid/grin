@@ -39,14 +39,13 @@ Notes:
 ## Web Component (`<grin-player>`)
 
 ```html
-<grin-player src="./samples/pulse_red.grin" autoplay loop playbackrate="1.5"></grin-player>
+<grin-player src="./samples/pulse_red.grin" autoplay playbackrate="1.5"></grin-player>
 ```
 
 Attributes:
 
 - `src`: URL to a `.grin` file
 - `autoplay`: start playback after load
-- `loop`: stored but not used by the element yet
 - `playbackrate`: scales tick duration (default 1)
 
 API:

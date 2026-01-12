@@ -8,7 +8,7 @@ import { RuleEngine } from "./rule-engine";
 
 export class GrinPlayerElement extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ["src", "autoplay", "loop", "playbackrate"];
+    return ["src", "autoplay", "playbackrate"];
   }
 
   private canvas: HTMLCanvasElement;
@@ -16,7 +16,6 @@ export class GrinPlayerElement extends HTMLElement {
   private player: GrinPlayer | null = null;
   private file: GrinFile | null = null;
   private autoplay = false;
-  private loop = false;
   private playbackRate = 1;
 
   constructor() {
@@ -62,7 +61,6 @@ export class GrinPlayerElement extends HTMLElement {
 
   connectedCallback(): void {
     this.autoplay = this.hasAttribute("autoplay");
-    this.loop = this.hasAttribute("loop");
     this.playbackRate = this.parsePlaybackRate(this.getAttribute("playbackrate"));
 
     const src = this.getAttribute("src");
@@ -87,9 +85,6 @@ export class GrinPlayerElement extends HTMLElement {
         if (this.autoplay) {
           this.player?.play();
         }
-        break;
-      case "loop":
-        this.loop = newValue !== null;
         break;
       case "playbackrate":
         this.playbackRate = this.parsePlaybackRate(newValue);

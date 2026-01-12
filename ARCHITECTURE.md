@@ -2,7 +2,7 @@
 
 ## Overview
 
-GRIN (Grouped Readdressable Indexed Nodes) is a deterministic image container format designed for simplicity, security, and wide compatibility. This document describes the system architecture and design decisions.
+GRIN (Graphic Readdressable Indexed Nodes) is a deterministic image container format designed for simplicity, security, and wide compatibility. This document describes the system architecture and design decisions.
 
 ## Design Principles
 

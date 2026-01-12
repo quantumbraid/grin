@@ -8,6 +8,8 @@ import { PlaybackState } from "./playback-state";
 import { RuleEngine } from "./rule-engine";
 import { RAFTickScheduler, TickScheduler } from "./tick-scheduler";
 
+const USE_PACKED_OUTPUT = isLittleEndian();
+
 export class GrinPlayer {
   private image: GrinImage | null = null;
   private scheduler: TickScheduler | null = null;
@@ -115,18 +117,29 @@ export class GrinPlayer {
     }
     const activeRules = this.ruleEngine.evaluateRules(this.image, tick);
     const output = this.displayBuffer.rgbaData;
+    const output32 =
+      USE_PACKED_OUTPUT && output.byteLength % 4 === 0
+        ? new Uint32Array(output.buffer, output.byteOffset, output.byteLength / 4)
+        : null;
     const opcodeSetId = this.image.header.opcodeSetId;
 
     for (let i = 0; i < this.image.pixels.length; i += 1) {
       const source = this.image.pixels[i];
+      if (!source) {
+        continue;
+      }
       const control = this.controlBytes[i] ?? source.c;
       const outputIndex = i * 4;
 
       if ((control & CONTROL_BYTE_MASKS.LOCK) !== 0) {
-        output[outputIndex] = source.r;
-        output[outputIndex + 1] = source.g;
-        output[outputIndex + 2] = source.b;
-        output[outputIndex + 3] = source.a;
+        if (output32) {
+          output32[i] = packRgba(source.r, source.g, source.b, source.a);
+        } else {
+          output[outputIndex] = source.r;
+          output[outputIndex + 1] = source.g;
+          output[outputIndex + 2] = source.b;
+          output[outputIndex + 3] = source.a;
+        }
         continue;
       }
 
@@ -141,13 +154,27 @@ export class GrinPlayer {
       }
 
       this.controlBytes[i] = working.c & ~CONTROL_BYTE_MASKS.RESERVED;
-      output[outputIndex] = working.r;
-      output[outputIndex + 1] = working.g;
-      output[outputIndex + 2] = working.b;
-      output[outputIndex + 3] = working.a;
+      if (output32) {
+        output32[i] = packRgba(working.r, working.g, working.b, working.a);
+      } else {
+        output[outputIndex] = working.r;
+        output[outputIndex + 1] = working.g;
+        output[outputIndex + 2] = working.b;
+        output[outputIndex + 3] = working.a;
+      }
     }
     if (this.onFrameRendered) {
       this.onFrameRendered();
     }
   }
+}
+
+function isLittleEndian(): boolean {
+  const buffer = new ArrayBuffer(4);
+  new DataView(buffer).setUint32(0, 0x0a0b0c0d, true);
+  return new Uint8Array(buffer)[0] === 0x0d;
+}
+
+function packRgba(r: number, g: number, b: number, a: number): number {
+  return (r | (g << 8) | (b << 16) | (a << 24)) >>> 0;
 }

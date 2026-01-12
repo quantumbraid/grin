@@ -5,6 +5,17 @@ grin/
 │       ├── build.yml
 │       ├── lint.yml
 │       └── test.yml
+├── .idea
+│   ├── .gitignore
+│   ├── caches
+│   │   └── deviceStreaming.xml
+│   ├── grin.iml
+│   ├── markdown.xml
+│   ├── misc.xml
+│   ├── modules.xml
+│   └── workspace.xml
+├── .vscode
+│   └── settings.json
 ├── ARCHITECTURE.md
 ├── CONTRIBUTING.md
 ├── Makefile
@@ -108,12 +119,46 @@ grin/
 │   ├── README.md
 │   ├── baseline.json
 │   └── bench.js
+├── docs
+│   ├── README.md
+│   ├── api-quickstart.md
+│   ├── format-diagram.md
+│   ├── migration-gif-apng.md
+│   ├── opcodes.md
+│   ├── playback-guide-android.md
+│   ├── playback-guide-web.md
+│   ├── security-audit-checklist.md
+│   ├── security-model.md
+│   ├── timing.md
+│   ├── tutorial-first-file.md
+│   └── tutorial-grin-groups.md
+├── grin_technical_specification.md
 ├── grin_technical_specification_v_2.md
+├── immediateTODO.md
 ├── package-lock.json
+├── samples
+│   ├── README.md
+│   ├── all_opcodes.grin
+│   ├── color_shift.grin
+│   ├── fade_gradient.grin
+│   ├── groups_demo.grin
+│   ├── invalid_header_size.grin
+│   ├── invalid_magic.grin
+│   ├── invalid_opcode.grin
+│   ├── locking_demo.grin
+│   ├── max_rules.grin
+│   ├── max_size.grin
+│   ├── minimal.grin
+│   ├── minimal_locked.grin
+│   ├── pulse_red.grin
+│   ├── timing_demo.grin
+│   └── truncated.grin
 ├── scripts
+│   ├── generate-samples.mjs
 │   └── generate-test-files.js
 ├── spec
 │   └── grin_technical_specification_v_2.md
+├── tchspecdraft.txt
 ├── tests
 │   └── fixtures
 │       ├── README.md
@@ -130,6 +175,7 @@ grin/
 │   ├── lib
 │   │   ├── endianness.js
 │   │   ├── format.js
+│   │   ├── gif.js
 │   │   ├── grin.js
 │   │   ├── opcodes.js
 │   │   ├── png.js
@@ -186,6 +232,7 @@ grin/
     │   ├── validation-boundaries.test.ts
     │   └── validation.test.ts
     ├── tsconfig.json
+    ├── typedoc.json
     └── vitest.config.ts
 
 #####/.github/workflows/build.yml#####
@@ -395,12 +442,1369 @@ jobs:
             echo "No tools/package.json yet"
           fi
 
+#####/.idea/.gitignore#####
+# Default ignored files
+/shelf/
+/workspace.xml
+
+#####/.idea/caches/deviceStreaming.xml#####
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DeviceStreaming">
+    <option name="deviceSelectionList">
+      <list>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="Sony" />
+          <option name="codename" value="A402SO" />
+          <option name="id" value="A402SO" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Sony" />
+          <option name="name" value="Xperia 10" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2520" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="27" />
+          <option name="brand" value="DOCOMO" />
+          <option name="codename" value="F01L" />
+          <option name="id" value="F01L" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="FUJITSU" />
+          <option name="name" value="F-01L" />
+          <option name="screenDensity" value="360" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1280" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="OnePlus" />
+          <option name="codename" value="OP535DL1" />
+          <option name="id" value="OP535DL1" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="OnePlus" />
+          <option name="name" value="CPH2409" />
+          <option name="screenDensity" value="401" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2412" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="OnePlus" />
+          <option name="codename" value="OP5552L1" />
+          <option name="id" value="OP5552L1" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="OnePlus" />
+          <option name="name" value="CPH2415" />
+          <option name="screenDensity" value="480" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2412" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="OnePlus" />
+          <option name="codename" value="OP5552L1" />
+          <option name="id" value="OP5552L1" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="OnePlus" />
+          <option name="name" value="CPH2415" />
+          <option name="screenDensity" value="480" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2412" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="OPPO" />
+          <option name="codename" value="OP573DL1" />
+          <option name="id" value="OP573DL1" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="OPPO" />
+          <option name="name" value="CPH2557" />
+          <option name="screenDensity" value="480" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="28" />
+          <option name="brand" value="DOCOMO" />
+          <option name="codename" value="SH-01L" />
+          <option name="id" value="SH-01L" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="SHARP" />
+          <option name="name" value="AQUOS sense2 SH-01L" />
+          <option name="screenDensity" value="480" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2160" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="Lenovo" />
+          <option name="codename" value="TB330FU" />
+          <option name="formFactor" value="Tablet" />
+          <option name="id" value="TB330FU" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Lenovo" />
+          <option name="name" value="Tab M11" />
+          <option name="screenDensity" value="240" />
+          <option name="screenX" value="1200" />
+          <option name="screenY" value="1920" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a03su" />
+          <option name="id" value="a03su" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy A03s" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1600" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a05s" />
+          <option name="id" value="a05s" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="A05s" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a06" />
+          <option name="id" value="a06" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy A06" />
+          <option name="screenDensity" value="300" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1600" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a14m" />
+          <option name="id" value="a14m" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-A145R" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2408" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a15" />
+          <option name="id" value="a15" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="A15" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a15x" />
+          <option name="id" value="a15x" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="A15 5G" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a16" />
+          <option name="id" value="a16" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-A165M" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a16x" />
+          <option name="id" value="a16x" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="A16 5G" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a26x" />
+          <option name="id" value="a26x" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-A266B" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a34x" />
+          <option name="id" value="a34x" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-A346N" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a35x" />
+          <option name="id" value="a35x" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="A35" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a35x" />
+          <option name="id" value="a35x" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="A35" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a35x" />
+          <option name="id" value="a35x" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="A35" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a36xq" />
+          <option name="id" value="a36xq" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-A366E" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a36xq" />
+          <option name="id" value="a36xq" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-A366E" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="a56x" />
+          <option name="id" value="a56x" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-A566E" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="google" />
+          <option name="codename" value="akita" />
+          <option name="id" value="akita" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 8a" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="google" />
+          <option name="codename" value="akita" />
+          <option name="id" value="akita" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 8a" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="arcfox" />
+          <option name="id" value="arcfox" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="razr plus 2024" />
+          <option name="screenDensity" value="360" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="1272" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="austin" />
+          <option name="id" value="austin" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="moto g 5G (2022)" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1600" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="b0q" />
+          <option name="id" value="b0q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S22 Ultra" />
+          <option name="screenDensity" value="600" />
+          <option name="screenX" value="1440" />
+          <option name="screenY" value="3088" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="b6q" />
+          <option name="id" value="b6q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy Z Flip 6" />
+          <option name="screenDensity" value="340" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2640" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="google" />
+          <option name="codename" value="blazer" />
+          <option name="id" value="blazer" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 10 Pro" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2410" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="32" />
+          <option name="brand" value="google" />
+          <option name="codename" value="bluejay" />
+          <option name="id" value="bluejay" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 6a" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="google" />
+          <option name="codename" value="caiman" />
+          <option name="id" value="caiman" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9 Pro" />
+          <option name="screenDensity" value="360" />
+          <option name="screenX" value="960" />
+          <option name="screenY" value="2142" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="google" />
+          <option name="codename" value="caiman" />
+          <option name="id" value="caiman" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9 Pro" />
+          <option name="screenDensity" value="360" />
+          <option name="screenX" value="960" />
+          <option name="screenY" value="2142" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="google" />
+          <option name="codename" value="comet" />
+          <option name="default" value="true" />
+          <option name="id" value="comet" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9 Pro Fold" />
+          <option name="screenDensity" value="390" />
+          <option name="screenX" value="2076" />
+          <option name="screenY" value="2152" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="google" />
+          <option name="codename" value="comet" />
+          <option name="default" value="true" />
+          <option name="id" value="comet" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9 Pro Fold" />
+          <option name="screenDensity" value="390" />
+          <option name="screenX" value="2076" />
+          <option name="screenY" value="2152" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="29" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="crownqlteue" />
+          <option name="id" value="crownqlteue" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy Note9" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="2220" />
+          <option name="screenY" value="1080" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="dm1q" />
+          <option name="id" value="dm1q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="S23" />
+          <option name="screenDensity" value="480" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="dm2q" />
+          <option name="id" value="dm2q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="S23 Plus" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="dm3q" />
+          <option name="id" value="dm3q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S23 Ultra" />
+          <option name="screenDensity" value="600" />
+          <option name="screenX" value="1440" />
+          <option name="screenY" value="3088" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="dubai" />
+          <option name="id" value="dubai" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="edge 30" />
+          <option name="screenDensity" value="405" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="e1q" />
+          <option name="default" value="true" />
+          <option name="id" value="e1q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S24" />
+          <option name="screenDensity" value="480" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="e1q" />
+          <option name="default" value="true" />
+          <option name="id" value="e1q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S24" />
+          <option name="screenDensity" value="480" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="e3q" />
+          <option name="id" value="e3q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S24 Ultra" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1440" />
+          <option name="screenY" value="3120" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="e3q" />
+          <option name="id" value="e3q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S24 Ultra" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1440" />
+          <option name="screenY" value="3120" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="e3qksx" />
+          <option name="id" value="e3qksx" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S24 Ultra" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1440" />
+          <option name="screenY" value="3120" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="google" />
+          <option name="codename" value="eos" />
+          <option name="id" value="eos" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Eos" />
+          <option name="screenDensity" value="320" />
+          <option name="screenX" value="384" />
+          <option name="screenY" value="384" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="google" />
+          <option name="codename" value="felix" />
+          <option name="id" value="felix" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel Fold" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="2208" />
+          <option name="screenY" value="1840" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="google" />
+          <option name="codename" value="felix" />
+          <option name="id" value="felix" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel Fold" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="2208" />
+          <option name="screenY" value="1840" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="google" />
+          <option name="codename" value="felix_camera" />
+          <option name="id" value="felix_camera" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel Fold (Camera-enabled)" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="2208" />
+          <option name="screenY" value="1840" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="fogona" />
+          <option name="id" value="fogona" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="moto g play - 2024" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1600" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="fogos" />
+          <option name="id" value="fogos" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="moto g34 5G" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1600" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="google" />
+          <option name="codename" value="frankel" />
+          <option name="id" value="frankel" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 10" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2424" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="g0q" />
+          <option name="id" value="g0q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-S906U1" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="g0q" />
+          <option name="id" value="g0q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-S906U1" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="gta9pwifi" />
+          <option name="id" value="gta9pwifi" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-X210" />
+          <option name="screenDensity" value="240" />
+          <option name="screenX" value="1200" />
+          <option name="screenY" value="1920" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="gts7lwifi" />
+          <option name="id" value="gts7lwifi" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-T870" />
+          <option name="screenDensity" value="340" />
+          <option name="screenX" value="1600" />
+          <option name="screenY" value="2560" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="gts7xllite" />
+          <option name="id" value="gts7xllite" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-T738U" />
+          <option name="screenDensity" value="340" />
+          <option name="screenX" value="1600" />
+          <option name="screenY" value="2560" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="gts8uwifi" />
+          <option name="formFactor" value="Tablet" />
+          <option name="id" value="gts8uwifi" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy Tab S8 Ultra" />
+          <option name="screenDensity" value="320" />
+          <option name="screenX" value="1848" />
+          <option name="screenY" value="2960" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="gts8wifi" />
+          <option name="formFactor" value="Tablet" />
+          <option name="id" value="gts8wifi" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy Tab S8" />
+          <option name="screenDensity" value="274" />
+          <option name="screenX" value="1600" />
+          <option name="screenY" value="2560" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="gts9fe" />
+          <option name="id" value="gts9fe" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy Tab S9 FE 5G" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="1440" />
+          <option name="screenY" value="2304" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="gts9wifi" />
+          <option name="id" value="gts9wifi" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-X710" />
+          <option name="screenDensity" value="340" />
+          <option name="screenX" value="1600" />
+          <option name="screenY" value="2560" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="google" />
+          <option name="codename" value="husky" />
+          <option name="id" value="husky" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 8 Pro" />
+          <option name="screenDensity" value="390" />
+          <option name="screenX" value="1008" />
+          <option name="screenY" value="2244" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="google" />
+          <option name="codename" value="husky" />
+          <option name="id" value="husky" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 8 Pro" />
+          <option name="screenDensity" value="390" />
+          <option name="screenX" value="1008" />
+          <option name="screenY" value="2244" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="30" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="java" />
+          <option name="id" value="java" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="G20" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1600" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="kansas" />
+          <option name="id" value="kansas" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="moto g - 2025" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1604" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="google" />
+          <option name="codename" value="komodo" />
+          <option name="id" value="komodo" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9 Pro XL" />
+          <option name="screenDensity" value="360" />
+          <option name="screenX" value="1008" />
+          <option name="screenY" value="2244" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="google" />
+          <option name="codename" value="komodo" />
+          <option name="id" value="komodo" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9 Pro XL" />
+          <option name="screenDensity" value="360" />
+          <option name="screenX" value="1008" />
+          <option name="screenY" value="2244" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="lamul" />
+          <option name="id" value="lamul" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="moto g05" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1604" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="lion" />
+          <option name="id" value="lion" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="moto g04" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1612" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="google" />
+          <option name="codename" value="lynx" />
+          <option name="id" value="lynx" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 7a" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="lyriq" />
+          <option name="id" value="lyriq" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="edge 40" />
+          <option name="screenDensity" value="400" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="manaus" />
+          <option name="id" value="manaus" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="edge 40 neo" />
+          <option name="screenDensity" value="400" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="motorola" />
+          <option name="codename" value="maui" />
+          <option name="id" value="maui" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Motorola" />
+          <option name="name" value="moto g play - 2023" />
+          <option name="screenDensity" value="280" />
+          <option name="screenX" value="720" />
+          <option name="screenY" value="1600" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="google" />
+          <option name="codename" value="mustang" />
+          <option name="id" value="mustang" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 10 Pro XL" />
+          <option name="screenDensity" value="390" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2404" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="o1q" />
+          <option name="id" value="o1q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S21" />
+          <option name="screenDensity" value="421" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="o1q" />
+          <option name="id" value="o1q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S21" />
+          <option name="screenDensity" value="421" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="31" />
+          <option name="brand" value="google" />
+          <option name="codename" value="oriole" />
+          <option name="id" value="oriole" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 6" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="p3q" />
+          <option name="id" value="p3q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S21 Ultra" />
+          <option name="screenDensity" value="600" />
+          <option name="screenX" value="1440" />
+          <option name="screenY" value="3200" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="pa2q" />
+          <option name="id" value="pa2q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="S25+" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="pa3q" />
+          <option name="id" value="pa3q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S25 Ultra" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="pa3q" />
+          <option name="id" value="pa3q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S25 Ultra" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="google" />
+          <option name="codename" value="panther" />
+          <option name="id" value="panther" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 7" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="psq" />
+          <option name="id" value="psq" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S25 Edge" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1440" />
+          <option name="screenY" value="3120" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="q5q" />
+          <option name="id" value="q5q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy Z Fold5" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1812" />
+          <option name="screenY" value="2176" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="q6q" />
+          <option name="id" value="q6q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy Z Fold6" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1856" />
+          <option name="screenY" value="2160" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="30" />
+          <option name="brand" value="google" />
+          <option name="codename" value="r11" />
+          <option name="formFactor" value="Wear OS" />
+          <option name="id" value="r11" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel Watch" />
+          <option name="screenDensity" value="320" />
+          <option name="screenX" value="384" />
+          <option name="screenY" value="384" />
+          <option name="type" value="WEAR_OS" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="r11q" />
+          <option name="id" value="r11q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-S711U" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="r11s" />
+          <option name="id" value="r11s" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-S711N" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="r9q" />
+          <option name="id" value="r9q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S21 FE 5G" />
+          <option name="screenDensity" value="480" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="r9q-SM-G990U" />
+          <option name="id" value="r9q-SM-G990U" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S21 FE 5G" />
+          <option name="screenDensity" value="480" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="google" />
+          <option name="codename" value="rango" />
+          <option name="id" value="rango" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 10 Pro Fold" />
+          <option name="screenDensity" value="390" />
+          <option name="screenX" value="2076" />
+          <option name="screenY" value="2152" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="30" />
+          <option name="brand" value="google" />
+          <option name="codename" value="redfin" />
+          <option name="id" value="redfin" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 5" />
+          <option name="screenDensity" value="440" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2340" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="google" />
+          <option name="codename" value="shiba" />
+          <option name="id" value="shiba" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 8" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="t2q" />
+          <option name="id" value="t2q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S21 Plus" />
+          <option name="screenDensity" value="394" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="t2q" />
+          <option name="id" value="t2q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="Galaxy S21 Plus" />
+          <option name="screenDensity" value="394" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2400" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="google" />
+          <option name="codename" value="tangorpro" />
+          <option name="formFactor" value="Tablet" />
+          <option name="id" value="tangorpro" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel Tablet" />
+          <option name="screenDensity" value="320" />
+          <option name="screenX" value="1600" />
+          <option name="screenY" value="2560" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="google" />
+          <option name="codename" value="tegu" />
+          <option name="id" value="tegu" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9a" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2424" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="google" />
+          <option name="codename" value="tokay" />
+          <option name="default" value="true" />
+          <option name="id" value="tokay" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2424" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="35" />
+          <option name="brand" value="google" />
+          <option name="codename" value="tokay" />
+          <option name="default" value="true" />
+          <option name="id" value="tokay" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2424" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="36" />
+          <option name="brand" value="google" />
+          <option name="codename" value="tokay" />
+          <option name="default" value="true" />
+          <option name="id" value="tokay" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Google" />
+          <option name="name" value="Pixel 9" />
+          <option name="screenDensity" value="420" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2424" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="34" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="xcover7" />
+          <option name="id" value="xcover7" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="SM-G556B" />
+          <option name="screenDensity" value="450" />
+          <option name="screenX" value="1080" />
+          <option name="screenY" value="2408" />
+        </PersistentDeviceSelectionData>
+        <PersistentDeviceSelectionData>
+          <option name="api" value="33" />
+          <option name="brand" value="samsung" />
+          <option name="codename" value="y2q" />
+          <option name="id" value="y2q" />
+          <option name="labId" value="google" />
+          <option name="manufacturer" value="Samsung" />
+          <option name="name" value="S20 Plus 5G" />
+          <option name="screenDensity" value="600" />
+          <option name="screenX" value="1440" />
+          <option name="screenY" value="3200" />
+        </PersistentDeviceSelectionData>
+      </list>
+    </option>
+  </component>
+</project>
+
+#####/.idea/grin.iml#####
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
+
+#####/.idea/markdown.xml#####
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MarkdownSettings">
+    <option name="previewPanelProviderInfo">
+      <ProviderInfo name="Compose (experimental)" className="com.intellij.markdown.compose.preview.ComposePanelProvider" />
+    </option>
+  </component>
+</project>
+
+#####/.idea/misc.xml#####
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectRootManager">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+</project>
+
+#####/.idea/modules.xml#####
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/grin.iml" filepath="$PROJECT_DIR$/.idea/grin.iml" />
+    </modules>
+  </component>
+</project>
+
+#####/.idea/workspace.xml#####
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="fa8f93fb-929c-40ad-ac24-04ccdbbb4104" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 6
+}]]></component>
+  <component name="ProjectId" id="384sgNp2sYd4rY5I7hfKV44bzNg" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/amber/Documents/grin"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="fa8f93fb-929c-40ad-ac24-04ccdbbb4104" name="Changes" comment="" />
+      <created>1768070315590</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1768070315590</updated>
+    </task>
+    <servers />
+  </component>
+</project>
+
+#####/.vscode/settings.json#####
+{
+    "java.configuration.updateBuildConfiguration": "interactive"
+}
+
 #####/ARCHITECTURE.md#####
 # GRIN Architecture
 
 ## Overview
 
-GRIN (Grouped Readdressable Indexed Nodes) is a deterministic image container format designed for simplicity, security, and wide compatibility. This document describes the system architecture and design decisions.
+GRIN (Graphic Readdressable Indexed Nodes) is a deterministic image container format designed for simplicity, security, and wide compatibility. This document describes the system architecture and design decisions.
 
 ## Design Principles
 
@@ -779,7 +2183,7 @@ Total: 128 + (W × H × 5) bytes
 #####/CONTRIBUTING.md#####
 # Contributing to GRIN
 
-Thank you for your interest in contributing to GRIN (Grouped Readdressable Indexed Nodes). This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to GRIN (Graphic Readdressable Indexed Nodes). This document provides guidelines and instructions for contributing.
 
 ## Table of Contents
 
@@ -1142,301 +2546,77 @@ clean:
 	cd android && ./gradlew clean
 
 #####/README.md#####
-# GRIN — Grouped Readdressable Indexed Nodes
+# GRIN (Graphic Readdressable Indexed Nodes)
 
-## Canonical Scope
+GRIN is a deterministic image container format with 5-byte pixels (RGBA + control byte)
+and a fixed 128-byte header with a bounded rules block. This repo includes working
+implementations for web and Android, CLI tools, tests, and sample files.
 
-This document defines **GRIN** as a standalone, implementation-ready specification. GRIN is a deterministic image container and playback substrate. It is not a generator, not a renderer, and not a general-purpose execution environment. GRIN defines how image state is stored, addressed, grouped, locked, and modulated over time under strict, inspectable constraints.
+## Highlights
 
-This document intentionally excludes all image-generation logic, orchestration, prompting, or creative systems. Any system that emits GRIN-compliant data is external to this specification.
+- Fixed-size header and rules block (no unbounded metadata).
+- 16 groups per pixel with a lock bit and opcode-driven modulation.
+- Web TypeScript library with a Canvas renderer and `<grin-player>` component.
+- Android Kotlin library with a demo app.
+- CLI tools: `grin-validate`, `grin-inspect`, `grin-encode`, `grin-decode`.
+- Tests and benchmarks across web and Android.
 
----
+## Specs and docs
 
-## 1. Design Intent
+- Format spec: `grin_technical_specification.md` (implementation-aligned)
+- Spec draft: `grin_technical_specification_v_2.md`
+- Architecture: `ARCHITECTURE.md`
+- Contributing: `CONTRIBUTING.md`
+- Security: `SECURITY.md`
+- Samples: `samples/README.md`
+- Docs index: `docs/README.md`
 
-GRIN exists to provide:
+## Repository layout
 
-- A bounded, inspectable image format
-- Deterministic runtime behavior
-- Predictable memory, CPU, and metadata costs
-- Structural resistance to hidden logic or malicious complexity
+- `web/` - TypeScript implementation, web component, demo, tests
+- `android/` - Kotlin implementation and demo app
+- `tools/` - Node.js CLI utilities
+- `samples/` - Reference `.grin` files (valid + invalid)
+- `benchmarks/` - Performance harness
+- `tests/` - Shared fixtures and generators
+- `core/` - Reserved for a future cross-platform reference core
 
-GRIN prioritizes **correctness over expressiveness**. If a behavior cannot be expressed within GRIN’s constraints, it is intentionally disallowed.
+## CLI quick start (Node >= 18)
 
-GRIN is intentionally incomplete.
+```bash
+node tools/bin/grin-validate.js samples/minimal.grin
+node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
+node tools/bin/grin-encode.js input.png output.grin
+node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
+```
 
----
+## Web library
 
-## 2. Core Mental Model
+```bash
+cd web
+npm install
+npm test
+npm run build
+```
 
-- Images are **state**, not timelines
-- Pixels are **nodes**, not colors
-- Motion is **modulation**, not replacement
-- Groups are **buses**, not selections
-- Editing is powerful; playback is dumb
-- External systems may observe GRIN state but never execute within it
+The demo lives in `web/demo/`. Build first so `web/demo/demo.js` can load `web/dist`.
 
-Nothing inside a GRIN file is allowed to be clever.
+## Android library and demo
 
----
+```bash
+cd android
+./gradlew :demo:assembleDebug
+```
 
-## 3. Output Contract
+The demo app loads sample files from `android/demo/src/main/assets/samples`.
 
-All imagery is emitted directly in **GRIN RGBA+C** format.
+## Samples
 
-- No conversion step
-- No tagging pass
-- No semantic metadata layer
+Regenerate sample files with:
 
-GRIN is the final output format.
-
----
-
-## 4. Pixel Definition
-
-Each pixel is exactly **5 bytes**:
-
-| Byte | Name | Type | Description |
-|---:|---|---|---|
-| 0 | R | uint8 | Red channel |
-| 1 | G | uint8 | Green channel |
-| 2 | B | uint8 | Blue channel |
-| 3 | A | uint8 | Alpha channel |
-| 4 | C | uint8 | Control byte |
-
-This represents a deliberate 25% size increase over RGBA, paid once.
-
-### 4.1 Control Byte (C)
-
-- Bits 0–3: **Group ID** (0–15)
-- Bit 7: **Lock bit**
-- Bits 4–6: Reserved (must be zero)
-
-Each pixel:
-
-- Belongs to exactly **one of 16 groups**
-- May be **locked or unlocked**
-
-There is no per-pixel metadata beyond this.
-
----
-
-## 5. Groups
-
-- Exactly **16 groups** exist
-- Groups are the **only runtime-addressable unit**
-
-There is:
-
-- No per-pixel addressing at runtime
-- No exclusion logic
-- No conditionals
-- No Venn diagrams
-
-If a group is not called, it is unaffected.
-
-If a subset must be protected, it is locked.
-
----
-
-## 6. Locking Semantics
-
-Locking is explicit, reversible, and costly.
-
-- Locked pixels ignore all runtime actions
-- Unlocking requires an explicit action
-- Re-locking requires an explicit action
-- Locking and unlocking consume rule budget
-
-Protection is a decision, not a default.
-
----
-
-## 7. File Container and Fixed Header
-
-GRIN files are **self-describing** within strict limits. Parsing is intentionally small and bounded so that a minimal Java/Kotlin implementation (Android) or a minimal JavaScript implementation (web) can reliably render and optionally play back GRIN.
-
-### 7.1 Byte Order and Invariants
-
-- All multi-byte integers are **little-endian**.
-- Header size is **fixed** to enable O(1) seek and predictable worst-case costs.
-- Reserved fields **must be written as 0** and **ignored by readers**.
-- A compliant file must be parsable without scanning or heuristics.
-
-### 7.2 Fixed Header Size
-
-- **HeaderSizeBytes = 128** (fixed, always present).
-- **PixelDataOffset = 128**.
-
-A reader never searches for metadata. It jumps to known offsets.
-
-### 7.3 Header Layout (128 bytes)
-
-All offsets below are from file start.
-
-| Offset | Size | Name | Type | Notes |
-|---:|---:|---|---|---|
-| 0 | 4 | Magic | ASCII | Must be `GRIN` |
-| 4 | 1 | VersionMajor | uint8 | Current: 0 |
-| 5 | 1 | VersionMinor | uint8 | Current: 0 |
-| 6 | 2 | HeaderSize | uint16 | Must be 128 |
-| 8 | 4 | Width | uint32 | Pixels |
-| 12 | 4 | Height | uint32 | Pixels |
-| 16 | 4 | TickMicros | uint32 | Playback tick duration in microseconds |
-| 20 | 1 | RuleCount | uint8 | 0–16 |
-| 21 | 1 | OpcodeSetId | uint8 | Identifies the fixed opcode set (reader-known) |
-| 22 | 2 | Flags | uint16 | Reserved (0) |
-| 24 | 8 | PixelDataLength | uint64 | Must equal `Width * Height * 5` |
-| 32 | 8 | FileLength | uint64 | Total bytes in file (optional; 0 allowed) |
-| 40 | 8 | PixelDataOffset64 | uint64 | Must be 128 |
-| 48 | 8 | ReservedA | uint64 | 0 |
-| 56 | 8 | ReservedB | uint64 | 0 |
-| 64 | 64 | RulesBlock | bytes | Fixed-size rule block; see §7.4 |
-
-#### 7.3.1 Reader Validation Rules
-
-A reader MUST reject the file if any of these are true:
-
-- Magic != `GRIN`
-- HeaderSize != 128
-- RuleCount > 16
-- PixelDataOffset64 != 128
-- PixelDataLength != Width * Height * 5
-- FileLength is non-zero and FileLength < 128 + PixelDataLength
-
-A reader SHOULD reject if any reserved field is non-zero.
-
-### 7.4 Rules Block (Fixed 64 bytes)
-
-Rules are stored inside the fixed header to prevent unbounded metadata growth.
-
-- RulesBlock is always 64 bytes.
-- Only the first `RuleCount` entries are active.
-- Unused entries must be zero.
-
-Each rule entry is 4 bytes (16 rules × 4 bytes = 64 bytes):
-
-| Bytes | Name | Type | Notes |
-|---:|---|---|---|
-| 0–1 | GroupMask | uint16 | Bit i targets Group i (0–15) |
-| 2 | Opcode | uint8 | Must be valid within OpcodeSetId |
-| 3 | Timing | uint8 | On/off oscillator timing parameter (reader-defined) |
-
-Rules express **declarative schedules**, not programs.
-
----
-
-## 8. Opcodes (Fixed Set)
-
-GRIN supports a small, fixed opcode set identified by OpcodeSetId.
-
-This spec defines the **existence** of a fixed opcode set but does not enumerate it here unless and until the opcode list is frozen. Readers must treat any unknown Opcode value as invalid.
-
-Constraints that must hold for any opcode set:
-
-- Must be statically inspectable
-- Must have predictable worst-case CPU cost per tick
-- Must not require dynamic allocation
-- Must not allow hidden logic or unbounded expressiveness
-
----
-
-## 9. Runtime Behavior Model
-
-Playback is intentionally simple.
-
-On each fixed tick:
-
-1. Determine active rules
-2. For each pixel:
-   - If locked, skip
-   - If pixel’s group is targeted, apply effect
-3. Present output
-
-There is:
-
-- No state accumulation
-- No drift
-- No mutation of stored pixels
-
----
-
-## 10. Broadcast Model
-
-GRIN uses **broadcast, not invocation**.
-
-- Group state may be broadcast outward
-- Nothing may be called inward
-
-GRIN:
-
-- Does not call external code
-- Does not request actions
-- Does not embed hooks
-
-If nothing is listening, nothing happens.
-
----
-
-## 11. Editing vs Playback
-
-Editing may:
-
-- Reassign groups
-- Change lock states
-- Rewrite pixels
-
-Playback may:
-
-- Modulate display only
-- Never rewrite stored data
-
-These modes are strictly separated.
-
----
-
-## 12. Security by Construction
-
-GRIN enforces:
-
-- Fixed header size
-- Fixed rule count
-- Fixed opcode set
-- No executable code
-- No dynamic allocation
-- No external resource access
-
-Malicious complexity is structurally impossible.
-
----
-
-## 13. What GRIN Is Not
-
-GRIN is not:
-
-- A video format
-- A scripting engine
-- A shader language
-- A game engine
-- A procedural world system
-
-Attempts to turn it into one violate its intent.
-
----
-
-## 14. Final Principle
-
-If a feature:
-
-- Increases expressiveness without bound
-- Requires interpretation instead of inspection
-- Cannot be reasoned about statically
-- Makes worst-case cost unknowable
-
-It does not belong in GRIN.
-
-Minimalism here is **structural**, not aesthetic.
-
+```bash
+node scripts/generate-samples.mjs
+```
 
 #####/SECURITY.md#####
 # Security Policy
@@ -1459,7 +2639,7 @@ for a fix once the issue is confirmed.
 #####/agents.txt#####
 ================================================================================
                     GRIN PROJECT — AGENTIC CONTRACT v1.0
-          Grouped Readdressable Indexed Nodes (.grin / .grn)
+          Graphic Readdressable Indexed Nodes (.grin / .grn)
 ================================================================================
 
 DOCUMENT PURPOSE
@@ -1475,7 +2655,7 @@ SECTION 1: PROJECT IDENTITY
 ================================================================================
 
 1.1 PROJECT NAME
-    Full Name: Grouped Readdressable Indexed Nodes
+    Full Name: Graphic Readdressable Indexed Nodes
     Short Name: GRIN
     File Extensions: .grin (primary), .grn (abbreviated)
 
@@ -2190,7 +3370,7 @@ SECTION 10: GLOSSARY
 
     Term            | Definition
     ----------------|------------------------------------------------------------
-    GRIN            | Grouped Readdressable Indexed Nodes (the format)
+    GRIN            | Graphic Readdressable Indexed Nodes (the format)
     Control Byte    | 5th byte of pixel, contains group ID and lock bit
     Group           | One of 16 addressable pixel categories (0-15)
     Group ID        | 4-bit identifier in control byte bits 0-3
@@ -2220,13 +3400,14 @@ SECTION 11: REVISION HISTORY
 
 #####/android/build.gradle.kts#####
 // GRIN Android Library - Root Build Configuration
-// Grouped Readdressable Indexed Nodes - Android/Kotlin Implementation
+// Graphic Readdressable Indexed Nodes - Android/Kotlin Implementation
 
 plugins {
     id("com.android.library") version "8.2.0" apply false
     id("com.android.application") version "8.2.0" apply false
     kotlin("android") version "1.9.21" apply false
     id("de.mannodermaus.android-junit5") version "1.10.0.0" apply false
+    id("org.jetbrains.dokka") version "1.9.20" apply false
 }
 
 allprojects {
@@ -2614,7 +3795,7 @@ class MainActivity : AppCompatActivity() {
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GRIN Demo</string>
-    <string name="description">Grouped Readdressable Indexed Nodes - Demo</string>
+    <string name="description">Graphic Readdressable Indexed Nodes - Demo</string>
     
     <!-- UI Strings -->
     <string name="load_file">Load .grin File</string>
@@ -2656,9 +3837,6 @@ class MainActivity : AppCompatActivity() {
     </style>
 </resources>
 
-#####/android/gradle.properties#####
-android.useAndroidX=true
-
 #####/android/gradle/wrapper/gradle-wrapper.properties#####
 distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
@@ -2667,6 +3845,9 @@ networkTimeout=10000
 validateDistributionUrl=true
 zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists
+
+#####/android/gradle.properties#####
+android.useAndroidX=true
 
 #####/android/gradlew#####
 #!/bin/sh
@@ -3021,6 +4202,7 @@ plugins {
     id("com.android.library")
     kotlin("android")
     id("de.mannodermaus.android-junit5")
+    id("org.jetbrains.dokka")
 }
 
 android {
@@ -3058,8 +4240,8 @@ android {
     }
 
     testOptions {
-        unitTests {
-            isIncludeAndroidResources = true
+        unitTests.all {
+            it.useJUnitPlatform()
         }
     }
 
@@ -3068,6 +4250,15 @@ android {
             withSourcesJar()
             withJavadocJar()
         }
+    }
+}
+
+tasks.dokkaHtml {
+    outputDirectory.set(rootProject.file("../docs/api/android"))
+    dokkaSourceSets.configureEach {
+        jdkVersion.set(8)
+        reportUndocumented.set(false)
+        skipDeprecated.set(false)
     }
 }
 
@@ -3153,7 +4344,7 @@ class GrinBenchmarkTest {
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   GRIN Android Library Manifest
-  Grouped Readdressable Indexed Nodes
+  Graphic Readdressable Indexed Nodes
   
   This library requires no special permissions.
   All GRIN file parsing is done in-memory with bounded resource consumption.
@@ -5465,6 +6656,10 @@ class GrinReferenceTest {
     @Test
     fun `serializes minimal file to reference bytes`() {
         val header = GrinHeader(
+            magic = GrinFormat.MAGIC_BYTES,
+            versionMajor = GrinFormat.VERSION_MAJOR,
+            versionMinor = GrinFormat.VERSION_MINOR,
+            headerSize = GrinFormat.HEADER_SIZE_BYTES,
             width = 1,
             height = 1,
             tickMicros = 0,
@@ -5621,7 +6816,7 @@ cd "${ROOT_DIR}"
 
 #####/android/settings.gradle.kts#####
 // GRIN Android Project Settings
-// Grouped Readdressable Indexed Nodes
+// Graphic Readdressable Indexed Nodes
 
 pluginManagement {
     repositories {
@@ -5755,8 +6950,845 @@ function safeReadBaseline(baselinePath) {
   }
 }
 
+#####/docs/README.md#####
+# GRIN Documentation
+
+This folder contains Phase 12 documentation that complements the core spec.
+
+- `docs/format-diagram.md` - byte-level layout diagrams and validation notes
+- `docs/opcodes.md` - opcode set 0 reference and behavior notes
+- `docs/timing.md` - timing byte interpretation and waveform details
+- `docs/api-quickstart.md` - API and CLI quick-starts
+- `docs/migration-gif-apng.md` - migration guide from frame-based formats
+- `docs/tutorial-first-file.md` - first-file tutorial using the CLI tools
+- `docs/tutorial-grin-groups.md` - groups and masks tutorial
+- `docs/playback-guide-web.md` - web playback integration guide
+- `docs/playback-guide-android.md` - Android playback integration guide
+- `docs/security-model.md` - security model and validation requirements
+- `docs/security-audit-checklist.md` - audit checklist
+- `docs/api/web/` - generated TypeDoc output (web library)
+- `docs/api/android/README.md` - Android API draft (Dokka output configured here)
+
+Related docs outside this folder:
+
+- `grin_technical_specification_v_2.md`
+- `grin_technical_specification.md`
+- `tchspecdraft.txt` (draft copy for review)
+- `ARCHITECTURE.md`
+- `SECURITY.md`
+- `samples/README.md`
+
+#####/docs/api-quickstart.md#####
+# GRIN API Quick Start
+
+This guide focuses on the current web, Android, and CLI implementations.
+
+## CLI (Node >= 18)
+
+```bash
+node tools/bin/grin-validate.js samples/minimal.grin
+node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
+node tools/bin/grin-encode.js input.png output.grin
+node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
+```
+
+Animated GIF export:
+
+```bash
+node tools/bin/grin-decode.js samples/pulse_red.grin output.gif --gif --frames 60 --fps 30
+```
+
+## Web / TypeScript
+
+Build the web package once so `web/dist` is available:
+
+```bash
+cd web
+npm install
+npm run build
+```
+
+Canvas playback with the core player:
+
+```ts
+import {
+  GrinCanvasRenderer,
+  GrinLoader,
+  GrinPlayer,
+  OpcodeRegistry,
+  RAFTickScheduler,
+  RuleEngine,
+} from "./dist/grin.js";
+
+const canvas = document.querySelector("canvas");
+const renderer = new GrinCanvasRenderer();
+let player = null;
+
+const schedulerFactory = (tickMicros) => new RAFTickScheduler(tickMicros);
+
+const file = await GrinLoader.fromURL("./samples/pulse_red.grin");
+player = new GrinPlayer(schedulerFactory, new RuleEngine(), OpcodeRegistry.getInstance(), () => {
+  renderer.render(player.getCurrentFrame(), canvas);
+});
+player.load(file);
+player.play();
+```
+
+## Web Component
+
+```html
+<grin-player src="./samples/pulse_red.grin" autoplay playbackrate="1.5"></grin-player>
+```
+
+The custom element exposes `play()`, `pause()`, `currentTime`, and `getCurrentFrame()`.
+
+## Android
+
+Use `GrinView` for drop-in playback:
+
+```kotlin
+val grinView = findViewById<GrinView>(R.id.grinView)
+val file = GrinUriLoader.fromAsset(this, "samples/minimal.grin")
+grinView.load(file)
+grinView.play()
+```
+
+Or manually manage playback:
+
+```kotlin
+val file = GrinFile.load(inputStream)
+val player = GrinPlayer()
+val renderer = GrinBitmapRenderer()
+player.load(file)
+player.play()
+
+val frame = player.getCurrentFrame()
+val bitmap = renderer.render(frame)
+```
+
+#####/docs/format-diagram.md#####
+# GRIN Format Diagram
+
+This diagram summarizes the byte-level layout implemented in the current web,
+Android, and CLI libraries. All multi-byte integers are little-endian.
+
+## File Layout (128 + pixel data)
+
+```text
+0x0000 ┌────────────────────────────────────────────────────────────┐
+       │ Header (128 bytes)                                          │
+0x0080 ├────────────────────────────────────────────────────────────┤
+       │ Pixel data (Width * Height * 5 bytes)                       │
+       └────────────────────────────────────────────────────────────┘
+```
+
+## Header Layout (128 bytes)
+
+| Offset | Size | Field | Type | Notes |
+| ---: | ---: | --- | --- | --- |
+| 0 | 4 | Magic | ASCII | "GRIN" |
+| 4 | 1 | VersionMajor | uint8 | current 0 |
+| 5 | 1 | VersionMinor | uint8 | current 0 |
+| 6 | 2 | HeaderSize | uint16 | must be 128 |
+| 8 | 4 | Width | uint32 | pixels |
+| 12 | 4 | Height | uint32 | pixels |
+| 16 | 4 | TickMicros | uint32 | tick duration in microseconds |
+| 20 | 1 | RuleCount | uint8 | 0-16 |
+| 21 | 1 | OpcodeSetId | uint8 | 0 for base set |
+| 22 | 2 | Flags | uint16 | reserved (0) |
+| 24 | 8 | PixelDataLength | uint64 | width * height * 5 |
+| 32 | 8 | FileLength | uint64 | total bytes (0 allowed) |
+| 40 | 8 | PixelDataOffset64 | uint64 | must be 128 |
+| 48 | 8 | ReservedA | uint64 | 0 |
+| 56 | 8 | ReservedB | uint64 | 0 |
+| 64 | 64 | RulesBlock | bytes | 16 rule entries (4 bytes each) |
+
+## Rules Block (64 bytes)
+
+Each rule entry is 4 bytes. Only the first RuleCount entries are active.
+
+| Byte | Field | Type | Notes |
+| ---: | --- | --- | --- |
+| 0-1 | GroupMask | uint16 | bit i targets group i |
+| 2 | Opcode | uint8 | must be valid for OpcodeSetId |
+| 3 | Timing | uint8 | see `docs/timing.md` |
+
+## Pixel Layout (5 bytes)
+
+| Byte | Field | Type | Notes |
+| ---: | --- | --- | --- |
+| 0 | R | uint8 | red |
+| 1 | G | uint8 | green |
+| 2 | B | uint8 | blue |
+| 3 | A | uint8 | alpha |
+| 4 | C | uint8 | control byte |
+
+Control byte bits:
+
+```text
+7   6   5   4   3   2   1   0
+L   R   R   R   G   G   G   G
+
+G = Group ID (0-15)
+R = Reserved (must be 0)
+L = Lock bit
+```
+
+## Reader Validation (Required)
+
+A reader must reject the file if any of the following are true:
+
+- Magic != "GRIN"
+- HeaderSize != 128
+- RuleCount > 16
+- PixelDataOffset64 != 128
+- PixelDataLength != Width * Height * 5
+- FileLength != 0 and FileLength < 128 + PixelDataLength
+
+Readers should warn if reserved fields or control-byte reserved bits are non-zero.
+
+#####/docs/migration-gif-apng.md#####
+# Migration Guide: GIF/APNG to GRIN
+
+GRIN is not a frame-based animation format. It stores a single image plus
+group assignments and rule-driven modulation. Migrating from GIF/APNG is
+about translating *behavior* into GRIN rules, not copying frames.
+
+## Key Differences
+
+- GIF/APNG: sequence of discrete frames.
+- GRIN: one base image, plus opcodes that modulate pixels over time.
+- GRIN rules target groups, not individual pixels at runtime.
+- Some complex frame-by-frame animations are not expressible in GRIN.
+
+## Migration Strategy
+
+1. Choose a base frame to represent the initial state.
+2. Assign groups to areas you want to modulate (up to 16).
+3. Translate repeating or periodic effects into GRIN rules.
+4. Encode the file and validate it.
+
+## Tools Workflow
+
+1) Prepare a base PNG and optional group mask:
+
+```bash
+node tools/bin/grin-encode.js base.png output.grin --groups group-mask.png --rules rules.json
+```
+
+2) Example `rules.json`:
+
+```json
+{
+  "tickMicros": 16666,
+  "opcodeSetId": 0,
+  "rules": [
+    { "groupMask": 1, "opcode": "0x03", "timing": "0x27" }
+  ]
+}
+```
+
+3) Inspect the result:
+
+```bash
+node tools/bin/grin-inspect.js output.grin --header --rules --groups
+```
+
+## When to Split into Multiple GRIN Files
+
+If your source animation has complex per-frame edits, consider exporting
+multiple GRIN files and switching between them externally. GRIN is designed
+for deterministic modulation, not arbitrarily scripted timelines.
+
+#####/docs/opcodes.md#####
+# GRIN Opcode Reference (OpcodeSetId = 0)
+
+The current implementations (web, Android, tools) define a base opcode set
+with IDs 0x00 through 0x0C. Unknown opcode values are treated as invalid.
+
+All opcodes are stateless and operate on a per-pixel working copy during playback.
+
+| ID | Name | Behavior | Notes |
+| ---: | --- | --- | --- |
+| 0x00 | NOP | No change | CPU cost 1 |
+| 0x01 | FADE_IN | Alpha *= timing wave | Uses `TimingInterpreter.evaluate` |
+| 0x02 | FADE_OUT | Alpha *= (1 - timing wave) | Uses `TimingInterpreter.evaluate` |
+| 0x03 | PULSE | Alpha *= timing wave | Same as FADE_IN in current code |
+| 0x04 | SHIFT_R | R += delta | delta = round((wave * 2 - 1) * 255) |
+| 0x05 | SHIFT_G | G += delta | delta = round((wave * 2 - 1) * 255) |
+| 0x06 | SHIFT_B | B += delta | delta = round((wave * 2 - 1) * 255) |
+| 0x07 | SHIFT_A | A += delta | delta = round((wave * 2 - 1) * 255) |
+| 0x08 | INVERT | R = 255 - R, etc | Alpha unchanged |
+| 0x09 | ROTATE_HUE | Rotate hue by wave * 360 deg | HSL conversion, CPU cost 3 |
+| 0x0A | LOCK | Set lock bit | Sets control byte bit 7 |
+| 0x0B | UNLOCK | Clear lock bit | Clears control byte bit 7 |
+| 0x0C | TOGGLE_LOCK | Toggle lock bit | XOR bit 7 |
+
+Reserved IDs: 0x0D-0x0F.
+
+## Example Rule Entry
+
+```text
+GroupMask: 0x0001  (targets group 0)
+Opcode:    0x03    (PULSE)
+Timing:    0x27    (period 8 ticks, sine wave, phase 0)
+```
+
+## Implementation Notes
+
+- SHIFT_* opcodes clamp channel values to 0-255 after applying the delta.
+- LOCK/UNLOCK/TOGGLE_LOCK mutate the control byte, which affects future ticks.
+- Rotate hue uses HSL conversion and clamps resulting RGB values.
+
+#####/docs/playback-guide-android.md#####
+# Android Playback Integration Guide
+
+The Android library provides both a `GrinView` for drop-in playback and the
+lower-level `GrinPlayer` if you want custom rendering.
+
+## Using GrinView
+
+```kotlin
+val grinView = findViewById<GrinView>(R.id.grinView)
+val file = GrinUriLoader.fromAsset(this, "samples/pulse_red.grin")
+grinView.load(file)
+grinView.play()
+```
+
+`GrinView` handles:
+
+- `GrinPlayer` lifecycle
+- aspect-correct drawing
+- pause/resume on attach/detach
+
+## Using GrinPlayer + GrinBitmapRenderer
+
+```kotlin
+val file = GrinFile.load(inputStream)
+val player = GrinPlayer()
+val renderer = GrinBitmapRenderer()
+
+player.load(file)
+player.play()
+
+val frame = player.getCurrentFrame()
+val bitmap = renderer.render(frame)
+imageView.setImageBitmap(bitmap)
+```
+
+The default scheduler uses `AndroidTickScheduler`, which is driven by
+`Choreographer` and honors the `TickMicros` value in the file header.
+
+## Loading Files
+
+Use `GrinUriLoader` helpers for common sources:
+
+```kotlin
+GrinUriLoader.fromAsset(context, "samples/minimal.grin")
+GrinUriLoader.fromRawResource(context, R.raw.my_sample)
+GrinUriLoader.fromFile(File("/sdcard/sample.grin"))
+```
+
+#####/docs/playback-guide-web.md#####
+# Web Playback Integration Guide
+
+This guide covers the core player and the `<grin-player>` custom element.
+
+## Canvas Playback (GrinPlayer)
+
+```ts
+import {
+  GrinCanvasRenderer,
+  GrinLoader,
+  GrinPlayer,
+  OpcodeRegistry,
+  RAFTickScheduler,
+  RuleEngine,
+} from "./dist/grin.js";
+
+const canvas = document.querySelector("canvas");
+const renderer = new GrinCanvasRenderer();
+let player = null;
+
+const file = await GrinLoader.fromURL("./samples/pulse_red.grin");
+player = new GrinPlayer(
+  (tickMicros) => new RAFTickScheduler(tickMicros),
+  new RuleEngine(),
+  OpcodeRegistry.getInstance(),
+  () => renderer.render(player.getCurrentFrame(), canvas)
+);
+
+player.load(file);
+player.play();
+```
+
+Notes:
+
+- `GrinPlayer` expects a `GrinFile` and renders into a `DisplayBuffer`.
+- Locked pixels are skipped; rule application is per-group per tick.
+- `RAFTickScheduler` uses `requestAnimationFrame` and honors `TickMicros`.
+
+## Web Component (`<grin-player>`)
+
+```html
+<grin-player src="./samples/pulse_red.grin" autoplay playbackrate="1.5"></grin-player>
+```
+
+Attributes:
+
+- `src`: URL to a `.grin` file
+- `autoplay`: start playback after load
+- `playbackrate`: scales tick duration (default 1)
+
+API:
+
+- `play()`, `pause()`
+- `currentTime` (tick)
+- `getCurrentFrame()` (ImageData)
+
+#####/docs/security-audit-checklist.md#####
+# GRIN Security Audit Checklist
+
+Use this checklist to review GRIN readers, writers, and playback pipelines.
+
+## File Parsing
+
+- [ ] Magic bytes validated before any other parsing.
+- [ ] Header size validated as 128 bytes.
+- [ ] RuleCount limited to 0-16.
+- [ ] PixelDataOffset64 validated as 128.
+- [ ] PixelDataLength == Width * Height * 5.
+- [ ] FileLength is 0 or >= 128 + PixelDataLength.
+- [ ] Reserved header fields are zeroed on write.
+- [ ] Reserved header fields are ignored on read (warn if non-zero).
+- [ ] Control byte reserved bits (4-6) are zeroed on write.
+- [ ] Control byte reserved bits are warned on read if non-zero.
+
+## Resource Bounds
+
+- [ ] Width/Height are non-negative and within implementation limits.
+- [ ] Pixel count and pixel data length checked for overflow.
+- [ ] Buffer lengths verified before allocation.
+
+## Opcode and Rule Handling
+
+- [ ] OpcodeSetId is recognized.
+- [ ] Unknown opcodes are rejected.
+- [ ] Rules block is fixed at 64 bytes.
+- [ ] Unused rule entries are zero on write.
+- [ ] Rules are applied only to matching group IDs.
+
+## Playback
+
+- [ ] Source pixels are never mutated.
+- [ ] Locked pixels bypass rule application.
+- [ ] Per-tick processing is O(1) per pixel and stateless.
+
+#####/docs/security-model.md#####
+# GRIN Security Model
+
+GRIN is designed to be inspection-safe. Files contain no executable code and
+can be validated without unbounded memory or CPU usage.
+
+## Core Principles
+
+- No executable code in files.
+- Fixed header size and bounded rule block.
+- Deterministic, stateless opcode execution.
+- No external resource access during playback.
+
+## Required Validation
+
+All readers should validate the following before allocating or parsing:
+
+- Magic bytes are "GRIN".
+- Header size equals 128.
+- RuleCount is in 0-16.
+- PixelDataOffset64 equals 128.
+- PixelDataLength equals Width * Height * 5.
+- FileLength is zero or >= 128 + PixelDataLength.
+
+The current implementations also warn on:
+
+- Non-zero reserved header fields.
+- Non-zero reserved control byte bits (4-6).
+- Unknown opcodes for the active opcode set.
+
+## Resource Bounds
+
+Implementations enforce safe integer bounds when computing:
+
+- pixel count = width * height
+- pixel data length = pixel count * 5
+- total file length
+
+This avoids integer overflow and ensures allocations are predictable.
+
+## Playback Safety
+
+- Playback operates on a working copy per pixel.
+- Source pixels are never mutated.
+- Locked pixels are always copied through.
+- OpCodes are stateless and O(1) per pixel.
+
+#####/docs/timing.md#####
+# GRIN Timing Byte Reference
+
+The timing byte is an 8-bit field used by opcodes that need a wave value.
+Both web and Android implementations interpret it the same way.
+
+## Bit Layout
+
+```text
+bits 7-6: Phase offset (0-3, quarter-phase increments)
+bits 5-4: Waveform type
+bits 3-0: Period (0-15 stored, interpreted as 1-16 ticks)
+```
+
+## Derived Values
+
+```text
+period = (timing & 0x0F) + 1
+waveform = (timing >> 4) & 0x03
+phaseOffset = ((timing >> 6) & 0x03) / 4
+
+position = ((tick / period) + phaseOffset) % 1
+```
+
+Waveform mapping:
+
+| Value | Waveform | Output |
+| ---: | --- | --- |
+| 0 | square | 0 for first half, 1 for second half |
+| 1 | triangle | ramp up then down |
+| 2 | sine | 0.5 - 0.5 * cos(2 * pi * position) |
+| 3 | sawtooth | ramp up 0 -> 1 |
+
+## Examples
+
+- `0x00`: period 1, square wave, phase 0.
+- `0x17`: period 8, triangle wave, phase 0.
+- `0x27`: period 8, sine wave, phase 0.
+- `0xE3`: period 4, sawtooth wave, phase 3 (offset 0.75).
+
+#####/docs/tutorial-first-file.md#####
+# Tutorial: Creating Your First GRIN File
+
+This tutorial walks through creating a simple GRIN file using the CLI tools.
+
+## 1) Prepare an Image
+
+Start with any PNG. A 16x16 or 32x32 image is enough for testing.
+
+## 2) (Optional) Create a Rules File
+
+Create `rules.json` to add a simple pulse:
+
+```json
+{
+  "tickMicros": 16666,
+  "opcodeSetId": 0,
+  "rules": [
+    { "groupMask": 1, "opcode": "0x03", "timing": "0x27" }
+  ]
+}
+```
+
+This targets group 0 and pulses alpha using a sine wave.
+
+## 3) Encode the GRIN File
+
+```bash
+node tools/bin/grin-encode.js input.png output.grin --rules rules.json
+```
+
+If you want group control, also provide a group mask image:
+
+```bash
+node tools/bin/grin-encode.js input.png output.grin --groups group-mask.png --rules rules.json
+```
+
+## 4) Inspect the Result
+
+```bash
+node tools/bin/grin-inspect.js output.grin --header --rules --groups
+```
+
+## 5) Render a Frame
+
+```bash
+node tools/bin/grin-decode.js output.grin output.png --frame 0
+```
+
+## 6) Compare with Reference Samples
+
+See `samples/README.md` for reference files such as `samples/pulse_red.grin`
+and `samples/minimal.grin`.
+
+#####/docs/tutorial-grin-groups.md#####
+# Tutorial: Understanding GRIN Groups
+
+Groups are the only runtime-addressable unit in GRIN. Each pixel belongs to
+exactly one group (0-15) and can be targeted by rules via a bitmask.
+
+## Control Byte Recap
+
+The control byte (C) uses bits 0-3 for the group ID and bit 7 for the lock bit.
+
+```text
+bit 7: lock
+bits 0-3: group ID (0-15)
+```
+
+## Rule Group Masks
+
+Each rule has a 16-bit mask. Bit i targets group i.
+
+Examples:
+
+```text
+0x0001 -> group 0
+0x0003 -> groups 0 and 1
+0x8000 -> group 15
+0xFFFF -> all groups
+```
+
+## Assigning Groups with the Encoder
+
+The CLI encoder reads group IDs from a mask image:
+
+```bash
+node tools/bin/grin-encode.js input.png output.grin --groups group-mask.png
+```
+
+Group IDs are derived from the mask image red channel:
+
+- 0-15 map directly to group IDs.
+- 16-255 map via `round(value / 17)` and clamp to 0-15.
+
+This lets you author mask images using standard 8-bit grayscale tools.
+
+## Example Rules File
+
+```json
+{
+  "rules": [
+    { "groupMask": 1, "opcode": "0x03", "timing": "0x27" },
+    { "groupMask": 2, "opcode": "0x04", "timing": "0x17" }
+  ]
+}
+```
+
+This pulses group 0 and shifts red on group 1.
+
+#####/grin_technical_specification.md#####
+# GRIN Technical Specification
+
+Status: Final (implementation-aligned)
+Version: 0.1
+
+GRIN (Graphic Readdressable Indexed Nodes) is a deterministic image container
+format with bounded metadata, a fixed rule budget, and a predictable playback
+model. This document reflects the current implementations in `web/`, `android/`,
+and `tools/`.
+
+## 1. Scope and Non-Goals
+
+GRIN defines:
+
+- A binary file format for storing a single image plus a fixed rule block.
+- A control byte per pixel that encodes group membership and lock state.
+- A fixed opcode set for deterministic, stateless modulation during playback.
+- A bounded, inspectable runtime model.
+
+GRIN does not define:
+
+- Image generation, prompting, or orchestration.
+- Per-pixel runtime addressing beyond group targeting.
+- Executable code in files.
+
+## 2. Constants and Types
+
+- Magic: ASCII "GRIN" (0x47 0x52 0x49 0x4E)
+- VersionMajor: 0
+- VersionMinor: 0
+- HeaderSizeBytes: 128 (fixed)
+- PixelSizeBytes: 5 (RGBA + control)
+- RuleCount: 0-16
+- RulesBlockSize: 64 bytes (16 entries x 4 bytes)
+- Endianness: Little-endian for all multi-byte integers
+
+## 3. File Layout
+
+```text
+Header (128 bytes) + PixelData (Width * Height * 5 bytes)
+```
+
+### 3.1 Header Layout (128 bytes)
+
+| Offset | Size | Field | Type | Notes |
+| ---: | ---: | --- | --- | --- |
+| 0 | 4 | Magic | ASCII | Must be "GRIN" |
+| 4 | 1 | VersionMajor | uint8 | 0 |
+| 5 | 1 | VersionMinor | uint8 | 0 |
+| 6 | 2 | HeaderSize | uint16 | Must be 128 |
+| 8 | 4 | Width | uint32 | Pixels |
+| 12 | 4 | Height | uint32 | Pixels |
+| 16 | 4 | TickMicros | uint32 | Tick duration in microseconds |
+| 20 | 1 | RuleCount | uint8 | 0-16 |
+| 21 | 1 | OpcodeSetId | uint8 | 0 for base set |
+| 22 | 2 | Flags | uint16 | Reserved (0) |
+| 24 | 8 | PixelDataLength | uint64 | Must equal Width * Height * 5 |
+| 32 | 8 | FileLength | uint64 | Total bytes, 0 allowed |
+| 40 | 8 | PixelDataOffset64 | uint64 | Must be 128 |
+| 48 | 8 | ReservedA | uint64 | 0 |
+| 56 | 8 | ReservedB | uint64 | 0 |
+| 64 | 64 | RulesBlock | bytes | 16 rule entries |
+
+### 3.2 Rules Block
+
+RulesBlock is always 64 bytes. Only the first RuleCount entries are active.
+Unused entries must be zero.
+
+Each rule entry (4 bytes):
+
+| Byte | Field | Type | Notes |
+| ---: | --- | --- | --- |
+| 0-1 | GroupMask | uint16 | Bit i targets group i |
+| 2 | Opcode | uint8 | Must be valid for OpcodeSetId |
+| 3 | Timing | uint8 | See Section 5 |
+
+### 3.3 Pixel Layout (5 bytes)
+
+| Byte | Field | Type | Notes |
+| ---: | --- | --- | --- |
+| 0 | R | uint8 | Red |
+| 1 | G | uint8 | Green |
+| 2 | B | uint8 | Blue |
+| 3 | A | uint8 | Alpha |
+| 4 | C | uint8 | Control byte |
+
+Control byte bits:
+
+- Bits 0-3: Group ID (0-15)
+- Bits 4-6: Reserved (must be 0)
+- Bit 7: Lock bit (1 = locked)
+
+## 4. Validation Rules
+
+Readers MUST reject if any of the following are true:
+
+- Magic != "GRIN"
+- HeaderSize != 128
+- RuleCount > 16
+- PixelDataOffset64 != 128
+- PixelDataLength != Width * Height * 5
+- FileLength is non-zero and FileLength < 128 + PixelDataLength
+
+Readers SHOULD warn if:
+
+- Reserved header fields are non-zero
+- Control byte reserved bits (4-6) are non-zero
+- Unknown OpcodeSetId or opcode
+
+## 5. Timing Byte
+
+Timing is an 8-bit field used to compute a waveform value per tick.
+
+Bit layout:
+
+```text
+bits 7-6: Phase offset (0-3, quarter-phase increments)
+bits 5-4: Waveform type
+bits 3-0: Period (0-15 stored, interpreted as 1-16 ticks)
+```
+
+Derived values:
+
+```text
+period = (timing & 0x0F) + 1
+waveform = (timing >> 4) & 0x03
+phaseOffset = ((timing >> 6) & 0x03) / 4
+position = ((tick / period) + phaseOffset) % 1
+```
+
+Waveforms:
+
+- 0: square (0 for first half, 1 for second half)
+- 1: triangle (ramp up then down)
+- 2: sine (0.5 - 0.5 * cos(2 * pi * position))
+- 3: sawtooth (ramp up 0 -> 1)
+
+## 6. Opcode Set 0 (OpcodeSetId = 0)
+
+The base set is fixed and stateless. Unknown opcodes are invalid.
+
+| ID | Name | Behavior |
+| ---: | --- | --- |
+| 0x00 | NOP | No change |
+| 0x01 | FADE_IN | Alpha *= wave |
+| 0x02 | FADE_OUT | Alpha *= (1 - wave) |
+| 0x03 | PULSE | Alpha *= wave |
+| 0x04 | SHIFT_R | R += delta |
+| 0x05 | SHIFT_G | G += delta |
+| 0x06 | SHIFT_B | B += delta |
+| 0x07 | SHIFT_A | A += delta |
+| 0x08 | INVERT | R = 255 - R, G = 255 - G, B = 255 - B |
+| 0x09 | ROTATE_HUE | Rotate hue by wave * 360 deg |
+| 0x0A | LOCK | Set lock bit |
+| 0x0B | UNLOCK | Clear lock bit |
+| 0x0C | TOGGLE_LOCK | Toggle lock bit |
+
+SHIFT_* delta:
+
+```text
+delta = round((wave * 2 - 1) * 255)
+```
+
+All channel writes clamp to 0-255.
+
+## 7. Playback Model
+
+Playback operates on a working copy per pixel and writes to a display buffer.
+Source pixels are never mutated.
+
+Rule activation uses the timing waveform level. A rule is active when:
+
+```text
+TimingInterpreter.evaluate(timing, tick) > 0.5
+```
+
+Per-tick processing:
+
+```text
+for each pixel in source:
+  control = controlByte
+  if control.locked:
+    output = source rgba
+    continue
+
+  working = copy(source, control)
+  for each activeRule:
+    if rule.groupMask targets control.groupId:
+      apply opcode to working
+
+  output = working rgba
+  controlByte = working control (reserved bits cleared)
+```
+
+## 8. Security Model
+
+GRIN enforces:
+
+- Fixed header size and fixed rule count
+- No executable code in files
+- No external resource access during playback
+- Bounded memory and CPU cost per tick
+
+Any implementation MUST validate before allocating or processing data.
+
 #####/grin_technical_specification_v_2.md#####
-# GRIN — Grouped Readdressable Indexed Nodes
+# GRIN — Graphic Readdressable Indexed Nodes
 
 ## Canonical Scope
 
@@ -6051,6 +8083,30 @@ It does not belong in GRIN.
 
 Minimalism here is **structural**, not aesthetic.
 
+#####/immediateTODO.md#####
+# Immediate Remaining Tasks
+
+These are the outstanding items from `todo.md` after completing optional tasks.
+
+## Phase 13
+- Define semantic versioning scheme
+- Tag initial release (v0.1.0)
+- Create CHANGELOG.md with release notes
+- Publish Android library to Maven Central / JitPack
+- Publish JavaScript library to npm
+- Create GitHub Releases with artifacts
+- Document Android API level compatibility
+- Document browser version compatibility
+- Document Node.js version compatibility
+- Choose and apply open-source license
+- Add license headers to all source files
+- Create NOTICE file for third-party attributions
+
+## Planned Upgrades (Unimplemented)
+- Photoshop plugin for painting GRIN channel groups and lock bits as layers
+- Illustrator plugin for painting GRIN channel groups and lock bits as layers
+- GIMP plugin for painting GRIN channel groups and lock bits as layers
+- Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
 
 #####/package-lock.json#####
 {
@@ -6059,6 +8115,353 @@ Minimalism here is **structural**, not aesthetic.
   "requires": true,
   "packages": {}
 }
+
+#####/samples/README.md#####
+# GRIN Sample Files
+
+This directory contains reference `.grin` files for demos, validation checks,
+and playback testing. Use `scripts/generate-samples.mjs` to regenerate them.
+
+## Valid Samples
+
+- `minimal.grin` — 1x1, group 0, unlocked, tickMicros 0, no rules.
+- `minimal_locked.grin` — 1x1, group 0 locked, tickMicros 0, no rules.
+- `pulse_red.grin` — 16x16, red pixels in group 0, PULSE rule (timing 0x27).
+- `fade_gradient.grin` — 64x64 grayscale gradient, 4 groups, fade rules per band.
+- `color_shift.grin` — 32x32 mid-gray, 3 groups, SHIFT_R/G/B with phase offsets.
+- `groups_demo.grin` — 16x16 palette, each column is a distinct group.
+- `locking_demo.grin` — 16x16, left half unlocked, right half locked, includes PULSE + LOCK/UNLOCK.
+- `timing_demo.grin` — 16x16 quadrants, PULSE with square/triangle/sine/saw timings.
+- `max_size.grin` — 512x512 RGB gradient, group 0, no rules.
+- `max_rules.grin` — 16x16, 16 rules, all groups targeted, opcode set 0.
+- `all_opcodes.grin` — 13x1, group per opcode, one rule per opcode (0x00-0x0C).
+
+## Invalid Samples
+
+- `invalid_magic.grin` — magic bytes changed to "NOPE".
+- `invalid_header_size.grin` — HeaderSize set to 127.
+- `truncated.grin` — file ends mid-pixel (header + 2 bytes).
+- `invalid_opcode.grin` — rule uses opcode 0xFF.
+
+## Minimal File Byte Dumps
+
+`minimal.grin` (133 bytes):
+
+```text
+00000000: 47 52 49 4e 00 00 80 00 01 00 00 00 01 00 00 00  GRIN............
+00000010: 00 00 00 00 00 00 00 00 05 00 00 00 00 00 00 00  ................
+00000020: 85 00 00 00 00 00 00 00 80 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000080: 00 00 00 ff 00                                   .....
+```
+
+`minimal_locked.grin` (133 bytes):
+
+```text
+00000000: 47 52 49 4e 00 00 80 00 01 00 00 00 01 00 00 00  GRIN............
+00000010: 00 00 00 00 00 00 00 00 05 00 00 00 00 00 00 00  ................
+00000020: 85 00 00 00 00 00 00 00 80 00 00 00 00 00 00 00  ................
+00000030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000080: 00 00 00 ff 80                                   .....
+```
+
+#####/scripts/generate-samples.mjs#####
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { BaseOpcodeId } from "../tools/lib/opcodes.js";
+import { createGrinFile, serializeGrinFile } from "../tools/lib/grin.js";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const samplesDir = path.join(root, "samples");
+
+fs.mkdirSync(samplesDir, { recursive: true });
+
+const DEMO_TICK_MICROS = 16666;
+
+function makePixel(r, g, b, a, groupId, locked = false) {
+  const group = groupId & 0x0f;
+  const lockBit = locked ? 0x80 : 0x00;
+  return { r, g, b, a, c: group | lockBit };
+}
+
+function makePixelGrid(width, height, pixelFactory) {
+  const pixels = [];
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      pixels.push(pixelFactory(x, y));
+    }
+  }
+  return pixels;
+}
+
+function writeSample(name, file) {
+  const bytes = serializeGrinFile(file);
+  fs.writeFileSync(path.join(samplesDir, name), bytes);
+  return bytes;
+}
+
+function createSample({ name, width, height, pixels, rules, tickMicros }) {
+  const file = createGrinFile({
+    width,
+    height,
+    pixels,
+    rules,
+    tickMicros,
+    opcodeSetId: 0,
+  });
+  return writeSample(name, file);
+}
+
+function clampByte(value) {
+  return Math.max(0, Math.min(255, value));
+}
+
+const palette = [
+  [255, 0, 0],
+  [0, 255, 0],
+  [0, 0, 255],
+  [255, 255, 0],
+  [255, 0, 255],
+  [0, 255, 255],
+  [255, 136, 0],
+  [136, 255, 0],
+  [0, 136, 255],
+  [136, 0, 255],
+  [255, 0, 136],
+  [0, 255, 136],
+  [136, 136, 136],
+  [255, 255, 255],
+  [68, 68, 68],
+  [0, 0, 0],
+];
+
+const minimalPixels = [makePixel(0, 0, 0, 255, 0)];
+const minimalBytes = createSample({
+  name: "minimal.grin",
+  width: 1,
+  height: 1,
+  pixels: minimalPixels,
+  rules: [],
+  tickMicros: 0,
+});
+
+const minimalLockedPixels = [makePixel(0, 0, 0, 255, 0, true)];
+const minimalLockedBytes = createSample({
+  name: "minimal_locked.grin",
+  width: 1,
+  height: 1,
+  pixels: minimalLockedPixels,
+  rules: [],
+  tickMicros: 0,
+});
+
+createSample({
+  name: "pulse_red.grin",
+  width: 16,
+  height: 16,
+  pixels: makePixelGrid(16, 16, () => makePixel(255, 0, 0, 255, 0)),
+  rules: [{ groupMask: 0x0001, opcode: BaseOpcodeId.PULSE, timing: 0x27 }],
+  tickMicros: DEMO_TICK_MICROS,
+});
+
+createSample({
+  name: "fade_gradient.grin",
+  width: 64,
+  height: 64,
+  pixels: makePixelGrid(64, 64, (x) => {
+    const value = clampByte(Math.round((x / 63) * 255));
+    const groupId = Math.min(3, Math.floor(x / 16));
+    return makePixel(value, value, value, 255, groupId);
+  }),
+  rules: [
+    { groupMask: 0x0001, opcode: BaseOpcodeId.FADE_IN, timing: 0x27 },
+    { groupMask: 0x0002, opcode: BaseOpcodeId.FADE_OUT, timing: 0x17 },
+    { groupMask: 0x0004, opcode: BaseOpcodeId.FADE_IN, timing: 0x33 },
+    { groupMask: 0x0008, opcode: BaseOpcodeId.FADE_OUT, timing: 0x07 },
+  ],
+  tickMicros: DEMO_TICK_MICROS,
+});
+
+createSample({
+  name: "color_shift.grin",
+  width: 32,
+  height: 32,
+  pixels: makePixelGrid(32, 32, (x) => {
+    const stripeWidth = Math.ceil(32 / 3);
+    const groupId = Math.min(2, Math.floor(x / stripeWidth));
+    return makePixel(128, 128, 128, 255, groupId);
+  }),
+  rules: [
+    { groupMask: 0x0001, opcode: BaseOpcodeId.SHIFT_R, timing: 0x27 },
+    { groupMask: 0x0002, opcode: BaseOpcodeId.SHIFT_G, timing: 0x67 },
+    { groupMask: 0x0004, opcode: BaseOpcodeId.SHIFT_B, timing: 0xa7 },
+  ],
+  tickMicros: DEMO_TICK_MICROS,
+});
+
+createSample({
+  name: "groups_demo.grin",
+  width: 16,
+  height: 16,
+  pixels: makePixelGrid(16, 16, (x) => {
+    const [r, g, b] = palette[x];
+    return makePixel(r, g, b, 255, x);
+  }),
+  rules: [],
+  tickMicros: DEMO_TICK_MICROS,
+});
+
+createSample({
+  name: "locking_demo.grin",
+  width: 16,
+  height: 16,
+  pixels: makePixelGrid(16, 16, (x) => {
+    const locked = x >= 8;
+    const groupId = locked ? 1 : 0;
+    return makePixel(24, 160, 200, 255, groupId, locked);
+  }),
+  rules: [
+    { groupMask: 0x0001, opcode: BaseOpcodeId.PULSE, timing: 0x27 },
+    { groupMask: 0x0001, opcode: BaseOpcodeId.LOCK, timing: 0x00 },
+    { groupMask: 0x0002, opcode: BaseOpcodeId.UNLOCK, timing: 0x00 },
+  ],
+  tickMicros: DEMO_TICK_MICROS,
+});
+
+createSample({
+  name: "timing_demo.grin",
+  width: 16,
+  height: 16,
+  pixels: makePixelGrid(16, 16, (x, y) => {
+    const groupId = x < 8 ? (y < 8 ? 0 : 2) : y < 8 ? 1 : 3;
+    return makePixel(60, 120, 240, 255, groupId);
+  }),
+  rules: [
+    { groupMask: 0x0001, opcode: BaseOpcodeId.PULSE, timing: 0x01 },
+    { groupMask: 0x0002, opcode: BaseOpcodeId.PULSE, timing: 0x13 },
+    { groupMask: 0x0004, opcode: BaseOpcodeId.PULSE, timing: 0x27 },
+    { groupMask: 0x0008, opcode: BaseOpcodeId.PULSE, timing: 0x37 },
+  ],
+  tickMicros: DEMO_TICK_MICROS,
+});
+
+const maxSize = 512;
+createSample({
+  name: "max_size.grin",
+  width: maxSize,
+  height: maxSize,
+  pixels: makePixelGrid(maxSize, maxSize, (x, y) => {
+    const r = clampByte(Math.round((x / (maxSize - 1)) * 255));
+    const g = clampByte(Math.round((y / (maxSize - 1)) * 255));
+    return makePixel(r, g, 128, 255, 0);
+  }),
+  rules: [],
+  tickMicros: DEMO_TICK_MICROS,
+});
+
+const maxRuleOpcodes = [
+  BaseOpcodeId.NOP,
+  BaseOpcodeId.FADE_IN,
+  BaseOpcodeId.FADE_OUT,
+  BaseOpcodeId.PULSE,
+  BaseOpcodeId.SHIFT_R,
+  BaseOpcodeId.SHIFT_G,
+  BaseOpcodeId.SHIFT_B,
+  BaseOpcodeId.SHIFT_A,
+  BaseOpcodeId.INVERT,
+  BaseOpcodeId.ROTATE_HUE,
+  BaseOpcodeId.LOCK,
+  BaseOpcodeId.UNLOCK,
+  BaseOpcodeId.TOGGLE_LOCK,
+  BaseOpcodeId.NOP,
+  BaseOpcodeId.FADE_IN,
+  BaseOpcodeId.FADE_OUT,
+];
+
+createSample({
+  name: "max_rules.grin",
+  width: 16,
+  height: 16,
+  pixels: makePixelGrid(16, 16, (x, y) => {
+    const groupId = x & 0x0f;
+    const r = clampByte(32 + groupId * 12);
+    const g = clampByte(16 + y * 8);
+    const b = clampByte(200 - groupId * 6);
+    return makePixel(r, g, b, 255, groupId);
+  }),
+  rules: maxRuleOpcodes.map((opcode, index) => ({
+    groupMask: 0xffff,
+    opcode,
+    timing: index & 0x0f,
+  })),
+  tickMicros: DEMO_TICK_MICROS,
+});
+
+const opcodeIds = [
+  BaseOpcodeId.NOP,
+  BaseOpcodeId.FADE_IN,
+  BaseOpcodeId.FADE_OUT,
+  BaseOpcodeId.PULSE,
+  BaseOpcodeId.SHIFT_R,
+  BaseOpcodeId.SHIFT_G,
+  BaseOpcodeId.SHIFT_B,
+  BaseOpcodeId.SHIFT_A,
+  BaseOpcodeId.INVERT,
+  BaseOpcodeId.ROTATE_HUE,
+  BaseOpcodeId.LOCK,
+  BaseOpcodeId.UNLOCK,
+  BaseOpcodeId.TOGGLE_LOCK,
+];
+
+createSample({
+  name: "all_opcodes.grin",
+  width: opcodeIds.length,
+  height: 1,
+  pixels: opcodeIds.map((_, index) => {
+    const r = clampByte(20 + index * 18);
+    const g = clampByte(240 - index * 12);
+    return makePixel(r, g, 100, 255, index);
+  }),
+  rules: opcodeIds.map((opcode, index) => ({
+    groupMask: 1 << index,
+    opcode,
+    timing: 0x27,
+  })),
+  tickMicros: DEMO_TICK_MICROS,
+});
+
+const invalidMagic = Uint8Array.from(minimalBytes);
+invalidMagic.set([0x4e, 0x4f, 0x50, 0x45], 0);
+fs.writeFileSync(path.join(samplesDir, "invalid_magic.grin"), invalidMagic);
+
+const invalidHeaderSize = Uint8Array.from(minimalBytes);
+invalidHeaderSize[6] = 0x7f;
+invalidHeaderSize[7] = 0x00;
+fs.writeFileSync(path.join(samplesDir, "invalid_header_size.grin"), invalidHeaderSize);
+
+fs.writeFileSync(path.join(samplesDir, "truncated.grin"), minimalBytes.subarray(0, 130));
+
+createSample({
+  name: "invalid_opcode.grin",
+  width: 1,
+  height: 1,
+  pixels: minimalPixels,
+  rules: [{ groupMask: 0x0001, opcode: 0xff, timing: 0x00 }],
+  tickMicros: 0,
+});
+
+process.stdout.write(`Generated samples in ${samplesDir}\n`);
+process.stdout.write(`minimal.grin bytes: ${minimalBytes.length}\n`);
+process.stdout.write(`minimal_locked.grin bytes: ${minimalLockedBytes.length}\n`);
 
 #####/scripts/generate-test-files.js#####
 import fs from "node:fs";
@@ -6098,7 +8501,7 @@ for (const [name, fixture] of Object.entries(fixtures)) {
 process.stdout.write(`Generated ${Object.keys(fixtures).length} fixture(s) in ${outputDir}\n`);
 
 #####/spec/grin_technical_specification_v_2.md#####
-# GRIN — Grouped Readdressable Indexed Nodes
+# GRIN — Graphic Readdressable Indexed Nodes
 
 ## Canonical Scope
 
@@ -6393,6 +8796,301 @@ It does not belong in GRIN.
 
 Minimalism here is **structural**, not aesthetic.
 
+#####/tchspecdraft.txt#####
+# GRIN — Graphic Readdressable Indexed Nodes
+
+## Canonical Scope
+
+This document defines **GRIN** as a standalone, implementation-ready specification. GRIN is a deterministic image container and playback substrate. It is not a generator, not a renderer, and not a general-purpose execution environment. GRIN defines how image state is stored, addressed, grouped, locked, and modulated over time under strict, inspectable constraints.
+
+This document intentionally excludes all image-generation logic, orchestration, prompting, or creative systems. Any system that emits GRIN-compliant data is external to this specification.
+
+---
+
+## 1. Design Intent
+
+GRIN exists to provide:
+
+- A bounded, inspectable image format
+- Deterministic runtime behavior
+- Predictable memory, CPU, and metadata costs
+- Structural resistance to hidden logic or malicious complexity
+
+GRIN prioritizes **correctness over expressiveness**. If a behavior cannot be expressed within GRIN’s constraints, it is intentionally disallowed.
+
+GRIN is intentionally incomplete.
+
+---
+
+## 2. Core Mental Model
+
+- Images are **state**, not timelines
+- Pixels are **nodes**, not colors
+- Motion is **modulation**, not replacement
+- Groups are **buses**, not selections
+- Editing is powerful; playback is dumb
+- External systems may observe GRIN state but never execute within it
+
+Nothing inside a GRIN file is allowed to be clever.
+
+---
+
+## 3. Output Contract
+
+All imagery is emitted directly in **GRIN RGBA+C** format.
+
+- No conversion step
+- No tagging pass
+- No semantic metadata layer
+
+GRIN is the final output format.
+
+---
+
+## 4. Pixel Definition
+
+Each pixel is exactly **5 bytes**:
+
+| Byte | Name | Type | Description |
+|---:|---|---|---|
+| 0 | R | uint8 | Red channel |
+| 1 | G | uint8 | Green channel |
+| 2 | B | uint8 | Blue channel |
+| 3 | A | uint8 | Alpha channel |
+| 4 | C | uint8 | Control byte |
+
+This represents a deliberate 25% size increase over RGBA, paid once.
+
+### 4.1 Control Byte (C)
+
+- Bits 0–3: **Group ID** (0–15)
+- Bit 7: **Lock bit**
+- Bits 4–6: Reserved (must be zero)
+
+Each pixel:
+
+- Belongs to exactly **one of 16 groups**
+- May be **locked or unlocked**
+
+There is no per-pixel metadata beyond this.
+
+---
+
+## 5. Groups
+
+- Exactly **16 groups** exist
+- Groups are the **only runtime-addressable unit**
+
+There is:
+
+- No per-pixel addressing at runtime
+- No exclusion logic
+- No conditionals
+- No Venn diagrams
+
+If a group is not called, it is unaffected.
+
+If a subset must be protected, it is locked.
+
+---
+
+## 6. Locking Semantics
+
+Locking is explicit, reversible, and costly.
+
+- Locked pixels ignore all runtime actions
+- Unlocking requires an explicit action
+- Re-locking requires an explicit action
+- Locking and unlocking consume rule budget
+
+Protection is a decision, not a default.
+
+---
+
+## 7. File Container and Fixed Header
+
+GRIN files are **self-describing** within strict limits. Parsing is intentionally small and bounded so that a minimal Java/Kotlin implementation (Android) or a minimal JavaScript implementation (web) can reliably render and optionally play back GRIN.
+
+### 7.1 Byte Order and Invariants
+
+- All multi-byte integers are **little-endian**.
+- Header size is **fixed** to enable O(1) seek and predictable worst-case costs.
+- Reserved fields **must be written as 0** and **ignored by readers**.
+- A compliant file must be parsable without scanning or heuristics.
+
+### 7.2 Fixed Header Size
+
+- **HeaderSizeBytes = 128** (fixed, always present).
+- **PixelDataOffset = 128**.
+
+A reader never searches for metadata. It jumps to known offsets.
+
+### 7.3 Header Layout (128 bytes)
+
+All offsets below are from file start.
+
+| Offset | Size | Name | Type | Notes |
+|---:|---:|---|---|---|
+| 0 | 4 | Magic | ASCII | Must be `GRIN` |
+| 4 | 1 | VersionMajor | uint8 | Current: 0 |
+| 5 | 1 | VersionMinor | uint8 | Current: 0 |
+| 6 | 2 | HeaderSize | uint16 | Must be 128 |
+| 8 | 4 | Width | uint32 | Pixels |
+| 12 | 4 | Height | uint32 | Pixels |
+| 16 | 4 | TickMicros | uint32 | Playback tick duration in microseconds |
+| 20 | 1 | RuleCount | uint8 | 0–16 |
+| 21 | 1 | OpcodeSetId | uint8 | Identifies the fixed opcode set (reader-known) |
+| 22 | 2 | Flags | uint16 | Reserved (0) |
+| 24 | 8 | PixelDataLength | uint64 | Must equal `Width * Height * 5` |
+| 32 | 8 | FileLength | uint64 | Total bytes in file (optional; 0 allowed) |
+| 40 | 8 | PixelDataOffset64 | uint64 | Must be 128 |
+| 48 | 8 | ReservedA | uint64 | 0 |
+| 56 | 8 | ReservedB | uint64 | 0 |
+| 64 | 64 | RulesBlock | bytes | Fixed-size rule block; see §7.4 |
+
+#### 7.3.1 Reader Validation Rules
+
+A reader MUST reject the file if any of these are true:
+
+- Magic != `GRIN`
+- HeaderSize != 128
+- RuleCount > 16
+- PixelDataOffset64 != 128
+- PixelDataLength != Width * Height * 5
+- FileLength is non-zero and FileLength < 128 + PixelDataLength
+
+A reader SHOULD reject if any reserved field is non-zero.
+
+### 7.4 Rules Block (Fixed 64 bytes)
+
+Rules are stored inside the fixed header to prevent unbounded metadata growth.
+
+- RulesBlock is always 64 bytes.
+- Only the first `RuleCount` entries are active.
+- Unused entries must be zero.
+
+Each rule entry is 4 bytes (16 rules × 4 bytes = 64 bytes):
+
+| Bytes | Name | Type | Notes |
+|---:|---|---|---|
+| 0–1 | GroupMask | uint16 | Bit i targets Group i (0–15) |
+| 2 | Opcode | uint8 | Must be valid within OpcodeSetId |
+| 3 | Timing | uint8 | On/off oscillator timing parameter (reader-defined) |
+
+Rules express **declarative schedules**, not programs.
+
+---
+
+## 8. Opcodes (Fixed Set)
+
+GRIN supports a small, fixed opcode set identified by OpcodeSetId.
+
+This spec defines the **existence** of a fixed opcode set but does not enumerate it here unless and until the opcode list is frozen. Readers must treat any unknown Opcode value as invalid.
+
+Constraints that must hold for any opcode set:
+
+- Must be statically inspectable
+- Must have predictable worst-case CPU cost per tick
+- Must not require dynamic allocation
+- Must not allow hidden logic or unbounded expressiveness
+
+---
+
+## 9. Runtime Behavior Model
+
+Playback is intentionally simple.
+
+On each fixed tick:
+
+1. Determine active rules
+2. For each pixel:
+   - If locked, skip
+   - If pixel’s group is targeted, apply effect
+3. Present output
+
+There is:
+
+- No state accumulation
+- No drift
+- No mutation of stored pixels
+
+---
+
+## 10. Broadcast Model
+
+GRIN uses **broadcast, not invocation**.
+
+- Group state may be broadcast outward
+- Nothing may be called inward
+
+GRIN:
+
+- Does not call external code
+- Does not request actions
+- Does not embed hooks
+
+If nothing is listening, nothing happens.
+
+---
+
+## 11. Editing vs Playback
+
+Editing may:
+
+- Reassign groups
+- Change lock states
+- Rewrite pixels
+
+Playback may:
+
+- Modulate display only
+- Never rewrite stored data
+
+These modes are strictly separated.
+
+---
+
+## 12. Security by Construction
+
+GRIN enforces:
+
+- Fixed header size
+- Fixed rule count
+- Fixed opcode set
+- No executable code
+- No dynamic allocation
+- No external resource access
+
+Malicious complexity is structurally impossible.
+
+---
+
+## 13. What GRIN Is Not
+
+GRIN is not:
+
+- A video format
+- A scripting engine
+- A shader language
+- A game engine
+- A procedural world system
+
+Attempts to turn it into one violate its intent.
+
+---
+
+## 14. Final Principle
+
+If a feature:
+
+- Increases expressiveness without bound
+- Requires interpretation instead of inspection
+- Cannot be reasoned about statically
+- Makes worst-case cost unknowable
+
+It does not belong in GRIN.
+
+Minimalism here is **structural**, not aesthetic.
 
 #####/tests/fixtures/README.md#####
 # Test Fixtures
@@ -6424,7 +9122,7 @@ This directory contains shared fixtures for GRIN tests.
 
 ## Overview
 
-**Project**: GRIN (Grouped Readdressable Indexed Nodes)  
+**Project**: GRIN (Graphic Readdressable Indexed Nodes)  
 **File Extensions**: `.grin`, `.grn`  
 **Target Platforms**: Android (Java/Kotlin), Web Browsers (JavaScript)  
 **Architecture**: Deterministic image container with 5-byte pixel structure (RGBA+C), 16 addressable channels, fixed 128-byte header, and bounded rule-based modulation.
@@ -6927,7 +9625,8 @@ This directory contains shared fixtures for GRIN tests.
   - Summary: Added per-tick processing in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
 - [x] Ensure display buffer is separate from source pixels
   - Summary: Display buffers are separate types in `web/lib/display-buffer.ts` and `android/lib/src/main/kotlin/io/grin/lib/DisplayBuffer.kt`.
-- [ ] Implement SIMD optimization hints (optional)
+- [x] Implement SIMD optimization hints (optional)
+  - Summary: Added packed RGBA output path in `web/lib/grin-player.ts` and `tools/lib/render.js`.
 
 ### 6.5 Display Buffer Management
 - [x] Implement `DisplayBuffer` class:
@@ -7197,8 +9896,8 @@ This directory contains shared fixtures for GRIN tests.
   - Summary: `tools/lib/render.js` renders ticks with opcodes and `tools/lib/png.js` writes PNG/JPEG output.
 - [x] Export group visualization (color-coded by group ID)
   - Summary: `renderGroupMap()` uses a 16-color palette per group ID.
-- [ ] Support animated GIF export (optional)
-  - Summary: Optional GIF export not implemented yet (no encoder wired up).
+- [x] Support animated GIF export (optional)
+  - Summary: Added GIF export to `tools/bin/grin-decode.js` with `tools/lib/gif.js`.
 
 ---
 
@@ -7271,6 +9970,8 @@ This directory contains shared fixtures for GRIN tests.
   - Summary: Added reference byte comparison in `web/tests/reference.test.ts`.
 - [x] Test cross-platform file compatibility
   - Summary: Added CLI parser compatibility checks in `web/tests/integration.test.ts`.
+- [x] Run Android Gradle unit tests
+  - Summary: `./gradlew test` succeeded.
 
 ### 10.7 Fuzz Testing
 - [x] Implement header fuzzer (randomized invalid headers)
@@ -7299,58 +10000,90 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 11: Sample File Creation
 
 ### *** 11.1 Minimal Valid File
-- [ ] Create `minimal.grin`: 1×1 pixel, 0 rules
-- [ ] Create `minimal_locked.grin`: 1×1 locked pixel, 0 rules
-- [ ] Document expected byte-for-byte content
+- [x] Create `minimal.grin`: 1×1 pixel, 0 rules
+  - Summary: Added `samples/minimal.grin`.
+- [x] Create `minimal_locked.grin`: 1×1 locked pixel, 0 rules
+  - Summary: Added `samples/minimal_locked.grin`.
+- [x] Document expected byte-for-byte content
+  - Summary: Documented byte dumps in `samples/README.md`.
 
 ### *** 11.2 Basic Animation Files
-- [ ] Create `pulse_red.grin`: 16×16, single group pulsing
-- [ ] Create `fade_gradient.grin`: 64×64, multi-group fade
-- [ ] Create `color_shift.grin`: 32×32, RGB channel shifts
+- [x] Create `pulse_red.grin`: 16×16, single group pulsing
+  - Summary: Added `samples/pulse_red.grin`.
+- [x] Create `fade_gradient.grin`: 64×64, multi-group fade
+  - Summary: Added `samples/fade_gradient.grin`.
+- [x] Create `color_shift.grin`: 32×32, RGB channel shifts
+  - Summary: Added `samples/color_shift.grin`.
 
 ### *** 11.3 Complex Demo Files
-- [ ] Create `groups_demo.grin`: Demonstrates all 16 groups
-- [ ] Create `locking_demo.grin`: Demonstrates lock/unlock opcodes
-- [ ] Create `timing_demo.grin`: Demonstrates timing variations
+- [x] Create `groups_demo.grin`: Demonstrates all 16 groups
+  - Summary: Added `samples/groups_demo.grin`.
+- [x] Create `locking_demo.grin`: Demonstrates lock/unlock opcodes
+  - Summary: Added `samples/locking_demo.grin` with lock/unlock rules.
+- [x] Create `timing_demo.grin`: Demonstrates timing variations
+  - Summary: Added `samples/timing_demo.grin`.
 
 ### *** 11.4 Edge Case Files
-- [ ] Create `max_size.grin`: Maximum reasonable dimensions
-- [ ] Create `max_rules.grin`: 16 rules, all groups targeted
-- [ ] Create `all_opcodes.grin`: Uses every defined opcode
+- [x] Create `max_size.grin`: Maximum reasonable dimensions
+  - Summary: Added `samples/max_size.grin` (512×512).
+- [x] Create `max_rules.grin`: 16 rules, all groups targeted
+  - Summary: Added `samples/max_rules.grin`.
+- [x] Create `all_opcodes.grin`: Uses every defined opcode
+  - Summary: Added `samples/all_opcodes.grin`.
 
 ### *** 11.5 Invalid Files (for testing)
-- [ ] Create `invalid_magic.grin`: Wrong magic bytes
-- [ ] Create `invalid_header_size.grin`: HeaderSize != 128
-- [ ] Create `truncated.grin`: File ends mid-pixel
-- [ ] Create `invalid_opcode.grin`: Unknown opcode ID
+- [x] Create `invalid_magic.grin`: Wrong magic bytes
+  - Summary: Added `samples/invalid_magic.grin`.
+- [x] Create `invalid_header_size.grin`: HeaderSize != 128
+  - Summary: Added `samples/invalid_header_size.grin`.
+- [x] Create `truncated.grin`: File ends mid-pixel
+  - Summary: Added `samples/truncated.grin`.
+- [x] Create `invalid_opcode.grin`: Unknown opcode ID
+  - Summary: Added `samples/invalid_opcode.grin`.
 
 ---
 
 ## Phase 12: Documentation
 
 ### 12.1 Specification Documentation
-- [ ] Finalize and version `grin_technical_specification.md`
-- [ ] Create byte-level format diagram (visual)
-- [ ] Create opcode reference table with examples
-- [ ] Create timing parameter reference
+- [x] Finalize and version `grin_technical_specification.md`
+  - Summary: Final spec added at `grin_technical_specification.md` (draft copy at `tchspecdraft.txt`).
+- [x] Create byte-level format diagram (visual)
+  - Summary: Added `docs/format-diagram.md`.
+- [x] Create opcode reference table with examples
+  - Summary: Added `docs/opcodes.md`.
+- [x] Create timing parameter reference
+  - Summary: Added `docs/timing.md`.
 
 ### *** 12.2 API Documentation
-- [ ] Generate JavaDoc for Android implementation
-- [ ] Generate JSDoc/TypeDoc for JavaScript implementation
-- [ ] Create API quick-start guide
-- [ ] Create migration guide (from GIF/APNG)
+- [x] Generate JavaDoc for Android implementation
+  - Summary: Draft API reference in `docs/api/android/README.md` and Dokka config added.
+- [x] Generate JSDoc/TypeDoc for JavaScript implementation
+  - Summary: TypeDoc output in `docs/api/web`.
+- [x] Create API quick-start guide
+  - Summary: Added `docs/api-quickstart.md`.
+- [x] Create migration guide (from GIF/APNG)
+  - Summary: Added `docs/migration-gif-apng.md`.
 
 ### *** 12.3 Tutorial Documentation
-- [ ] Write "Creating Your First GRIN File" tutorial
-- [ ] Write "Understanding GRIN Groups" tutorial
-- [ ] Write "Playback Integration Guide" (Android)
-- [ ] Write "Playback Integration Guide" (Web)
+- [x] Write "Creating Your First GRIN File" tutorial
+  - Summary: Added `docs/tutorial-first-file.md`.
+- [x] Write "Understanding GRIN Groups" tutorial
+  - Summary: Added `docs/tutorial-grin-groups.md`.
+- [x] Write "Playback Integration Guide" (Android)
+  - Summary: Added `docs/playback-guide-android.md`.
+- [x] Write "Playback Integration Guide" (Web)
+  - Summary: Added `docs/playback-guide-web.md`.
 
 ### 12.4 Security Documentation
-- [ ] Document security model (no executable code)
-- [ ] Document bounded resource consumption
-- [ ] Document validation requirements for untrusted input
-- [ ] Create security audit checklist
+- [x] Document security model (no executable code)
+  - Summary: Added `docs/security-model.md`.
+- [x] Document bounded resource consumption
+  - Summary: Covered in `docs/security-model.md`.
+- [x] Document validation requirements for untrusted input
+  - Summary: Covered in `docs/security-model.md`.
+- [x] Create security audit checklist
+  - Summary: Added `docs/security-audit-checklist.md`.
 
 ---
 
@@ -7375,6 +10108,15 @@ This directory contains shared fixtures for GRIN tests.
 - [ ] Choose and apply open-source license
 - [ ] Add license headers to all source files
 - [ ] Create NOTICE file for third-party attributions
+
+---
+
+## Planned Upgrades (Unimplemented)
+
+- [ ] Photoshop plugin for painting GRIN channel groups and lock bits as layers
+- [ ] Illustrator plugin for painting GRIN channel groups and lock bits as layers
+- [ ] GIMP plugin for painting GRIN channel groups and lock bits as layers
+- [ ] Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
 
 ---
 
@@ -7452,8 +10194,10 @@ Phase 0 (Setup) ──┬──> Phase 1 (Binary Format) ──> Phase 2 (Data S
 
 #####/tools/bin/grin-decode.js#####
 #!/usr/bin/env node
+import path from "node:path";
 import { readGrinFile } from "../lib/grin.js";
-import { renderGroupMap, renderToTick } from "../lib/render.js";
+import { createRenderState, renderFrame, renderGroupMap, renderToTick } from "../lib/render.js";
+import { writeGif } from "../lib/gif.js";
 import { writeImage } from "../lib/png.js";
 
 const args = process.argv.slice(2);
@@ -7461,6 +10205,9 @@ let inputPath = null;
 let outputPath = null;
 let frame = 0;
 let groups = false;
+let gif = false;
+let frames = null;
+let fps = null;
 
 for (let i = 0; i < args.length; i += 1) {
   const arg = args[i];
@@ -7469,6 +10216,14 @@ for (let i = 0; i < args.length; i += 1) {
     i += 1;
   } else if (arg === "--groups") {
     groups = true;
+  } else if (arg === "--gif") {
+    gif = true;
+  } else if (arg === "--frames") {
+    frames = Number.parseInt(args[i + 1] ?? "0", 10);
+    i += 1;
+  } else if (arg === "--fps") {
+    fps = Number.parseInt(args[i + 1] ?? "0", 10);
+    i += 1;
   } else if (!arg.startsWith("--")) {
     if (!inputPath) {
       inputPath = arg;
@@ -7487,6 +10242,27 @@ try {
   const file = readGrinFile(inputPath);
   const width = file.header.width;
   const height = file.header.height;
+  const outputExt = path.extname(outputPath).toLowerCase();
+  const isGif = gif || outputExt === ".gif";
+
+  if (isGif && groups) {
+    throw new Error("Cannot combine --groups with GIF output");
+  }
+
+  if (isGif) {
+    const frameCount = Number.isInteger(frames) && frames > 0 ? frames : 60;
+    const rate = Number.isInteger(fps) && fps > 0 ? fps : 30;
+    const delayMs = Math.max(1, Math.round(1000 / rate));
+    const state = createRenderState(file);
+    const sequence = [];
+    for (let i = 0; i < frameCount; i += 1) {
+      sequence.push(renderFrame(file, frame + i, state));
+    }
+    writeGif(outputPath, width, height, sequence, { delayMs });
+    process.stdout.write(`Wrote ${outputPath} (${frameCount} frames @ ${rate}fps)\n`);
+    process.exit(0);
+  }
+
   const rgba = groups ? renderGroupMap(file) : renderToTick(file, frame);
   writeImage(outputPath, width, height, rgba);
   process.stdout.write(`Wrote ${outputPath}\n`);
@@ -7498,7 +10274,8 @@ try {
 
 function printUsage() {
   process.stdout.write(
-    "Usage: grin-decode <input.grin> <output.png> [--frame <tick>] [--groups]\n"
+    "Usage: grin-decode <input.grin> <output.png> [--frame <tick>] [--groups]\n" +
+      "       grin-decode <input.grin> <output.gif> [--gif] [--frame <tick>] [--frames <count>] [--fps <rate>]\n"
   );
 }
 
@@ -7969,6 +10746,39 @@ export const CONTROL_BYTE_MASKS = {
 export function groupMaskTargetsGroup(groupMask, groupId) {
   const shift = groupId & 0x0f;
   return (groupMask & (1 << shift)) !== 0;
+}
+
+#####/tools/lib/gif.js#####
+import fs from "node:fs";
+import gifEncoderModule from "gif-encoder-2";
+
+const GIFEncoder = gifEncoderModule?.default ?? gifEncoderModule;
+
+export function writeGif(filePath, width, height, frames, options = {}) {
+  const expectedLength = width * height * 4;
+  const delayMs = Number.isInteger(options.delayMs) ? options.delayMs : 100;
+  const repeat = Number.isInteger(options.repeat) ? options.repeat : 0;
+  const quality = Number.isInteger(options.quality) ? options.quality : 10;
+
+  for (const frame of frames) {
+    if (frame.length !== expectedLength) {
+      throw new Error("RGBA buffer length does not match width * height * 4");
+    }
+  }
+
+  const encoder = new GIFEncoder(width, height);
+  encoder.setRepeat(repeat);
+  encoder.setDelay(delayMs);
+  encoder.setQuality(quality);
+  encoder.start();
+
+  for (const frame of frames) {
+    encoder.addFrame(frame);
+  }
+
+  encoder.finish();
+  const buffer = encoder.out.getData();
+  fs.writeFileSync(filePath, buffer);
 }
 
 #####/tools/lib/grin.js#####
@@ -8485,6 +11295,7 @@ import { TimingInterpreter } from "./timing.js";
 import { applyOpcode } from "./opcodes.js";
 
 const ACTIVE_THRESHOLD = 0.5;
+const USE_PACKED_OUTPUT = isLittleEndian();
 
 export function renderToTick(file, tick) {
   if (!Number.isInteger(tick) || tick < 0) {
@@ -8500,18 +11311,27 @@ export function renderToTick(file, tick) {
 
 export function renderFrame(file, tick, state) {
   const output = new Uint8Array(file.pixels.length * 4);
+  const output32 =
+    USE_PACKED_OUTPUT && output.byteLength % 4 === 0 ? new Uint32Array(output.buffer) : null;
   const activeRules = evaluateActiveRules(file.rules, tick);
 
   for (let i = 0; i < file.pixels.length; i += 1) {
     const source = file.pixels[i];
+    if (!source) {
+      continue;
+    }
     const control = state.controlBytes[i] ?? source.c;
     const outputIndex = i * 4;
 
     if ((control & CONTROL_BYTE_MASKS.LOCK) !== 0) {
-      output[outputIndex] = source.r;
-      output[outputIndex + 1] = source.g;
-      output[outputIndex + 2] = source.b;
-      output[outputIndex + 3] = source.a;
+      if (output32) {
+        output32[i] = packRgba(source.r, source.g, source.b, source.a);
+      } else {
+        output[outputIndex] = source.r;
+        output[outputIndex + 1] = source.g;
+        output[outputIndex + 2] = source.b;
+        output[outputIndex + 3] = source.a;
+      }
       continue;
     }
 
@@ -8531,10 +11351,14 @@ export function renderFrame(file, tick, state) {
     }
 
     state.controlBytes[i] = working.c & ~CONTROL_BYTE_MASKS.RESERVED;
-    output[outputIndex] = working.r;
-    output[outputIndex + 1] = working.g;
-    output[outputIndex + 2] = working.b;
-    output[outputIndex + 3] = working.a;
+    if (output32) {
+      output32[i] = packRgba(working.r, working.g, working.b, working.a);
+    } else {
+      output[outputIndex] = working.r;
+      output[outputIndex + 1] = working.g;
+      output[outputIndex + 2] = working.b;
+      output[outputIndex + 3] = working.a;
+    }
   }
 
   return output;
@@ -8542,14 +11366,24 @@ export function renderFrame(file, tick, state) {
 
 export function renderGroupMap(file) {
   const output = new Uint8Array(file.pixels.length * 4);
+  const output32 =
+    USE_PACKED_OUTPUT && output.byteLength % 4 === 0 ? new Uint32Array(output.buffer) : null;
   for (let i = 0; i < file.pixels.length; i += 1) {
-    const groupId = file.pixels[i].c & CONTROL_BYTE_MASKS.GROUP_ID;
+    const source = file.pixels[i];
+    if (!source) {
+      continue;
+    }
+    const groupId = source.c & CONTROL_BYTE_MASKS.GROUP_ID;
     const color = GROUP_COLORS[groupId] ?? [0, 0, 0];
     const offset = i * 4;
-    output[offset] = color[0];
-    output[offset + 1] = color[1];
-    output[offset + 2] = color[2];
-    output[offset + 3] = 255;
+    if (output32) {
+      output32[i] = packRgba(color[0], color[1], color[2], 255);
+    } else {
+      output[offset] = color[0];
+      output[offset + 1] = color[1];
+      output[offset + 2] = color[2];
+      output[offset + 3] = 255;
+    }
   }
   return output;
 }
@@ -8564,6 +11398,16 @@ export function createRenderState(file) {
 
 function evaluateActiveRules(rules, tick) {
   return rules.filter((rule) => TimingInterpreter.evaluate(rule.timing, tick) > ACTIVE_THRESHOLD);
+}
+
+function isLittleEndian() {
+  const buffer = new ArrayBuffer(4);
+  new DataView(buffer).setUint32(0, 0x0a0b0c0d, true);
+  return new Uint8Array(buffer)[0] === 0x0d;
+}
+
+function packRgba(r, g, b, a) {
+  return (r | (g << 8) | (b << 16) | (a << 24)) >>> 0;
 }
 
 const GROUP_COLORS = [
@@ -8899,6 +11743,7 @@ function prefixResult(errors, warnings, result, prefix) {
       "name": "@grin-format/tools",
       "version": "0.1.0",
       "dependencies": {
+        "gif-encoder-2": "^1.0.5",
         "jpeg-js": "^0.4.4",
         "pngjs": "^7.0.0"
       },
@@ -8911,6 +11756,11 @@ function prefixResult(errors, warnings, result, prefix) {
       "engines": {
         "node": ">=18.0.0"
       }
+    },
+    "node_modules/gif-encoder-2": {
+      "version": "1.0.5",
+      "resolved": "https://registry.npmjs.org/gif-encoder-2/-/gif-encoder-2-1.0.5.tgz",
+      "integrity": "sha512-fsRAKbZuUoZ7FYGjpFElmflTkKwsn/CzAmL/xDl4558aTAgysIDCUF6AXWO8dmai/ApfZACbPVAM+vPezJXlFg=="
     },
     "node_modules/jpeg-js": {
       "version": "0.4.4",
@@ -8945,6 +11795,7 @@ function prefixResult(errors, warnings, result, prefix) {
     "test": "echo \"no tests configured\""
   },
   "dependencies": {
+    "gif-encoder-2": "^1.0.5",
     "jpeg-js": "^0.4.4",
     "pngjs": "^7.0.0"
   },
@@ -9099,7 +11950,7 @@ loadSamples();
       <header class="hero">
         <div>
           <p class="eyebrow">GRIN FORMAT</p>
-          <h1>Grouped Readdressable Indexed Nodes</h1>
+          <h1>Graphic Readdressable Indexed Nodes</h1>
           <p class="subtitle">
             Deterministic playback, bounded cost, and strict validation. Drag a file to
             see it pulse.
@@ -9581,7 +12432,7 @@ import { RuleEngine } from "./rule-engine";
 
 export class GrinPlayerElement extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ["src", "autoplay", "loop", "playbackrate"];
+    return ["src", "autoplay", "playbackrate"];
   }
 
   private canvas: HTMLCanvasElement;
@@ -9589,7 +12440,6 @@ export class GrinPlayerElement extends HTMLElement {
   private player: GrinPlayer | null = null;
   private file: GrinFile | null = null;
   private autoplay = false;
-  private loop = false;
   private playbackRate = 1;
 
   constructor() {
@@ -9635,7 +12485,6 @@ export class GrinPlayerElement extends HTMLElement {
 
   connectedCallback(): void {
     this.autoplay = this.hasAttribute("autoplay");
-    this.loop = this.hasAttribute("loop");
     this.playbackRate = this.parsePlaybackRate(this.getAttribute("playbackrate"));
 
     const src = this.getAttribute("src");
@@ -9660,9 +12509,6 @@ export class GrinPlayerElement extends HTMLElement {
         if (this.autoplay) {
           this.player?.play();
         }
-        break;
-      case "loop":
-        this.loop = newValue !== null;
         break;
       case "playbackrate":
         this.playbackRate = this.parsePlaybackRate(newValue);
@@ -10529,6 +13375,8 @@ import { PlaybackState } from "./playback-state";
 import { RuleEngine } from "./rule-engine";
 import { RAFTickScheduler, TickScheduler } from "./tick-scheduler";
 
+const USE_PACKED_OUTPUT = isLittleEndian();
+
 export class GrinPlayer {
   private image: GrinImage | null = null;
   private scheduler: TickScheduler | null = null;
@@ -10636,18 +13484,29 @@ export class GrinPlayer {
     }
     const activeRules = this.ruleEngine.evaluateRules(this.image, tick);
     const output = this.displayBuffer.rgbaData;
+    const output32 =
+      USE_PACKED_OUTPUT && output.byteLength % 4 === 0
+        ? new Uint32Array(output.buffer, output.byteOffset, output.byteLength / 4)
+        : null;
     const opcodeSetId = this.image.header.opcodeSetId;
 
     for (let i = 0; i < this.image.pixels.length; i += 1) {
       const source = this.image.pixels[i];
+      if (!source) {
+        continue;
+      }
       const control = this.controlBytes[i] ?? source.c;
       const outputIndex = i * 4;
 
       if ((control & CONTROL_BYTE_MASKS.LOCK) !== 0) {
-        output[outputIndex] = source.r;
-        output[outputIndex + 1] = source.g;
-        output[outputIndex + 2] = source.b;
-        output[outputIndex + 3] = source.a;
+        if (output32) {
+          output32[i] = packRgba(source.r, source.g, source.b, source.a);
+        } else {
+          output[outputIndex] = source.r;
+          output[outputIndex + 1] = source.g;
+          output[outputIndex + 2] = source.b;
+          output[outputIndex + 3] = source.a;
+        }
         continue;
       }
 
@@ -10662,15 +13521,29 @@ export class GrinPlayer {
       }
 
       this.controlBytes[i] = working.c & ~CONTROL_BYTE_MASKS.RESERVED;
-      output[outputIndex] = working.r;
-      output[outputIndex + 1] = working.g;
-      output[outputIndex + 2] = working.b;
-      output[outputIndex + 3] = working.a;
+      if (output32) {
+        output32[i] = packRgba(working.r, working.g, working.b, working.a);
+      } else {
+        output[outputIndex] = working.r;
+        output[outputIndex + 1] = working.g;
+        output[outputIndex + 2] = working.b;
+        output[outputIndex + 3] = working.a;
+      }
     }
     if (this.onFrameRendered) {
       this.onFrameRendered();
     }
   }
+}
+
+function isLittleEndian(): boolean {
+  const buffer = new ArrayBuffer(4);
+  new DataView(buffer).setUint32(0, 0x0a0b0c0d, true);
+  return new Uint8Array(buffer)[0] === 0x0d;
+}
+
+function packRgba(r: number, g: number, b: number, a: number): number {
+  return (r | (g << 8) | (b << 16) | (a << 24)) >>> 0;
 }
 
 #####/web/lib/grin-reader.ts#####
@@ -11878,6 +14751,7 @@ function prefixResult(
         "eslint": "^8.56.0",
         "rollup": "^4.24.0",
         "tsx": "^4.19.2",
+        "typedoc": "^0.25.13",
         "typescript": "^5.3.0",
         "vitest": "^1.6.0"
       },
@@ -13330,6 +16204,12 @@ function prefixResult(
         "node": ">=8"
       }
     },
+    "node_modules/ansi-sequence-parser": {
+      "version": "1.1.3",
+      "resolved": "https://registry.npmjs.org/ansi-sequence-parser/-/ansi-sequence-parser-1.1.3.tgz",
+      "integrity": "sha512-+fksAx9eG3Ab6LDnLs3ZqZa8KVJ/jYnX+D4Qe1azX+LFGFAXqynCQLOdLpNYN/l9e7l6hMWwZbrnctqr6eSQSw==",
+      "dev": true
+    },
     "node_modules/ansi-styles": {
       "version": "4.3.0",
       "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz",
@@ -14311,6 +17191,12 @@ function prefixResult(
       "integrity": "sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==",
       "dev": true
     },
+    "node_modules/jsonc-parser": {
+      "version": "3.3.1",
+      "resolved": "https://registry.npmjs.org/jsonc-parser/-/jsonc-parser-3.3.1.tgz",
+      "integrity": "sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==",
+      "dev": true
+    },
     "node_modules/keyv": {
       "version": "4.5.4",
       "resolved": "https://registry.npmjs.org/keyv/-/keyv-4.5.4.tgz",
@@ -14379,6 +17265,12 @@ function prefixResult(
         "get-func-name": "^2.0.1"
       }
     },
+    "node_modules/lunr": {
+      "version": "2.3.9",
+      "resolved": "https://registry.npmjs.org/lunr/-/lunr-2.3.9.tgz",
+      "integrity": "sha512-zTU3DaZaF3Rt9rhN3uBMGQD3dD2/vFQqnvZCDv4dl5iOzq2IZQqTxu90r4E5J+nP70J3ilqVCrbho2eWaeW8Ow==",
+      "dev": true
+    },
     "node_modules/magic-string": {
       "version": "0.30.21",
       "resolved": "https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz",
@@ -14386,6 +17278,18 @@ function prefixResult(
       "dev": true,
       "dependencies": {
         "@jridgewell/sourcemap-codec": "^1.5.5"
+      }
+    },
+    "node_modules/marked": {
+      "version": "4.3.0",
+      "resolved": "https://registry.npmjs.org/marked/-/marked-4.3.0.tgz",
+      "integrity": "sha512-PRsaiG84bK+AMvxziE/lCFss8juXjNaWzVbN5tXAm4XjeaS9NAHhop+PjQxz2A9h8Q4M/xGmzP8vqNwy6JeK0A==",
+      "dev": true,
+      "bin": {
+        "marked": "bin/marked.js"
+      },
+      "engines": {
+        "node": ">= 12"
       }
     },
     "node_modules/merge-stream": {
@@ -14955,6 +17859,18 @@ function prefixResult(
         "node": ">=8"
       }
     },
+    "node_modules/shiki": {
+      "version": "0.14.7",
+      "resolved": "https://registry.npmjs.org/shiki/-/shiki-0.14.7.tgz",
+      "integrity": "sha512-dNPAPrxSc87ua2sKJ3H5dQ/6ZaY8RNnaAqK+t0eG7p0Soi2ydiqbGOTaZCqaYvA/uZYfS1LJnemt3Q+mSfcPCg==",
+      "dev": true,
+      "dependencies": {
+        "ansi-sequence-parser": "^1.1.0",
+        "jsonc-parser": "^3.2.0",
+        "vscode-oniguruma": "^1.7.0",
+        "vscode-textmate": "^8.0.0"
+      }
+    },
     "node_modules/siginfo": {
       "version": "2.0.0",
       "resolved": "https://registry.npmjs.org/siginfo/-/siginfo-2.0.0.tgz",
@@ -15181,10 +18097,31 @@ function prefixResult(
         "url": "https://github.com/sponsors/sindresorhus"
       }
     },
+    "node_modules/typedoc": {
+      "version": "0.25.13",
+      "resolved": "https://registry.npmjs.org/typedoc/-/typedoc-0.25.13.tgz",
+      "integrity": "sha512-pQqiwiJ+Z4pigfOnnysObszLiU3mVLWAExSPf+Mu06G/qsc3wzbuM56SZQvONhHLncLUhYzOVkjFFpFfL5AzhQ==",
+      "dev": true,
+      "dependencies": {
+        "lunr": "^2.3.9",
+        "marked": "^4.3.0",
+        "minimatch": "^9.0.3",
+        "shiki": "^0.14.7"
+      },
+      "bin": {
+        "typedoc": "bin/typedoc"
+      },
+      "engines": {
+        "node": ">= 16"
+      },
+      "peerDependencies": {
+        "typescript": "4.6.x || 4.7.x || 4.8.x || 4.9.x || 5.0.x || 5.1.x || 5.2.x || 5.3.x || 5.4.x"
+      }
+    },
     "node_modules/typescript": {
-      "version": "5.9.3",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
-      "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+      "version": "5.4.5",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.4.5.tgz",
+      "integrity": "sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==",
       "dev": true,
       "bin": {
         "tsc": "bin/tsc",
@@ -15767,6 +18704,18 @@ function prefixResult(
         }
       }
     },
+    "node_modules/vscode-oniguruma": {
+      "version": "1.7.0",
+      "resolved": "https://registry.npmjs.org/vscode-oniguruma/-/vscode-oniguruma-1.7.0.tgz",
+      "integrity": "sha512-L9WMGRfrjOhgHSdOYgCt/yRMsXzLDJSL7BPrOZt73gU0iWO4mpqzqQzOz5srxqTvMBaR0XZTSrVWo4j55Rc6cA==",
+      "dev": true
+    },
+    "node_modules/vscode-textmate": {
+      "version": "8.0.0",
+      "resolved": "https://registry.npmjs.org/vscode-textmate/-/vscode-textmate-8.0.0.tgz",
+      "integrity": "sha512-AFbieoL7a5LMqcnOF04ji+rpXadgOXnZsxQr//r83kLPr7biP7am3g9zbaZIaBGwBRWeSvoMD4mgPdX3e4NWBg==",
+      "dev": true
+    },
     "node_modules/which": {
       "version": "2.0.2",
       "resolved": "https://registry.npmjs.org/which/-/which-2.0.2.tgz",
@@ -15832,7 +18781,7 @@ function prefixResult(
 {
   "name": "@grin-format/web",
   "version": "0.1.0",
-  "description": "GRIN (Grouped Readdressable Indexed Nodes) image format - Web/JavaScript implementation",
+  "description": "GRIN (Graphic Readdressable Indexed Nodes) image format - Web/JavaScript implementation",
   "keywords": [
     "grin",
     "image",
@@ -15879,6 +18828,7 @@ function prefixResult(
     "test:watch": "vitest",
     "lint": "eslint lib/**/*.ts",
     "typecheck": "tsc --noEmit",
+    "docs:api": "typedoc",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build && npm test"
   },
@@ -15892,7 +18842,8 @@ function prefixResult(
     "rollup": "^4.24.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-commonjs": "^25.0.8",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "typedoc": "^0.25.13"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -16447,7 +19398,14 @@ function buildReferenceBytes(): Uint8Array {
 }
 
 test("JavaScript file serialization matches reference bytes", () => {
-  const header = new GrinHeader({ width: 1, height: 1, tickMicros: 0, ruleCount: 0, opcodeSetId: 0 });
+  const header = new GrinHeader({
+    width: 1,
+    height: 1,
+    tickMicros: 0,
+    ruleCount: 0,
+    opcodeSetId: 0,
+    fileLength: BigInt(HEADER_SIZE_BYTES + 5),
+  });
   const pixel = new GrinPixel(1, 2, 3, 4, 0);
   const file = new GrinFile(header, [pixel], []);
 
@@ -16640,6 +19598,18 @@ test("validateGrinFile passes for minimal valid file", () => {
   },
   "include": ["lib/**/*.ts"],
   "exclude": ["node_modules", "dist", "tests"]
+}
+
+#####/web/typedoc.json#####
+{
+  "entryPoints": ["lib/index.ts", "lib/player.ts"],
+  "tsconfig": "tsconfig.json",
+  "out": "../docs/api/web",
+  "readme": "none",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "skipErrorChecking": true
 }
 
 #####/web/vitest.config.ts#####

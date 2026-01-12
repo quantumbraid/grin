@@ -1,4 +1,4 @@
-# GRIN — Grouped Readdressable Indexed Nodes
+# GRIN — Graphic Readdressable Indexed Nodes
 
 ## Canonical Scope
 

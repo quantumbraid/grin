@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Project**: GRIN (Grouped Readdressable Indexed Nodes)  
+**Project**: GRIN (Graphic Readdressable Indexed Nodes)  
 **File Extensions**: `.grin`, `.grn`  
 **Target Platforms**: Android (Java/Kotlin), Web Browsers (JavaScript)  
 **Architecture**: Deterministic image container with 5-byte pixel structure (RGBA+C), 16 addressable channels, fixed 128-byte header, and bounded rule-based modulation.
@@ -505,7 +505,8 @@
   - Summary: Added per-tick processing in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
 - [x] Ensure display buffer is separate from source pixels
   - Summary: Display buffers are separate types in `web/lib/display-buffer.ts` and `android/lib/src/main/kotlin/io/grin/lib/DisplayBuffer.kt`.
-- [ ] Implement SIMD optimization hints (optional)
+- [x] Implement SIMD optimization hints (optional)
+  - Summary: Added packed RGBA output path in `web/lib/grin-player.ts` and `tools/lib/render.js`.
 
 ### 6.5 Display Buffer Management
 - [x] Implement `DisplayBuffer` class:
@@ -775,8 +776,8 @@
   - Summary: `tools/lib/render.js` renders ticks with opcodes and `tools/lib/png.js` writes PNG/JPEG output.
 - [x] Export group visualization (color-coded by group ID)
   - Summary: `renderGroupMap()` uses a 16-color palette per group ID.
-- [ ] Support animated GIF export (optional)
-  - Summary: Optional GIF export not implemented yet (no encoder wired up).
+- [x] Support animated GIF export (optional)
+  - Summary: Added GIF export to `tools/bin/grin-decode.js` with `tools/lib/gif.js`.
 
 ---
 
@@ -849,6 +850,8 @@
   - Summary: Added reference byte comparison in `web/tests/reference.test.ts`.
 - [x] Test cross-platform file compatibility
   - Summary: Added CLI parser compatibility checks in `web/tests/integration.test.ts`.
+- [x] Run Android Gradle unit tests
+  - Summary: `./gradlew test` succeeded.
 
 ### 10.7 Fuzz Testing
 - [x] Implement header fuzzer (randomized invalid headers)
@@ -923,8 +926,8 @@
 ## Phase 12: Documentation
 
 ### 12.1 Specification Documentation
-- [ ] Finalize and version `grin_technical_specification.md`
-  - Summary: Draft copy added at `tchspecdraft.txt` for review.
+- [x] Finalize and version `grin_technical_specification.md`
+  - Summary: Final spec added at `grin_technical_specification.md` (draft copy at `tchspecdraft.txt`).
 - [x] Create byte-level format diagram (visual)
   - Summary: Added `docs/format-diagram.md`.
 - [x] Create opcode reference table with examples
@@ -985,6 +988,15 @@
 - [ ] Choose and apply open-source license
 - [ ] Add license headers to all source files
 - [ ] Create NOTICE file for third-party attributions
+
+---
+
+## Planned Upgrades (Unimplemented)
+
+- [ ] Photoshop plugin for painting GRIN channel groups and lock bits as layers
+- [ ] Illustrator plugin for painting GRIN channel groups and lock bits as layers
+- [ ] GIMP plugin for painting GRIN channel groups and lock bits as layers
+- [ ] Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
 
 ---
 

@@ -11,6 +11,12 @@ node tools/bin/grin-encode.js input.png output.grin
 node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
 ```
 
+Animated GIF export:
+
+```bash
+node tools/bin/grin-decode.js samples/pulse_red.grin output.gif --gif --frames 60 --fps 30
+```
+
 ## Web / TypeScript
 
 Build the web package once so `web/dist` is available:
@@ -50,7 +56,7 @@ player.play();
 ## Web Component
 
 ```html
-<grin-player src="./samples/pulse_red.grin" autoplay loop playbackrate="1.5"></grin-player>
+<grin-player src="./samples/pulse_red.grin" autoplay playbackrate="1.5"></grin-player>
 ```
 
 The custom element exposes `play()`, `pause()`, `currentTime`, and `getCurrentFrame()`.

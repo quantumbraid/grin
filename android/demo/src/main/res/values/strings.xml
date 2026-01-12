@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GRIN Demo</string>
-    <string name="description">Grouped Readdressable Indexed Nodes - Demo</string>
+    <string name="description">Graphic Readdressable Indexed Nodes - Demo</string>
     
     <!-- UI Strings -->
     <string name="load_file">Load .grin File</string>

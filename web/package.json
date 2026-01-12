@@ -1,7 +1,7 @@
 {
   "name": "@grin-format/web",
   "version": "0.1.0",
-  "description": "GRIN (Grouped Readdressable Indexed Nodes) image format - Web/JavaScript implementation",
+  "description": "GRIN (Graphic Readdressable Indexed Nodes) image format - Web/JavaScript implementation",
   "keywords": [
     "grin",
     "image",

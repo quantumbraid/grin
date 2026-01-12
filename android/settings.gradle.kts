@@ -1,5 +1,5 @@
 // GRIN Android Project Settings
-// Grouped Readdressable Indexed Nodes
+// Graphic Readdressable Indexed Nodes
 
 pluginManagement {
     repositories {

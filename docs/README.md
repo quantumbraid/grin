@@ -19,6 +19,7 @@ This folder contains Phase 12 documentation that complements the core spec.
 Related docs outside this folder:
 
 - `grin_technical_specification_v_2.md`
+- `grin_technical_specification.md`
 - `tchspecdraft.txt` (draft copy for review)
 - `ARCHITECTURE.md`
 - `SECURITY.md`
