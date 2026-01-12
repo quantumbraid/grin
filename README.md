@@ -55,24 +55,24 @@ core/ - Reserved for a future cross-platform reference core
 
 CLI QUICK START (Node >= 18)
 
-\\\ node tools/bin/grin-validate.js samples/minimal.grin
+/// node tools/bin/grin-validate.js samples/minimal.grin
 \\\ node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
-\\\ node tools/bin/grin-encode.js input.png output.grin
-\\\ node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
+/// node tools/bin/grin-encode.js input.png output.grin
+/// node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
 
 ##WEB LIBRARY
 
-\\\ cd web
-\\\ npm install
-\\\ npm test
-\\\ npm run build
+/// cd web
+/// npm install
+/// npm test
+/// npm run build
 
 The demo lives in web/demo/. Build first so web/dist is available.
 
 ANDROID LIBRARY AND DEMO
 
-\\\ cd android
-\\\ ./gradlew :demo:assembleDebug
+/// cd android
+/// ./gradlew :demo:assembleDebug
 
 The demo app loads sample files from android/demo/src/main/assets/samples.
 
@@ -80,7 +80,7 @@ SAMPLES
 
 Regenerate sample files with:
 
-\\\ node scripts/generate-samples.mjs
+/// node scripts/generate-samples.mjs
 
 DOCUMENTATION
 
