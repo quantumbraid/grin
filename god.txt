@@ -13607,6 +13607,69 @@ This directory contains shared fixtures for GRIN tests.
 
 ---
 
+## Phase 15: UI/UX Polish + Windows Desktop Integration
+
+### 15.1 UX Audit + Requirements Backlog
+- [ ] Inventory all end-user surfaces: `web/demo/`, `android/demo/`, CLI help (`tools/bin/`), and docs onboarding (`docs/README.md`)
+  - Capture screenshots, flows, and current pain points.
+- [ ] Create a UX heuristics checklist (navigation clarity, error states, keyboard/mouse affordances, accessibility)
+  - Store the checklist in `docs/ui-ux-audit.md` and link from `docs/README.md`.
+- [ ] Define core user journeys (open file, play animation, inspect groups, export) with success criteria
+  - Add journey maps to `docs/ui-ux-audit.md`.
+- [ ] Prioritize the UX backlog with severity tags (P0/P1/P2) and platform labels (web/android/cli)
+  - Maintain a prioritized list in `docs/ui-ux-audit.md`.
+
+### 15.2 Web Demo UI Polish (Web)
+- [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
+  - Ensure consistent spacing, typography, and control grouping.
+- [ ] Add accessibility coverage (ARIA labels, focus order, contrast checks)
+  - Document a11y checks in `docs/ui-ux-audit.md`.
+- [ ] Improve empty, loading, and error states (missing file, validation errors, decode failures)
+  - Provide actionable messaging with next steps.
+- [ ] Add keyboard shortcuts for playback, frame stepping, and group filtering
+  - Surface shortcuts in a help tooltip or modal.
+- [ ] Add a validation summary panel (header warnings, rule count, invalid pixels)
+  - Link to existing validation error outputs.
+
+### 15.3 Android Demo UI Polish (Android)
+- [ ] Align the demo UI with Material 3 components in `android/demo/`
+  - Rebuild the activity layout with proper app bars, cards, and controls.
+- [ ] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
+  - Ensure touch targets meet accessibility guidelines.
+- [ ] Add file-open flow with recent files and error recovery
+  - Handle invalid file formats gracefully.
+- [ ] Add in-app metadata viewer (header fields, rules summary, group counts)
+  - Provide copy/share options for debugging.
+
+### 15.4 Cross-Platform UX Consistency
+- [ ] Standardize iconography, labels, and terminology across web/android/docs
+  - Maintain a glossary in `docs/ui-ux-audit.md`.
+- [ ] Consolidate error copy and remediation hints for validation failures
+  - Reference spec sections where possible.
+- [ ] Add onboarding snippets (first-run guidance, sample file prompts)
+  - Include download links for `samples/` data.
+
+### 15.5 Windows Desktop Viewer + File Associations
+- [ ] Decide Windows UI stack (WinUI 3/.NET WPF/Electron) and document rationale
+  - Add decision record in `docs/windows-desktop.md`.
+- [ ] Create a Windows desktop viewer app capable of rendering `.grin` files
+  - Support animation playback, group filtering, and metadata inspection.
+- [ ] Implement `.grin` and `.grn` file association registration (ProgID, icons)
+  - Ensure double-click opens the viewer app.
+- [ ] Implement Windows thumbnail and preview support
+  - Option A: WIC codec to decode `.grin` frames for Explorer thumbnails.
+  - Option B: IThumbnailProvider/preview handler COM server for Explorer.
+- [ ] Enable Windows Photos gallery integration
+  - Register `.grin` as an image-capable format via WIC or Photos-compatible handler.
+- [ ] Add installer packaging (MSI/EXE via WiX/NSIS) with clean uninstall
+  - Register/unregister file associations and shell extensions on install/uninstall.
+- [ ] Add build pipeline for Windows artifacts (CI job + signed binaries)
+  - Document signing requirements and certificate management.
+- [ ] Write Windows install & troubleshooting guide in `docs/windows-desktop.md`
+  - Include manual registry fallback steps for power users.
+
+---
+
 ## Planned Upgrades (Unimplemented)
 
 - [ ] Photoshop, Illustrator, and GIMP plugins (see Phase 14 for detailed plan)
@@ -13643,6 +13706,9 @@ Phase 0 (Setup) ──┬──> Phase 1 (Binary Format) ──> Phase 2 (Data S
                                          │
                                          v
                                   Phase 13 (Release)
+                                         │
+                                         v
+                            Phase 15 (UI/UX + Windows)
 ```
 
 ---
@@ -13674,8 +13740,9 @@ Phase 0 (Setup) ──┬──> Phase 1 (Binary Format) ──> Phase 2 (Data S
 | 11    | 8-12           | Yes            |
 | 12    | 16-24          | Yes            |
 | 13    | 8-12           | Partially      |
+| 15    | 32-48          | Partially      |
 
-**Total Estimated**: 200-300 hours for full implementation
+**Total Estimated**: 232-348 hours for full implementation
 
 ---
 
