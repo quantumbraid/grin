@@ -1,0 +1,98 @@
+/* Panel layout styling for the GRIN Photoshop scaffold. */
+:root {
+  color: #f2f2f2;
+  background: #1e1e1e;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 12px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel__header {
+  border-bottom: 1px solid #2d2d2d;
+  padding-bottom: 8px;
+}
+
+.panel__title {
+  font-size: 18px;
+  margin: 0;
+}
+
+.panel__subtitle {
+  font-size: 12px;
+  margin: 4px 0 0;
+  color: #b5b5b5;
+}
+
+.panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field--inline {
+  flex-direction: row;
+  align-items: center;
+}
+
+.field__label {
+  font-size: 12px;
+  color: #c9c9c9;
+}
+
+.field__control {
+  background: #2b2b2b;
+  border: 1px solid #3a3a3a;
+  color: #f2f2f2;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.field__checkbox {
+  width: 14px;
+  height: 14px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.button {
+  background: #2b2b2b;
+  border: 1px solid #3a3a3a;
+  color: #f2f2f2;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button--primary {
+  background: #1a73e8;
+  border-color: #1a73e8;
+}
+
+.panel__footer {
+  border-top: 1px solid #2d2d2d;
+  padding-top: 8px;
+}
+
+.status {
+  font-size: 12px;
+  margin: 0;
+  color: #b5b5b5;
+}

@@ -1,0 +1,10 @@
+{
+  "name": "@grin/photoshop-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GRIN Photoshop UXP panel scaffold.",
+  "scripts": {
+    "lint": "node -c src/main.js"
+  },
+  "license": "MIT"
+}

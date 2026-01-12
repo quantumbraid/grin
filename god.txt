@@ -142,6 +142,14 @@ grin/
 ├── grin_technical_specification_v_2.md
 ├── immediatetodo.txt
 ├── package-lock.json
+├── plugins
+│   └── photoshop
+│       ├── manifest.json
+│       ├── package.json
+│       └── src
+│           ├── index.html
+│           ├── main.js
+│           └── styles.css
 ├── samples
 │   ├── README.md
 │   ├── all_opcodes.grin
@@ -9686,6 +9694,286 @@ Minimalism here is **structural**, not aesthetic.
   "lockfileVersion": 3,
   "requires": true,
   "packages": {}
+}
+
+#####/plugins/photoshop/manifest.json#####
+{
+  "manifestVersion": 5,
+  "id": "io.grin.photoshop.plugin",
+  "name": "GRIN Exporter",
+  "version": "0.1.0",
+  "main": "src/main.js",
+  "host": {
+    "app": "PS",
+    "minVersion": "22.0.0"
+  },
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "grin-panel",
+      "label": "GRIN Export",
+      "minimumSize": {
+        "width": 300,
+        "height": 260
+      },
+      "maximumSize": {
+        "width": 600,
+        "height": 800
+      },
+      "panel": {
+        "main": "src/index.html"
+      }
+    }
+  ]
+}
+
+#####/plugins/photoshop/package.json#####
+{
+  "name": "@grin/photoshop-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GRIN Photoshop UXP panel scaffold.",
+  "scripts": {
+    "lint": "node -c src/main.js"
+  },
+  "license": "MIT"
+}
+
+#####/plugins/photoshop/src/index.html#####
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>GRIN Export Panel</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Panel shell for GRIN group/lock controls. -->
+    <section class="panel">
+      <header class="panel__header">
+        <h1 class="panel__title">GRIN Export</h1>
+        <p class="panel__subtitle">Group + lock metadata scaffold</p>
+      </header>
+
+      <div class="panel__body">
+        <!-- Group selection control placeholder. -->
+        <label class="field">
+          <span class="field__label">Active Group</span>
+          <select id="groupSelect" class="field__control" aria-label="Active group">
+            <option value="0">Group 0</option>
+            <option value="1">Group 1</option>
+            <option value="2">Group 2</option>
+            <option value="3">Group 3</option>
+            <option value="4">Group 4</option>
+            <option value="5">Group 5</option>
+            <option value="6">Group 6</option>
+            <option value="7">Group 7</option>
+            <option value="8">Group 8</option>
+            <option value="9">Group 9</option>
+            <option value="10">Group 10</option>
+            <option value="11">Group 11</option>
+            <option value="12">Group 12</option>
+            <option value="13">Group 13</option>
+            <option value="14">Group 14</option>
+            <option value="15">Group 15</option>
+          </select>
+        </label>
+
+        <!-- Lock toggle placeholder. -->
+        <label class="field field--inline">
+          <input id="lockToggle" type="checkbox" class="field__checkbox" />
+          <span class="field__label">Lock pixels</span>
+        </label>
+
+        <!-- Action buttons placeholder. -->
+        <div class="actions">
+          <button id="previewButton" class="button" type="button">
+            Preview
+          </button>
+          <button id="exportButton" class="button button--primary" type="button">
+            Export
+          </button>
+        </div>
+      </div>
+
+      <footer class="panel__footer">
+        <p id="status" class="status" aria-live="polite">
+          Ready to configure export metadata.
+        </p>
+      </footer>
+    </section>
+
+    <script src="main.js"></script>
+  </body>
+</html>
+
+#####/plugins/photoshop/src/main.js#####
+// GRIN Photoshop plugin scaffold logic for panel UI wiring.
+
+const statusElement = document.getElementById("status");
+const groupSelect = document.getElementById("groupSelect");
+const lockToggle = document.getElementById("lockToggle");
+const previewButton = document.getElementById("previewButton");
+const exportButton = document.getElementById("exportButton");
+
+/**
+ * Update the status footer with a short message.
+ * @param {string} message - Status message to display.
+ */
+function setStatus(message) {
+  if (!statusElement) {
+    return;
+  }
+  statusElement.textContent = message;
+}
+
+/**
+ * Build a friendly summary of the current selection state.
+ * @returns {string} summary text
+ */
+function describeSelection() {
+  const groupId = groupSelect ? Number(groupSelect.value) : 0;
+  const lockState = lockToggle ? lockToggle.checked : false;
+  return `Group ${groupId} • ${lockState ? "Locked" : "Unlocked"}`;
+}
+
+/**
+ * Handle placeholder preview action.
+ */
+function handlePreview() {
+  setStatus(`Preview requested (${describeSelection()}).`);
+}
+
+/**
+ * Handle placeholder export action.
+ */
+function handleExport() {
+  setStatus(`Export requested (${describeSelection()}).`);
+}
+
+/**
+ * Handle metadata changes and update the status.
+ */
+function handleSelectionChange() {
+  setStatus(`Selection updated (${describeSelection()}).`);
+}
+
+if (groupSelect) {
+  groupSelect.addEventListener("change", handleSelectionChange);
+}
+
+if (lockToggle) {
+  lockToggle.addEventListener("change", handleSelectionChange);
+}
+
+if (previewButton) {
+  previewButton.addEventListener("click", handlePreview);
+}
+
+if (exportButton) {
+  exportButton.addEventListener("click", handleExport);
+}
+
+setStatus(`Ready (${describeSelection()}).`);
+
+#####/plugins/photoshop/src/styles.css#####
+/* Panel layout styling for the GRIN Photoshop scaffold. */
+:root {
+  color: #f2f2f2;
+  background: #1e1e1e;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 12px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel__header {
+  border-bottom: 1px solid #2d2d2d;
+  padding-bottom: 8px;
+}
+
+.panel__title {
+  font-size: 18px;
+  margin: 0;
+}
+
+.panel__subtitle {
+  font-size: 12px;
+  margin: 4px 0 0;
+  color: #b5b5b5;
+}
+
+.panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field--inline {
+  flex-direction: row;
+  align-items: center;
+}
+
+.field__label {
+  font-size: 12px;
+  color: #c9c9c9;
+}
+
+.field__control {
+  background: #2b2b2b;
+  border: 1px solid #3a3a3a;
+  color: #f2f2f2;
+  padding: 6px 8px;
+  border-radius: 4px;
+}
+
+.field__checkbox {
+  width: 14px;
+  height: 14px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.button {
+  background: #2b2b2b;
+  border: 1px solid #3a3a3a;
+  color: #f2f2f2;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button--primary {
+  background: #1a73e8;
+  border-color: #1a73e8;
+}
+
+.panel__footer {
+  border-top: 1px solid #2d2d2d;
+  padding-top: 8px;
+}
+
+.status {
+  font-size: 12px;
+  margin: 0;
+  color: #b5b5b5;
 }
 
 #####/samples/README.md#####
@@ -22789,4 +23077,3 @@ if (document.readyState === "loading") {
 } else {
   init();
 }
-

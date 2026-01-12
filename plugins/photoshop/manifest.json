@@ -1,0 +1,29 @@
+{
+  "manifestVersion": 5,
+  "id": "io.grin.photoshop.plugin",
+  "name": "GRIN Exporter",
+  "version": "0.1.0",
+  "main": "src/main.js",
+  "host": {
+    "app": "PS",
+    "minVersion": "22.0.0"
+  },
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "grin-panel",
+      "label": "GRIN Export",
+      "minimumSize": {
+        "width": 300,
+        "height": 260
+      },
+      "maximumSize": {
+        "width": 600,
+        "height": 800
+      },
+      "panel": {
+        "main": "src/index.html"
+      }
+    }
+  ]
+}
