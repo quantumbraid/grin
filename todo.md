@@ -994,16 +994,21 @@
 ## Phase 14: Creative Suite + GIMP Plugins
 
 ### 14.1 Shared foundations (all plugins)
-- [ ] Define the pixel-group editing model and UX goals for painting group IDs + lock bits
+- [x] Define the pixel-group editing model and UX goals for painting group IDs + lock bits
   - Deliverable: a 1-page UX spec describing how artists select groups, toggle lock, and preview rules.
-- [ ] Decide on an interchange format between host apps and the GRIN toolchain
+  - Summary: Documented the shared UX model in `docs/creative-suite-foundations.md`.
+- [x] Decide on an interchange format between host apps and the GRIN toolchain
   - Likely: export a layered PNG + JSON sidecar with group/lock metadata.
-- [ ] Create a shared validation CLI workflow for plugin export
+  - Summary: Standardized PNG + groups PNG + rules JSON artifacts in `docs/creative-suite-foundations.md`.
+- [x] Create a shared validation CLI workflow for plugin export
   - Use `tools/bin/grin-validate.js` and `tools/bin/grin-inspect.js` as post-export checks.
-- [ ] Draft a shared palette/legend for group IDs (0-15) and lock state overlays
+  - Summary: Defined the CLI validation flow in `docs/creative-suite-foundations.md`.
+- [x] Draft a shared palette/legend for group IDs (0-15) and lock state overlays
   - Define color mapping and UI affordances for every plugin.
-- [ ] Define output paths and naming conventions for exports (`.grin`, `.png`, `.json`)
+  - Summary: Added the palette/legend table in `docs/creative-suite-foundations.md`.
+- [x] Define output paths and naming conventions for exports (`.grin`, `.png`, `.json`)
   - Make sure it matches `tools/bin/grin-encode.js` expectations.
+  - Summary: Standardized export naming in `docs/creative-suite-foundations.md`.
 
 ### 14.2 Photoshop plugin (UXP)
 - [ ] Set up `plugins/photoshop/` workspace with UXP manifest + dev tooling
