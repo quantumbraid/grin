@@ -1,15 +1,15 @@
-GRIN
-Graphic Readdressable Indexed Nodes
+#GRIN
+##Graphic Readdressable Indexed Nodes
 
-⚠️ Gradle is still being fixed. Everything else should work.
+###⚠️ Gradle is still being fixed. Everything else should work.
 
-GRIN is a deterministic image container format designed as an upgrade to traditional images and GIFs. Instead of storing static frames or frame sequences, GRIN treats an image as a programmable field of pixels that can be dynamically grouped, addressed, and modulated over time.
+*GRIN is a deterministic image container format designed as an upgrade to traditional images and GIFs. Instead of storing static frames or frame sequences, GRIN treats an image as a programmable field of pixels that can be dynamically grouped, addressed, and modulated over time.
 
-Rather than thinking in layers or frames, GRIN addresses pixels in arbitrary programmable groups. A group can contain any pixels you want, regardless of color, spatial adjacency, or semantic meaning.
+*Rather than thinking in layers or frames, GRIN addresses pixels in arbitrary programmable groups. A group can contain any pixels you want, regardless of color, spatial adjacency, or semantic meaning.
 
-A useful mental model is a DMX lighting controller, where each light is a pixel and groups of lights are driven by rules instead of timelines.
+*A useful mental model is a DMX lighting controller, where each light is a pixel and groups of lights are driven by rules instead of timelines.
 
-Another way to think about GRIN is as a chroma-key-like system, but without visible colors. Each pixel carries an unseen control value with 16 possible states, plus a lock bit. Instead of keying on green or blue, rules key off this hidden channel. Pixels can be locked or unlocked, allowing rules to selectively affect them.
+*Another way to think about GRIN is as a chroma-key-like system, but without visible colors. Each pixel carries an unseen control value with 16 possible states, plus a lock bit. Instead of keying on green or blue, rules key off this hidden channel. Pixels can be locked or unlocked, allowing rules to selectively affect them.
 
 CORE CONCEPT
 
@@ -54,24 +54,24 @@ core/ - Reserved for a future cross-platform reference core
 
 CLI QUICK START (Node >= 18)
 
-node tools/bin/grin-validate.js samples/minimal.grin
-node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
-node tools/bin/grin-encode.js input.png output.grin
-node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
+\\\node tools/bin/grin-validate.js samples/minimal.grin
+\\\node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
+\\\node tools/bin/grin-encode.js input.png output.grin
+\\\node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
 
-WEB LIBRARY
+##WEB LIBRARY
 
-cd web
-npm install
-npm test
-npm run build
+\\\cd web
+\\\npm install
+\\\npm test
+\\\npm run build
 
 The demo lives in web/demo/. Build first so web/dist is available.
 
 ANDROID LIBRARY AND DEMO
 
-cd android
-./gradlew :demo:assembleDebug
+\\\cd android
+\\\./gradlew :demo:assembleDebug
 
 The demo app loads sample files from android/demo/src/main/assets/samples.
 
@@ -79,7 +79,7 @@ SAMPLES
 
 Regenerate sample files with:
 
-node scripts/generate-samples.mjs
+\\\node scripts/generate-samples.mjs
 
 DOCUMENTATION
 
