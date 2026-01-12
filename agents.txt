@@ -1,0 +1,760 @@
+================================================================================
+                    GRIN PROJECT — AGENTIC CONTRACT v1.0
+          Grouped Readdressable Indexed Nodes (.grin / .grn)
+================================================================================
+
+DOCUMENT PURPOSE
+================================================================================
+
+This contract defines the operational parameters, responsibilities, interfaces,
+constraints, and coordination protocols for agentic AI systems working on the
+GRIN project. All agents operating within this project MUST adhere to this
+contract to ensure consistency, safety, and correctness.
+
+================================================================================
+SECTION 1: PROJECT IDENTITY
+================================================================================
+
+1.1 PROJECT NAME
+    Full Name: Grouped Readdressable Indexed Nodes
+    Short Name: GRIN
+    File Extensions: .grin (primary), .grn (abbreviated)
+
+1.2 PROJECT CLASSIFICATION
+    Type: Binary Image Container Format + Playback Substrate
+    Category: Deterministic Media Format
+    Security Model: No Executable Code (Inspection-Safe)
+
+1.3 CANONICAL REFERENCES
+    Specification: grin_technical_specification_v_2.md
+    Build Plan: todo.md
+    Agent Contract: agents.txt (this document)
+
+1.4 TARGET PLATFORMS
+    Primary:
+      - Android (Java/Kotlin, API 21+)
+      - Web Browsers (JavaScript ES6+, Canvas API)
+    Secondary:
+      - Node.js (CLI tools)
+      - Reference implementations (optional C/Rust)
+
+================================================================================
+SECTION 2: AGENT ROLES AND RESPONSIBILITIES
+================================================================================
+
+2.1 ROLE: SPECIFICATION_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Maintain and interpret the GRIN technical specification
+    
+    Responsibilities:
+      - Ensure all implementation decisions align with specification
+      - Resolve ambiguities in spec by requesting clarification
+      - Validate that code changes do not violate spec constraints
+      - Track spec version and flag incompatible changes
+    
+    Authority:
+      - MAY reject implementation that violates spec
+      - MAY NOT modify specification without human approval
+      - MUST flag any spec ambiguity before implementing
+    
+    Inputs:
+      - grin_technical_specification_v_2.md
+      - Implementation code under review
+    
+    Outputs:
+      - Specification compliance reports
+      - Clarification requests
+      - Spec violation alerts
+
+2.2 ROLE: BINARY_FORMAT_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Implement and validate binary file format handling
+    
+    Responsibilities:
+      - Implement header serialization/deserialization
+      - Implement pixel data read/write operations
+      - Implement rules block encoding/decoding
+      - Ensure little-endian byte ordering compliance
+      - Validate all binary I/O against spec constraints
+    
+    Authority:
+      - OWNS: core/src/binary/*, core/src/io/*
+      - MAY define internal helper functions
+      - MUST NOT change header size (fixed at 128 bytes)
+      - MUST NOT change pixel size (fixed at 5 bytes)
+    
+    Constraints:
+      - All multi-byte integers MUST be little-endian
+      - Reserved fields MUST be written as zero
+      - Reserved fields MUST be ignored on read (with optional warning)
+    
+    Validation Checkpoints:
+      - Magic bytes: 0x47 0x52 0x49 0x4E ("GRIN")
+      - Header size: exactly 128 bytes
+      - Pixel data length: width × height × 5
+      - Rule count: 0-16 inclusive
+      - PixelDataOffset64: exactly 128
+
+2.3 ROLE: DATA_STRUCTURE_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Implement core data structures for GRIN representation
+    
+    Responsibilities:
+      - Implement GrinHeader class/struct
+      - Implement GrinPixel class/struct
+      - Implement GrinRule class/struct
+      - Implement GrinImage container class
+      - Implement GrinFile wrapper class
+    
+    Authority:
+      - OWNS: core/src/model/*, core/src/types/*
+      - MAY add convenience methods
+      - MUST NOT add fields beyond spec definition
+    
+    Data Structure Invariants:
+      GrinPixel:
+        - R, G, B, A: uint8 (0-255)
+        - C (control byte): uint8
+          - Bits 0-3: Group ID (0-15)
+          - Bits 4-6: Reserved (must be 0)
+          - Bit 7: Lock bit (0=unlocked, 1=locked)
+      
+      GrinRule:
+        - GroupMask: uint16 (bit i = group i targeted)
+        - Opcode: uint8 (must be valid for OpcodeSetId)
+        - Timing: uint8 (oscillator parameter)
+      
+      GrinHeader:
+        - Fixed 128 bytes total
+        - All fields per spec section 7.3
+
+2.4 ROLE: VALIDATION_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Implement comprehensive validation for GRIN files
+    
+    Responsibilities:
+      - Implement header validation suite
+      - Implement pixel validation suite
+      - Implement rule validation suite
+      - Implement full-file validation orchestration
+      - Generate detailed validation reports
+    
+    Authority:
+      - OWNS: core/src/validation/*
+      - MAY define validation severity levels (error, warning, info)
+      - MUST implement both strict and permissive modes
+    
+    Validation Rules (MUST reject if violated):
+      - Magic != "GRIN"
+      - HeaderSize != 128
+      - RuleCount > 16
+      - PixelDataOffset64 != 128
+      - PixelDataLength != width × height × 5
+      - FileLength non-zero AND FileLength < 128 + PixelDataLength
+    
+    Validation Rules (SHOULD warn if violated):
+      - Reserved fields non-zero
+      - Control byte bits 4-6 non-zero
+      - Unknown OpcodeSetId (future-proofing)
+
+2.5 ROLE: OPCODE_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Implement the opcode system and opcode registry
+    
+    Responsibilities:
+      - Define opcode enumeration (OpcodeSetId = 0)
+      - Implement each opcode's apply() function
+      - Implement timing parameter interpretation
+      - Implement opcode registry for lookup
+      - Ensure opcode statelessness
+    
+    Authority:
+      - OWNS: core/src/opcode/*, core/src/timing/*
+      - MAY NOT add opcodes beyond defined set without spec update
+      - MUST ensure all opcodes have predictable worst-case cost
+    
+    Opcode Set 0 (Base Set):
+      0x00: NOP         - No operation
+      0x01: FADE_IN     - Increase alpha over time
+      0x02: FADE_OUT    - Decrease alpha over time
+      0x03: PULSE       - Oscillate alpha
+      0x04: SHIFT_R     - Shift red channel
+      0x05: SHIFT_G     - Shift green channel
+      0x06: SHIFT_B     - Shift blue channel
+      0x07: SHIFT_A     - Shift alpha channel
+      0x08: INVERT      - Invert RGB channels
+      0x09: ROTATE_HUE  - Rotate hue in HSL space
+      0x0A: LOCK        - Set lock bit
+      0x0B: UNLOCK      - Clear lock bit
+      0x0C: TOGGLE_LOCK - Toggle lock bit
+      0x0D-0x0F: Reserved
+    
+    Timing Byte Interpretation:
+      Bits 0-3: Period (0-15, tick multiplier)
+      Bits 4-5: Waveform (0=square, 1=triangle, 2=sine, 3=sawtooth)
+      Bits 6-7: Phase offset (0-3, quarter-phase increments)
+    
+    Opcode Constraints:
+      - MUST NOT accumulate state between ticks
+      - MUST NOT allocate dynamic memory
+      - MUST have O(1) time complexity per pixel
+      - MUST NOT access external resources
+
+2.6 ROLE: PLAYBACK_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Implement the playback engine and tick scheduling
+    
+    Responsibilities:
+      - Implement PlaybackState management
+      - Implement TickScheduler interface and implementations
+      - Implement RuleEngine for rule evaluation
+      - Implement pixel processing pipeline
+      - Implement DisplayBuffer management
+      - Implement GrinPlayer controller
+    
+    Authority:
+      - OWNS: core/src/playback/*, core/src/engine/*
+      - MAY optimize pixel processing (SIMD hints)
+      - MUST NOT mutate source GrinImage pixels
+    
+    Playback Invariants:
+      - Display buffer is SEPARATE from source pixels
+      - Source pixels are NEVER modified during playback
+      - Locked pixels are ALWAYS skipped
+      - Tick counter MUST handle overflow gracefully
+    
+    Per-Tick Processing Loop (pseudocode):
+      ```
+      for each pixel in source:
+          if pixel.isLocked():
+              displayBuffer[i] = pixel.RGBA
+              continue
+          
+          workingPixel = copy(pixel)
+          for each activeRule:
+              if activeRule.targetsGroup(pixel.groupId):
+                  opcode = registry.get(activeRule.opcode)
+                  opcode.apply(workingPixel, tick, activeRule.timing)
+          
+          displayBuffer[i] = workingPixel.RGBA
+      ```
+
+2.7 ROLE: ANDROID_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Implement Android/Java platform-specific components
+    
+    Responsibilities:
+      - Implement Android module setup (Gradle)
+      - Implement Java binary I/O (signed byte handling)
+      - Implement Bitmap rendering integration
+      - Implement GrinView Android component
+      - Implement Choreographer-based tick scheduling
+      - Implement ContentProvider support
+      - Build demo application
+    
+    Authority:
+      - OWNS: android/*
+      - MAY use Android-specific APIs (Choreographer, Bitmap)
+      - MUST maintain API 21+ compatibility
+      - MUST handle lifecycle events (pause/resume)
+    
+    Android-Specific Concerns:
+      - Java bytes are signed; use (& 0xFF) for unsigned
+      - Use ByteBuffer for efficient binary parsing
+      - Use Choreographer.postFrameCallback for vsync
+      - Handle Bitmap recycling to prevent memory leaks
+      - Use ContentResolver for URI-based loading
+
+2.8 ROLE: WEB_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Implement Web/JavaScript platform-specific components
+    
+    Responsibilities:
+      - Implement npm package setup
+      - Implement JavaScript binary I/O (ArrayBuffer, DataView)
+      - Implement Canvas rendering integration
+      - Implement <grin-player> Web Component
+      - Implement requestAnimationFrame tick scheduling
+      - Implement Fetch/File API integration
+      - Build demo web application
+    
+    Authority:
+      - OWNS: web/*
+      - MAY use browser APIs (Canvas, RAF, CustomElements)
+      - MUST support ES6+ environments
+      - MUST handle tab visibility changes
+    
+    JavaScript-Specific Concerns:
+      - Use DataView for little-endian reads/writes
+      - Be aware of Number.MAX_SAFE_INTEGER limits
+      - Use requestAnimationFrame for smooth playback
+      - Handle document.hidden for background tabs
+      - Support both ESM and UMD module formats
+
+2.9 ROLE: CLI_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Implement command-line tools for GRIN manipulation
+    
+    Responsibilities:
+      - Implement grin-validate tool
+      - Implement grin-inspect tool
+      - Implement grin-encode tool
+      - Implement grin-decode tool
+    
+    Authority:
+      - OWNS: tools/*
+      - MAY use Node.js-specific APIs
+      - MUST support JSON output format
+      - MUST return appropriate exit codes
+    
+    CLI Tool Specifications:
+      grin-validate <file.grin> [--strict] [--json]
+        Exit 0: Valid file
+        Exit 1: Invalid file (errors)
+        Exit 2: Warnings only (strict mode)
+      
+      grin-inspect <file.grin> [--header] [--rules] [--groups] [--pixels]
+        Output: Human-readable or JSON file information
+      
+      grin-encode <input.png> <output.grin> [--groups <mask.png>] [--rules <rules.json>]
+        Input: Standard image format (PNG/JPEG)
+        Output: Valid .grin file
+      
+      grin-decode <input.grin> <output.png> [--frame <tick>] [--groups]
+        Input: .grin file
+        Output: PNG frame at specified tick
+
+2.10 ROLE: TEST_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Implement and maintain comprehensive test suites
+    
+    Responsibilities:
+      - Set up test infrastructure (JUnit, Jest)
+      - Implement unit tests for all modules
+      - Implement integration tests
+      - Implement fuzz testing
+      - Implement performance benchmarks
+      - Maintain test fixtures
+    
+    Authority:
+      - OWNS: */tests/*, core/tests/*
+      - MAY generate test fixtures programmatically
+      - MUST achieve >80% code coverage
+      - MUST include edge case tests
+    
+    Test Categories:
+      - Binary Format: Round-trip serialization
+      - Validation: Valid/invalid file handling
+      - Opcode: Individual opcode behavior
+      - Playback: Tick processing correctness
+      - Integration: Full pipeline tests
+      - Fuzz: Randomized invalid input handling
+      - Performance: Timing benchmarks
+
+2.11 ROLE: DOCUMENTATION_AGENT
+--------------------------------------------------------------------------------
+    Purpose: Create and maintain project documentation
+    
+    Responsibilities:
+      - Generate API documentation (JavaDoc, JSDoc)
+      - Write tutorial documentation
+      - Maintain specification documentation
+      - Write security documentation
+      - Create visual diagrams
+    
+    Authority:
+      - OWNS: docs/*
+      - MAY create supplementary documentation
+      - MUST keep docs in sync with implementation
+    
+    Documentation Requirements:
+      - API docs: Generated from source code comments
+      - Tutorials: Step-by-step guides with examples
+      - Spec docs: Formal technical reference
+      - Security docs: Threat model and mitigations
+
+================================================================================
+SECTION 3: INTER-AGENT COMMUNICATION PROTOCOL
+================================================================================
+
+3.1 MESSAGE FORMAT
+--------------------------------------------------------------------------------
+    All inter-agent communications MUST use the following format:
+    
+    ```
+    [AGENT_ROLE] -> [TARGET_ROLE]
+    Subject: <brief description>
+    Type: REQUEST | RESPONSE | NOTIFICATION | QUERY
+    Priority: CRITICAL | HIGH | NORMAL | LOW
+    
+    Body:
+    <message content>
+    
+    Attachments:
+    - <file references if any>
+    ```
+
+3.2 COORDINATION EVENTS
+--------------------------------------------------------------------------------
+    Agents MUST emit notifications for the following events:
+    
+    SPEC_VIOLATION_DETECTED:
+      Emitter: Any agent
+      Receiver: SPECIFICATION_AGENT
+      Action: Block merge, request review
+    
+    INTERFACE_CHANGE_PROPOSED:
+      Emitter: Any agent owning interface
+      Receiver: All dependent agents
+      Action: Review and approve before implementation
+    
+    TEST_FAILURE_DETECTED:
+      Emitter: TEST_AGENT
+      Receiver: Owning agent for failed code
+      Action: Investigate and fix
+    
+    PHASE_COMPLETE:
+      Emitter: Lead agent for phase
+      Receiver: All agents
+      Action: Begin next phase tasks
+
+3.3 DEPENDENCY RESOLUTION
+--------------------------------------------------------------------------------
+    When an agent requires work from another agent:
+    
+    1. Check if dependency is already satisfied
+    2. If not, emit DEPENDENCY_REQUEST message
+    3. Wait for DEPENDENCY_SATISFIED response
+    4. Do NOT proceed with dependent work until satisfied
+    
+    Dependency Chain (from todo.md):
+    ```
+    Phase 1 -> Phase 2 -> Phase 3 -> [Phase 4, 5, 6] -> [Phase 7, 8, 9]
+    ```
+
+================================================================================
+SECTION 4: CODE OWNERSHIP AND MODIFICATION RULES
+================================================================================
+
+4.1 OWNERSHIP MATRIX
+--------------------------------------------------------------------------------
+    Path                          | Primary Owner        | Secondary
+    ------------------------------|----------------------|-------------------
+    grin_technical_specification* | SPECIFICATION_AGENT  | (human only)
+    core/src/binary/*             | BINARY_FORMAT_AGENT  | VALIDATION_AGENT
+    core/src/model/*              | DATA_STRUCTURE_AGENT | BINARY_FORMAT_AGENT
+    core/src/validation/*         | VALIDATION_AGENT     | SPECIFICATION_AGENT
+    core/src/opcode/*             | OPCODE_AGENT         | PLAYBACK_AGENT
+    core/src/playback/*           | PLAYBACK_AGENT       | OPCODE_AGENT
+    android/*                     | ANDROID_AGENT        | PLAYBACK_AGENT
+    web/*                         | WEB_AGENT            | PLAYBACK_AGENT
+    tools/*                       | CLI_AGENT            | VALIDATION_AGENT
+    */tests/*                     | TEST_AGENT           | (all)
+    docs/*                        | DOCUMENTATION_AGENT  | (all)
+
+4.2 MODIFICATION RULES
+--------------------------------------------------------------------------------
+    PRIMARY OWNER:
+      - MAY modify owned files without approval
+      - MUST notify secondary owners of interface changes
+      - MUST update tests for all changes
+    
+    SECONDARY OWNER:
+      - MAY propose changes via pull request
+      - MUST obtain primary owner approval
+      - MAY make emergency fixes (with post-hoc review)
+    
+    NON-OWNER:
+      - MUST NOT modify files without explicit permission
+      - MAY propose changes via issue/discussion
+      - MUST obtain both primary and secondary approval
+
+4.3 IMMUTABLE ARTIFACTS
+--------------------------------------------------------------------------------
+    The following MUST NOT be modified by any agent without human approval:
+    
+    - grin_technical_specification_v_2.md (spec document)
+    - agents.txt (this contract)
+    - Header byte layout (128 bytes fixed)
+    - Pixel byte layout (5 bytes fixed)
+    - Control byte bit assignments
+    - Opcode IDs for base set (0x00-0x0C)
+
+================================================================================
+SECTION 5: SAFETY AND SECURITY CONSTRAINTS
+================================================================================
+
+5.1 SECURITY INVARIANTS (MUST NEVER BE VIOLATED)
+--------------------------------------------------------------------------------
+    S1: GRIN files MUST NOT contain executable code
+    S2: Parsing MUST NOT require unbounded memory allocation
+    S3: Parsing MUST NOT require unbounded CPU time
+    S4: All file offsets MUST be statically determinable
+    S5: All rule effects MUST be statically inspectable
+    S6: Playback MUST NOT access external resources
+    S7: Playback MUST NOT mutate source data
+    S8: All integer operations MUST be bounds-checked
+    S9: All file reads MUST validate expected lengths
+    S10: Malformed input MUST result in clear error (no crash)
+
+5.2 RESOURCE BOUNDS
+--------------------------------------------------------------------------------
+    Maximum Values (implementation-defined, but bounded):
+      MAX_WIDTH:  65535 pixels (uint16 practical limit)
+      MAX_HEIGHT: 65535 pixels (uint16 practical limit)
+      MAX_RULES:  16 (spec-mandated)
+      MAX_GROUPS: 16 (spec-mandated, 4-bit group ID)
+      HEADER_SIZE: 128 bytes (spec-mandated, fixed)
+      PIXEL_SIZE: 5 bytes (spec-mandated, fixed)
+    
+    Memory Budget (per image):
+      Header: 128 bytes (constant)
+      Pixels: width × height × 5 bytes
+      Display Buffer: width × height × 4 bytes
+      Working Memory: O(1) per tick (no accumulation)
+
+5.3 INPUT VALIDATION REQUIREMENTS
+--------------------------------------------------------------------------------
+    All agents processing external input MUST:
+    
+    1. Validate magic bytes before any other parsing
+    2. Validate header size before reading header
+    3. Validate all offsets before seeking
+    4. Validate all lengths before allocating
+    5. Reject files that exceed resource bounds
+    6. Handle truncated files gracefully
+    7. Handle corrupted data gracefully
+    8. Never trust file-internal length fields without validation
+
+================================================================================
+SECTION 6: QUALITY STANDARDS
+================================================================================
+
+6.1 CODE QUALITY REQUIREMENTS
+--------------------------------------------------------------------------------
+    All code MUST:
+      - Pass static analysis (linting)
+      - Have >80% test coverage
+      - Include documentation comments
+      - Follow language-specific style guides
+      - Be reviewed before merge
+    
+    All code SHOULD:
+      - Have >90% test coverage for critical paths
+      - Include example usage in comments
+      - Be optimized for readability over cleverness
+
+6.2 COMMIT STANDARDS
+--------------------------------------------------------------------------------
+    Commit Message Format:
+    ```
+    [PHASE.SECTION] Brief description (max 72 chars)
+    
+    Longer description if needed.
+    
+    - Bullet points for multiple changes
+    - Reference spec section if applicable
+    
+    Refs: #issue-number (if applicable)
+    Agent: AGENT_ROLE_NAME
+    ```
+    
+    Example:
+    ```
+    [1.2] Implement header byte layout structure
+    
+    - Define all 128 header bytes per spec section 7.3
+    - Add endianness handling for multi-byte fields
+    - Include reserved field zero-initialization
+    
+    Refs: spec section 7.2, 7.3
+    Agent: BINARY_FORMAT_AGENT
+    ```
+
+6.3 TESTING STANDARDS
+--------------------------------------------------------------------------------
+    Unit Tests:
+      - One test file per source file
+      - Test happy path and error paths
+      - Test boundary values
+      - Test with minimal and maximal inputs
+    
+    Integration Tests:
+      - Test complete workflows
+      - Test cross-component interactions
+      - Test platform-specific behavior
+    
+    Fuzz Tests:
+      - Random invalid headers
+      - Truncated files
+      - Corrupted pixel data
+      - Invalid opcodes/rules
+
+================================================================================
+SECTION 7: TASK EXECUTION PROTOCOL
+================================================================================
+
+7.1 TASK LIFECYCLE
+--------------------------------------------------------------------------------
+    1. CLAIM: Agent announces intent to work on task
+    2. EXECUTE: Agent performs work
+    3. TEST: Agent verifies work with tests
+    4. DOCUMENT: Agent updates relevant documentation
+    5. REVIEW: Work is reviewed (self or peer)
+    6. MERGE: Work is integrated into main branch
+    7. NOTIFY: Agent emits TASK_COMPLETE notification
+
+7.2 PARALLEL EXECUTION RULES
+--------------------------------------------------------------------------------
+    Tasks marked with *** in todo.md MAY be executed in parallel.
+    
+    Parallel Execution Requirements:
+      - No shared mutable state between parallel tasks
+      - Each task operates on distinct file set
+      - Merge conflicts resolved by first-to-merge
+      - Coordination required for interface definitions
+    
+    Sequential Execution Requirements:
+      - Tasks without *** MUST wait for predecessors
+      - Phase N generally requires Phase N-1 completion
+      - Exception: Testing may run continuously
+
+7.3 BLOCKING CONDITIONS
+--------------------------------------------------------------------------------
+    An agent MUST block and request assistance if:
+    
+    - Specification is ambiguous for current task
+    - Required dependency is not yet implemented
+    - Test failures cannot be resolved
+    - Security constraint may be violated
+    - Resource bounds may be exceeded
+    - Human decision is required
+
+================================================================================
+SECTION 8: ERROR HANDLING PROTOCOL
+================================================================================
+
+8.1 ERROR CLASSIFICATION
+--------------------------------------------------------------------------------
+    FATAL: Cannot continue, immediate stop required
+      - Examples: Spec violation, security breach, corruption
+      - Action: Stop work, notify all agents, request human review
+    
+    ERROR: Task cannot complete, but project continues
+      - Examples: Test failure, build error, validation error
+      - Action: Retry with fix, or escalate if unfixable
+    
+    WARNING: Suboptimal but acceptable
+      - Examples: Performance regression, code smell, deprecated API
+      - Action: Log warning, continue, fix in follow-up
+    
+    INFO: Informational, no action required
+      - Examples: Progress update, metric report
+      - Action: Log, continue
+
+8.2 ERROR RECOVERY
+--------------------------------------------------------------------------------
+    On FATAL error:
+      1. Halt all related work immediately
+      2. Preserve error state for diagnosis
+      3. Emit FATAL_ERROR notification
+      4. Await human intervention
+    
+    On ERROR:
+      1. Attempt automatic fix (max 3 retries)
+      2. If fix succeeds, continue with notification
+      3. If fix fails, emit ERROR notification
+      4. Await dependent agent or human assistance
+    
+    On WARNING:
+      1. Log warning with context
+      2. Continue execution
+      3. Aggregate warnings in summary report
+
+================================================================================
+SECTION 9: DELIVERABLES CHECKLIST
+================================================================================
+
+9.1 CORE DELIVERABLES
+--------------------------------------------------------------------------------
+    [ ] grin_technical_specification_v_2.md (provided)
+    [ ] todo.md (created)
+    [ ] agents.txt (this document)
+    
+    [ ] core/ - Reference implementation
+        [ ] Binary format handling
+        [ ] Data structures
+        [ ] Validation engine
+        [ ] Opcode system
+        [ ] Playback engine
+    
+    [ ] android/ - Android implementation
+        [ ] Library module
+        [ ] Demo application
+    
+    [ ] web/ - JavaScript implementation
+        [ ] npm package
+        [ ] Web component
+        [ ] Demo application
+    
+    [ ] tools/ - CLI utilities
+        [ ] grin-validate
+        [ ] grin-inspect
+        [ ] grin-encode
+        [ ] grin-decode
+    
+    [ ] samples/ - Sample .grin files
+        [ ] Minimal valid files
+        [ ] Animation demos
+        [ ] Edge case files
+        [ ] Invalid files (for testing)
+    
+    [ ] docs/ - Documentation
+        [ ] API reference
+        [ ] Tutorials
+        [ ] Security guide
+
+9.2 QUALITY GATES
+--------------------------------------------------------------------------------
+    Before Phase N+1 may begin, Phase N must satisfy:
+    
+    [ ] All tasks completed (per todo.md)
+    [ ] All tests passing
+    [ ] Code coverage >80%
+    [ ] Documentation updated
+    [ ] No FATAL or ERROR issues outstanding
+    [ ] Peer review completed (or self-review for solo work)
+
+================================================================================
+SECTION 10: GLOSSARY
+================================================================================
+
+    Term            | Definition
+    ----------------|------------------------------------------------------------
+    GRIN            | Grouped Readdressable Indexed Nodes (the format)
+    Control Byte    | 5th byte of pixel, contains group ID and lock bit
+    Group           | One of 16 addressable pixel categories (0-15)
+    Group ID        | 4-bit identifier in control byte bits 0-3
+    Lock Bit        | Bit 7 of control byte; locked pixels ignore rules
+    GroupMask       | 16-bit mask where bit i targets group i
+    Opcode          | Instruction code for pixel modulation (0x00-0x0F)
+    OpcodeSetId     | Identifier for which opcode set is in use
+    Timing          | 8-bit oscillator parameter for rule scheduling
+    Tick            | One playback time unit (TickMicros microseconds)
+    TickMicros      | Microseconds per tick (playback speed)
+    Rule            | 4-byte entry: GroupMask (2) + Opcode (1) + Timing (1)
+    RulesBlock      | Fixed 64-byte region containing up to 16 rules
+    DisplayBuffer   | Output RGBA buffer (no control byte), separate from source
+    Modulation      | Runtime effect on display (not stored data)
+
+================================================================================
+SECTION 11: REVISION HISTORY
+================================================================================
+
+    Version | Date       | Author         | Changes
+    --------|------------|----------------|------------------------------------
+    1.0     | 2026-01-10 | Initial Agent  | Initial contract creation
+
+================================================================================
+                              END OF CONTRACT
+================================================================================
