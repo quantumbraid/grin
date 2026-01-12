@@ -90,6 +90,8 @@ while preserving the original art and enabling instant validation.
 
 - Run the validation step automatically after export.
 - If validation fails, show a list of errors with file references and suggested fixes.
+- GIMP workflows should export through the Python-Fu panel and surface preview counts from the
+  group/lock layers so artists can verify metadata coverage before encoding.
 
 ## 4) Shared palette/legend for group IDs and lock overlays
 
@@ -140,3 +142,13 @@ exports/
 
 This naming scheme is compatible with `tools/bin/grin-encode.js` inputs and keeps derivative
 assets grouped for validation and review.
+
+## 6) GIMP plugin specifics
+
+- **Menu entry:** `Filters → GRIN → GRIN Export...` (Python-Fu).
+- **Metadata layers:** The plugin maintains `GRIN_GROUPS` and `GRIN_LOCK` grayscale layers for
+  non-destructive group and lock authoring.
+- **Selection painting:** Use selections to paint group IDs (0-15) and lock state (0/255) into
+  the metadata layers while leaving the visible art untouched.
+- **Preview feedback:** The plugin summarizes group and lock pixel counts after each run to help
+  validate coverage before encoding.
