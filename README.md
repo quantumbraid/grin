@@ -16,21 +16,33 @@
 ##CORE CONCEPT
 
 *A .grin file is not a loop of frames.
+
 *Nearly all animation logic lives in the file header. 
+
 *Narrow, bounded scripts operate on pixel groups and can shift colors, animate values, loop or diverge, and run once or indefinitely.
+
 *Because logic is embedded, a .grin file can branch, repeat, or evolve without duplicating image data. 
+
 *Rendering requires only minimal runtime code. For web playback, a small amount of JavaScript is sufficient.
+
 *GRIN is designed to be artist-friendly, portable, and low-infrastructure, while remaining fully deterministic.
 
 ##TECHNICAL SUMMARY
 
 *Deterministic image container format
+
 *5-byte pixels: RGBA + control byte
+
 *Fixed 128-byte header
+
 *Bounded rules block (no unbounded metadata)
+
 *16 addressable groups per pixel
+
 *Lock bit per pixel
+
 *Opcode-driven modulation
+
 *No frame storage required
 
 This repository includes working implementations, tools, tests, and sample files.
@@ -38,9 +50,13 @@ This repository includes working implementations, tools, tests, and sample files
 ##IMPLEMENTATIONS INCLUDED
 
 Web TypeScript library with Canvas renderer
+
 <grin-player> web component
+
 Android Kotlin library with demo app
+
 CLI tools for validation, inspection, encoding, and decoding
+
 Tests and benchmarks for web and Android
 
 ##REPOSITORY LAYOUT
@@ -121,7 +137,9 @@ Docs index: docs/README.md
 PLANNED WORK
 
 Photoshop, Illustrator, and GIMP plugins
+
 Translation of .grin files to real DMX stage control
+
 Compatibility with large video walls and LED arrays
 
 LICENSING STATUS
@@ -129,7 +147,9 @@ LICENSING STATUS
 THIS REPOSITORY IS CURRENTLY UNLICENSED.
 
 You may build, experiment, and explore this code for personal and research purposes.
-You may not redistribute the code, incorporate it into unrelated projects, or use the code or its outputs for commercial purposes without explicit consent.
+
+You may not redistribute the code, incorporate it into unrelated projects, 
+or use the code or its outputs for commercial purposes without explicit consent.
 
 For commercial use, redistribution, or related project releases, contact:
 
@@ -137,4 +157,3 @@ quantumbraid@gmail.com
 
 This standard is intentionally constrained for security reasons and to encourage thoughtful, novel usage.
 
-about like thatunrelated projects, or use the code or its outputs for commercial purposes without explicit consent. For commercial use, redistribution, or related project releases, contact: quantumbraid@gmail.com This standard is intentionally constrained for security reasons and to encourage thoughtful, novel usage. about like that
