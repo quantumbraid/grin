@@ -13,6 +13,8 @@ This folder contains Phase 12 documentation that complements the core spec.
 - `docs/playback-guide-android.md` - Android playback integration guide
 - `docs/security-model.md` - security model and validation requirements
 - `docs/security-audit-checklist.md` - audit checklist
+- `docs/release-preparation.md` - semantic versioning and release tagging
+- `docs/compatibility.md` - Android, browser, and Node.js compatibility matrix
 - `docs/api/web/` - generated TypeDoc output (web library)
 - `docs/api/android/README.md` - Android API draft (Dokka output configured here)
 

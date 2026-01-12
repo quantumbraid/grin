@@ -1,0 +1,8 @@
+GRIN (Graphic Readdressable Indexed Nodes)
+
+This product includes software developed by the GRIN Project Contributors.
+
+Third-party dependencies are redistributed under their respective licenses.
+See package manifests (e.g., web/package.json, tools/package.json) for
+dependency lists and consult the dependencies' license files for attribution
+requirements.
