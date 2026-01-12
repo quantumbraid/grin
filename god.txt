@@ -138,6 +138,7 @@ grin/
 │   ├── timing.md
 │   ├── tutorial-first-file.md
 │   └── tutorial-grin-groups.md
+├── delete e.txt
 ├── grin_technical_specification.md
 ├── grin_technical_specification_v_2.md
 ├── immediatetodo.txt
@@ -22790,3 +22791,44 @@ if (document.readyState === "loading") {
   init();
 }
 
+#####/delete e.txt#####
+Incidental files (non-source, supporting artifacts)
+- ARCHITECTURE.md
+- CHANGELOG.md
+- CONTRIBUTING.md
+- LICENSE
+- NOTICE
+- README.md
+- SECURITY.md
+- benchmarks/README.md
+- benchmarks/baseline.json
+- benchmarks/bench.js
+- docs/README.md
+- docs/compatibility.md
+- docs/api-quickstart.md
+- docs/format-diagram.md
+- docs/migration-gif-apng.md
+- docs/opcodes.md
+- docs/playback-guide-android.md
+- docs/playback-guide-web.md
+- docs/release-preparation.md
+- docs/security-audit-checklist.md
+- docs/security-model.md
+- docs/timing.md
+- docs/tutorial-first-file.md
+- docs/tutorial-grin-groups.md
+- grin_technical_specification.md
+- grin_technical_specification_v_2.md
+- samples/README.md
+- samples/*.grin
+- spec/grin_technical_specification_v_2.md
+- tchspecdraft.txt
+- tests/fixtures/README.md
+- tests/fixtures/grin-fixtures.json
+
+VS Code files
+- .vscode/settings.json
+
+Files unnecessary for GitHub repo (machine-specific or IDE cache)
+- .idea/
+- android/local.properties
