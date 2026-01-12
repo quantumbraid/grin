@@ -30,12 +30,16 @@ Release artifacts should include:
 ### Android (Maven Central / JitPack)
 
 1. Ensure `android/lib/build.gradle.kts` has publishing metadata and signing configured.
-2. Export credentials for Sonatype and signing:
-   - `SONATYPE_USERNAME`, `SONATYPE_PASSWORD`
+2. Export credentials for the Central Publisher Portal and signing:
+   - `CENTRAL_USERNAME`, `CENTRAL_PASSWORD`
    - `SIGNING_KEY`, `SIGNING_PASSWORD`
-3. Publish the release artifacts:
+3. Run preflight checks:
+   - Confirm the Central Portal namespace is verified for `io.grin`.
+   - Validate that the in-memory PGP key matches the published public key.
+   - Verify the Android version matches the release tag and CHANGELOG entry.
+4. Publish the release artifacts:
    - `./gradlew :lib:publish` (from `android/`)
-4. Close and release the staging repository in Sonatype OSSRH.
+5. In the Central Publisher Portal, review the deployment status and publish it.
 
 For JitPack, push a Git tag and confirm the build at `https://jitpack.io/#grin-format/grin`.
 

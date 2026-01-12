@@ -41,6 +41,27 @@ jobs:
         working-directory: android
         run: ./gradlew :lib:assembleRelease
 
+      # Surface Central Publisher Portal credentials without failing the release build.
+      - name: Central Portal preflight
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          # Report missing Central Publisher Portal credentials without failing the job.
+          if [[ -z "${CENTRAL_USERNAME}" || -z "${CENTRAL_PASSWORD}" ]]; then
+            echo "Central Publisher Portal credentials are not set; publishing must be handled separately."
+          else
+            echo "Central Publisher Portal credentials detected."
+          fi
+          # Report missing signing material without failing the job.
+          if [[ -z "${SIGNING_KEY}" || -z "${SIGNING_PASSWORD}" ]]; then
+            echo "In-memory PGP signing material is not set; Android publishing requires signing keys."
+          else
+            echo "In-memory PGP signing material detected."
+          fi
+
       # Package artifacts for the GitHub release.
       - name: Prepare release artifacts
         run: |
