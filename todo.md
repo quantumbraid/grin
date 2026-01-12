@@ -1014,15 +1014,20 @@
 - [x] Set up `plugins/photoshop/` workspace with UXP manifest + dev tooling
   - Include a simple panel scaffold for group/lock selection and export.
   - Summary: Added the Photoshop UXP panel scaffold, manifest, and package metadata in `plugins/photoshop/`.
-- [ ] Implement layer metadata capture
+- [x] Implement layer metadata capture
   - Map layer names or layer tags to group IDs (0-15) and lock bit.
-- [ ] Implement pixel-to-group map extraction
+  - Summary: Added tag parsing and layer metadata capture in `plugins/photoshop/src/main.js`.
+- [x] Implement pixel-to-group map extraction
   - Render a flattened bitmap with hidden metadata encoding group + lock values.
-- [ ] Implement export pipeline
+  - Summary: Exported named metadata layers for group/lock maps in `plugins/photoshop/src/main.js`.
+- [x] Implement export pipeline
   - Generate a JSON sidecar and call `tools/bin/grin-encode.js`.
-- [ ] Add preview/validation step
+  - Summary: Added PNG export, rules sidecar creation, and CLI command guidance in `plugins/photoshop/src/main.js`.
+- [x] Add preview/validation step
   - Use `grin-validate` and report errors in the panel UI.
-- [ ] Write Photoshop plugin README with install + usage steps
+  - Summary: Added preview metadata summary and validation command output in `plugins/photoshop/src/main.js`.
+- [x] Write Photoshop plugin README with install + usage steps
+  - Summary: Documented installation, tagging, and export workflow in `plugins/photoshop/README.md`.
 
 ### 14.3 Illustrator plugin (UXP)
 - [ ] Set up `plugins/illustrator/` workspace with UXP manifest + dev tooling
