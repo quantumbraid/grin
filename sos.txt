@@ -1,3 +1,0 @@
-Undone items (Phase 12 & 13):
-
-- Phase 13.4: Add license headers to all source files.
