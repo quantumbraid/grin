@@ -29,6 +29,7 @@
     
     <!-- UI Strings -->
     <string name="load_file">Load .grin File</string>
+    <string name="open_camera">Open Grid Camera</string>
     <string name="play">Play</string>
     <string name="pause">Pause</string>
     <string name="stop">Stop</string>
@@ -40,9 +41,17 @@
     <string name="dimensions_format">Dimensions: %1$d × %2$d</string>
     <string name="rule_count_format">Rules: %1$d</string>
     <string name="tick_rate_format">Tick Rate: %1$d µs</string>
+
+    <!-- Grid camera -->
+    <string name="grid_camera_title">Grid Camera Preview</string>
+    <string name="camera_performance_default">Grid: -- × -- · Palette: --</string>
+    <string name="camera_performance_format">Grid: %1$d × %2$d · Palette: %3$d</string>
+    <string name="close">Close</string>
     
     <!-- Errors -->
     <string name="error_invalid_file">Invalid GRIN file</string>
     <string name="error_file_not_found">File not found</string>
     <string name="error_loading">Error loading file</string>
+    <string name="camera_permission_denied">Camera permission denied.</string>
+    <string name="camera_start_failed">Unable to start camera preview.</string>
 </resources>

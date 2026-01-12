@@ -29,6 +29,10 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Camera permission required for the grid preview pipeline. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -63,6 +67,12 @@
                 <data android:pathPattern=".*\\.grn" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".GridCameraActivity"
+            android:exported="false"
+            android:label="@string/grid_camera_title"
+            android:theme="@style/Theme.GrinDemo" />
     </application>
 
 </manifest>

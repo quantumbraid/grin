@@ -57,6 +57,10 @@ class MainActivity : AppCompatActivity() {
         binding.loadButton.setOnClickListener {
             filePicker.launch(arrayOf("application/octet-stream"))
         }
+        binding.cameraButton.setOnClickListener {
+            // Launch the grid camera preview workflow.
+            startActivity(Intent(this, GridCameraActivity::class.java))
+        }
         binding.playButton.setOnClickListener { binding.grinView.play() }
         binding.pauseButton.setOnClickListener { binding.grinView.pause() }
         binding.stopButton.setOnClickListener { binding.grinView.stop() }
