@@ -46,14 +46,21 @@ Tests and benchmarks for web and Android
 ##REPOSITORY LAYOUT
 
 web/ - TypeScript implementation, web component, demo, tests
+
 android/ - Kotlin implementation and demo app
+
 tools/ - Node.js CLI utilities
+
 samples/ - Reference .grin files (valid and invalid)
+
 benchmarks/ - Performance harness
+
 tests/ - Shared fixtures and generators
+
 core/ - Reserved for a future cross-platform reference core
 
 CLI QUICK START (Node >= 18)
+
 ```npm
   node tools/bin/grin-validate.js samples/minimal.grin
 ```
@@ -100,10 +107,15 @@ Regenerate sample files with:
 DOCUMENTATION
 
 Format specification: grin_technical_specification_v_2.md
+
 Architecture: ARCHITECTURE.md
+
 Contributing: CONTRIBUTING.md
+
 Security: SECURITY.md
+
 Samples: samples/README.md
+
 Docs index: docs/README.md
 
 PLANNED WORK
