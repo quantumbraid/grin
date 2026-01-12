@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GRIN Web Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <main class="app">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">GRIN FORMAT</p>
+          <h1>Grouped Readdressable Indexed Nodes</h1>
+          <p class="subtitle">
+            Deterministic playback, bounded cost, and strict validation. Drag a file to
+            see it pulse.
+          </p>
+        </div>
+        <div class="drop" id="dropZone">
+          <span>Drop a .grin file</span>
+          <label class="file-button">
+            <input id="fileInput" type="file" accept=".grin,.grn" />
+            Choose file
+          </label>
+        </div>
+      </header>
+
+      <section class="stage">
+        <div class="panel">
+          <h2>Playback</h2>
+          <div class="controls">
+            <button id="playButton">Play</button>
+            <button id="pauseButton">Pause</button>
+            <button id="stopButton">Stop</button>
+          </div>
+          <label class="slider">
+            <span>Seek</span>
+            <input id="seekSlider" type="range" min="0" max="1000" value="0" />
+          </label>
+          <div class="meta" id="metadata">
+            <p>Load a file to see metadata.</p>
+          </div>
+        </div>
+
+        <div class="screen">
+          <canvas id="previewCanvas"></canvas>
+          <div class="badge">Live RGBA Buffer</div>
+        </div>
+      </section>
+
+      <section class="samples">
+        <div>
+          <h2>Sample Gallery</h2>
+          <p>Quick-start with bundled samples.</p>
+        </div>
+        <ul id="sampleList"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="./demo.js"></script>
+  </body>
+</html>

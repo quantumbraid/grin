@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="io.grin.lib.GrinEndiannessTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-01-10T22:15:12" hostname="ambermint" time="0.088">
+  <properties/>
+  <testcase name="writeUint64LEWritesExpectedBytes" classname="io.grin.lib.GrinEndiannessTest" time="0.053"/>
+  <testcase name="readUint32LEReadsExpectedValue" classname="io.grin.lib.GrinEndiannessTest" time="0.003"/>
+  <testcase name="writeUint32LEWritesExpectedBytes" classname="io.grin.lib.GrinEndiannessTest" time="0.001"/>
+  <testcase name="readUint16LEReadsExpectedValue" classname="io.grin.lib.GrinEndiannessTest" time="0.001"/>
+  <testcase name="writeUint16LEWritesExpectedBytes" classname="io.grin.lib.GrinEndiannessTest" time="0.003"/>
+  <testcase name="readUint64LEReadsExpectedValue" classname="io.grin.lib.GrinEndiannessTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

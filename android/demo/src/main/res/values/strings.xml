@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GRIN Demo</string>
+    <string name="description">Grouped Readdressable Indexed Nodes - Demo</string>
+    
+    <!-- UI Strings -->
+    <string name="load_file">Load .grin File</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+    <string name="samples_title">Sample Files</string>
+    <string name="no_samples">No samples found</string>
+    
+    <!-- File info -->
+    <string name="file_info_title">File Information</string>
+    <string name="dimensions_format">Dimensions: %1$d × %2$d</string>
+    <string name="rule_count_format">Rules: %1$d</string>
+    <string name="tick_rate_format">Tick Rate: %1$d µs</string>
+    
+    <!-- Errors -->
+    <string name="error_invalid_file">Invalid GRIN file</string>
+    <string name="error_file_not_found">File not found</string>
+    <string name="error_loading">Error loading file</string>
+</resources>

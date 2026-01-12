@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["lib/index.ts", "lib/player.ts"],
+  "tsconfig": "tsconfig.json",
+  "out": "../docs/api/web",
+  "readme": "none",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "skipErrorChecking": true
+}

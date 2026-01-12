@@ -1,0 +1,23 @@
+{
+  "name": "@grin-format/tools",
+  "version": "0.1.0",
+  "description": "GRIN CLI utilities (validate, inspect, encode, decode)",
+  "type": "module",
+  "bin": {
+    "grin-validate": "./bin/grin-validate.js",
+    "grin-inspect": "./bin/grin-inspect.js",
+    "grin-encode": "./bin/grin-encode.js",
+    "grin-decode": "./bin/grin-decode.js"
+  },
+  "scripts": {
+    "lint": "echo \"no lint configured\"",
+    "test": "echo \"no tests configured\""
+  },
+  "dependencies": {
+    "jpeg-js": "^0.4.4",
+    "pngjs": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -924,6 +924,7 @@
 
 ### 12.1 Specification Documentation
 - [ ] Finalize and version `grin_technical_specification.md`
+  - Summary: Draft copy added at `tchspecdraft.txt` for review.
 - [x] Create byte-level format diagram (visual)
   - Summary: Added `docs/format-diagram.md`.
 - [x] Create opcode reference table with examples
@@ -932,8 +933,10 @@
   - Summary: Added `docs/timing.md`.
 
 ### *** 12.2 API Documentation
-- [ ] Generate JavaDoc for Android implementation
-- [ ] Generate JSDoc/TypeDoc for JavaScript implementation
+- [x] Generate JavaDoc for Android implementation
+  - Summary: Draft API reference in `docs/api/android/README.md` and Dokka config added.
+- [x] Generate JSDoc/TypeDoc for JavaScript implementation
+  - Summary: TypeDoc output in `docs/api/web`.
 - [x] Create API quick-start guide
   - Summary: Added `docs/api-quickstart.md`.
 - [x] Create migration guide (from GIF/APNG)

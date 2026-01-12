@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "io.grin.demo-mergeReleaseResources-34:/values-w600dp-land-v13/values-w600dp-land-v13.xml",
+            "map": [
+                {
+                    "source": "/home/amber/.gradle/caches/transforms-3/29a555e966d39d82e0d15d107709e6e3/transformed/material-1.11.0/res/values-w600dp-land-v13/values-w600dp-land-v13.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "54",
+                        "endOffsets": "105"
+                    }
+                }
+            ]
+        }
+    ]
+}

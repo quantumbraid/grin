@@ -1,0 +1,224 @@
+:root {
+  color-scheme: light;
+  --ink: #111111;
+  --mist: #f7f5ef;
+  --accent: #ff6b6b;
+  --accent-dark: #d64545;
+  --teal: #3dd6d0;
+  --sun: #f2c94c;
+  --panel: rgba(255, 255, 255, 0.85);
+  --border: rgba(17, 17, 17, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at top left, #fef7e6 0%, #eef9f5 45%, #f2f5ff 100%);
+  min-height: 100vh;
+}
+
+.noise {
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='%23000' fill-opacity='0.04'%3E%3Ccircle cx='12' cy='20' r='2'/%3E%3Ccircle cx='70' cy='40' r='1.5'/%3E%3Ccircle cx='100' cy='90' r='2'/%3E%3Ccircle cx='30' cy='100' r='1.2'/%3E%3C/g%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 48px 24px 72px;
+  position: relative;
+  z-index: 1;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 280px);
+  gap: 32px;
+  align-items: center;
+  margin-bottom: 48px;
+}
+
+.eyebrow {
+  font-family: "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.75rem;
+  color: rgba(17, 17, 17, 0.6);
+  margin: 0 0 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  line-height: 1.05;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  max-width: 520px;
+}
+
+.drop {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border-radius: 18px;
+  background: var(--panel);
+  border: 1px dashed var(--border);
+  text-align: center;
+  font-weight: 600;
+}
+
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--ink);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.file-button input {
+  display: none;
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: stretch;
+  margin-bottom: 48px;
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 45px rgba(17, 17, 17, 0.08);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+button {
+  border: none;
+  background: var(--accent);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:nth-child(2) {
+  background: var(--teal);
+}
+
+button:nth-child(3) {
+  background: var(--accent-dark);
+}
+
+.slider {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.slider input[type="range"] {
+  width: 100%;
+}
+
+.meta {
+  font-family: "IBM Plex Mono", monospace;
+  background: rgba(17, 17, 17, 0.05);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 16px;
+  font-size: 0.85rem;
+  white-space: pre-line;
+}
+
+.screen {
+  position: relative;
+  background: #0d0d0d;
+  border-radius: 24px;
+  padding: 16px;
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 30px 60px rgba(17, 17, 17, 0.25);
+}
+
+.screen canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  background: #000;
+}
+
+.badge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  backdrop-filter: blur(10px);
+}
+
+.samples {
+  display: grid;
+  gap: 16px;
+}
+
+.samples ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.samples li {
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.samples li:hover {
+  transform: translateY(-3px);
+}
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+  .stage {
+    grid-template-columns: 1fr;
+  }
+}

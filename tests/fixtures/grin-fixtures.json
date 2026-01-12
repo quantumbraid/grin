@@ -1,0 +1,12 @@
+{
+  "minimal": {
+    "width": 1,
+    "height": 1,
+    "tickMicros": 0,
+    "opcodeSetId": 0,
+    "pixels": [
+      { "r": 1, "g": 2, "b": 3, "a": 4, "c": 0 }
+    ],
+    "rules": []
+  }
+}

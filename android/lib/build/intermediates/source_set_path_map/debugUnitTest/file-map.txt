@@ -1,0 +1,5 @@
+io.grin.lib.test.lib-test-0 /home/amber/Documents/grin/android/lib/build/generated/res/resValues/test/debug
+io.grin.lib.test.lib-mergeDebugUnitTestResources-1 /home/amber/Documents/grin/android/lib/build/intermediates/incremental/debugUnitTest/mergeDebugUnitTestResources/merged.dir
+io.grin.lib.test.lib-mergeDebugUnitTestResources-2 /home/amber/Documents/grin/android/lib/build/intermediates/incremental/debugUnitTest/mergeDebugUnitTestResources/stripped.dir
+io.grin.lib.test.lib-merged_res-3 /home/amber/Documents/grin/android/lib/build/intermediates/merged_res/debugUnitTest
+io.grin.lib.test.lib-packaged_res-4 /home/amber/Documents/grin/android/lib/build/intermediates/packaged_res/debug

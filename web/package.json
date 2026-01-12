@@ -1,0 +1,76 @@
+{
+  "name": "@grin-format/web",
+  "version": "0.1.0",
+  "description": "GRIN (Grouped Readdressable Indexed Nodes) image format - Web/JavaScript implementation",
+  "keywords": [
+    "grin",
+    "image",
+    "animation",
+    "canvas",
+    "web-component"
+  ],
+  "license": "MIT",
+  "author": "GRIN Project Contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grin-format/grin.git",
+    "directory": "web"
+  },
+  "type": "module",
+  "main": "./dist/grin.cjs",
+  "module": "./dist/grin.js",
+  "types": "./dist/grin.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/grin.js",
+      "require": "./dist/grin.cjs",
+      "types": "./dist/grin.d.ts"
+    },
+    "./player": {
+      "import": "./dist/grin-player.js",
+      "require": "./dist/grin-player.cjs",
+      "types": "./dist/grin-player.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./dist/grin-player.js",
+    "./dist/grin-player.cjs"
+  ],
+  "scripts": {
+    "build": "tsc && rollup -c",
+    "build:watch": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint lib/**/*.ts",
+    "typecheck": "tsc --noEmit",
+    "docs:api": "typedoc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build && npm test"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "tsx": "^4.19.2",
+    "rollup": "^4.24.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-commonjs": "^25.0.8",
+    "vitest": "^1.6.0",
+    "typedoc": "^0.25.13"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not op_mini all"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "io.grin.demo-mergeDebugResources-34:/values-port/values-port.xml",
+            "map": [
+                {
+                    "source": "/home/amber/.gradle/caches/transforms-3/c83745f8b1750632e69aff0f8fc95565/transformed/appcompat-1.6.1/res/values-port/values-port.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "55",
+                        "endOffsets": "106"
+                    }
+                }
+            ]
+        }
+    ]
+}

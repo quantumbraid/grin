@@ -1,0 +1,29 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="io.grin.lib.test" >
+4
+5    <uses-sdk
+5-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:5:5-74
+6        android:minSdkVersion="21"
+6-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:5:15-41
+7        android:targetSdkVersion="21" />
+7-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:5:42-71
+8
+9    <instrumentation
+9-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:11:5-13:66
+10        android:name="android.test.InstrumentationTestRunner"
+10-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:11:22-75
+11        android:label="Tests for io.grin.lib.test"
+11-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:13:22-64
+12        android:targetPackage="io.grin.lib.test" />
+12-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:12:22-62
+13
+14    <application android:debuggable="true" >
+14-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:7:5-9:19
+14-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:7:18-43
+15        <uses-library android:name="android.test.runner" />
+15-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:8:9-60
+15-->/home/amber/Documents/grin/android/lib/build/intermediates/tmp/manifest/test/release/tempFile1ProcessTestManifest1836088855102355634.xml:8:23-57
+16    </application>
+17
+18</manifest>
