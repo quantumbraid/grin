@@ -1011,8 +1011,9 @@
   - Summary: Standardized export naming in `docs/creative-suite-foundations.md`.
 
 ### 14.2 Photoshop plugin (UXP)
-- [ ] Set up `plugins/photoshop/` workspace with UXP manifest + dev tooling
+- [x] Set up `plugins/photoshop/` workspace with UXP manifest + dev tooling
   - Include a simple panel scaffold for group/lock selection and export.
+  - Summary: Added the Photoshop UXP panel scaffold, manifest, and package metadata in `plugins/photoshop/`.
 - [ ] Implement layer metadata capture
   - Map layer names or layer tags to group IDs (0-15) and lock bit.
 - [ ] Implement pixel-to-group map extraction
