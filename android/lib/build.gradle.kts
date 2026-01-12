@@ -100,14 +100,15 @@ afterEvaluate {
 
         repositories {
             maven {
-                // Sonatype OSSRH endpoint for Maven Central staging.
-                name = "sonatype"
-                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                // Central Publisher Portal endpoint for Maven Central deployments.
+                name = "central"
+                url = uri("https://central.sonatype.com/api/v1/publisher")
                 credentials {
-                    username = findProperty("sonatypeUsername") as String?
-                        ?: System.getenv("SONATYPE_USERNAME")
-                    password = findProperty("sonatypePassword") as String?
-                        ?: System.getenv("SONATYPE_PASSWORD")
+                    // Use Central Portal token credentials from Gradle properties or env vars.
+                    username = findProperty("centralUsername") as String?
+                        ?: System.getenv("CENTRAL_USERNAME")
+                    password = findProperty("centralPassword") as String?
+                        ?: System.getenv("CENTRAL_PASSWORD")
                 }
             }
         }
@@ -120,6 +121,7 @@ signing {
     val signingPassword = findProperty("signingPassword") as String?
         ?: System.getenv("SIGNING_PASSWORD")
     if (!signingKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
+        // Keep PGP keys in memory for Central Publisher Portal-compatible signing.
         useInMemoryPgpKeys(signingKey, signingPassword)
         sign(publishing.publications["release"])
     }

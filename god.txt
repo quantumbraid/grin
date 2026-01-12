@@ -423,6 +423,27 @@ jobs:
         working-directory: android
         run: ./gradlew :lib:assembleRelease
 
+      # Surface Central Publisher Portal credentials without failing the release build.
+      - name: Central Portal preflight
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          # Report missing Central Publisher Portal credentials without failing the job.
+          if [[ -z "${CENTRAL_USERNAME}" || -z "${CENTRAL_PASSWORD}" ]]; then
+            echo "Central Publisher Portal credentials are not set; publishing must be handled separately."
+          else
+            echo "Central Publisher Portal credentials detected."
+          fi
+          # Report missing signing material without failing the job.
+          if [[ -z "${SIGNING_KEY}" || -z "${SIGNING_PASSWORD}" ]]; then
+            echo "In-memory PGP signing material is not set; Android publishing requires signing keys."
+          else
+            echo "In-memory PGP signing material detected."
+          fi
+
       # Package artifacts for the GitHub release.
       - name: Prepare release artifacts
         run: |
@@ -4435,14 +4456,15 @@ afterEvaluate {
 
         repositories {
             maven {
-                // Sonatype OSSRH endpoint for Maven Central staging.
-                name = "sonatype"
-                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                // Central Publisher Portal endpoint for Maven Central deployments.
+                name = "central"
+                url = uri("https://central.sonatype.com/api/v1/publisher")
                 credentials {
-                    username = findProperty("sonatypeUsername") as String?
-                        ?: System.getenv("SONATYPE_USERNAME")
-                    password = findProperty("sonatypePassword") as String?
-                        ?: System.getenv("SONATYPE_PASSWORD")
+                    // Use Central Portal token credentials from Gradle properties or env vars.
+                    username = findProperty("centralUsername") as String?
+                        ?: System.getenv("CENTRAL_USERNAME")
+                    password = findProperty("centralPassword") as String?
+                        ?: System.getenv("CENTRAL_PASSWORD")
                 }
             }
         }
@@ -4455,6 +4477,7 @@ signing {
     val signingPassword = findProperty("signingPassword") as String?
         ?: System.getenv("SIGNING_PASSWORD")
     if (!signingKey.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
+        // Keep PGP keys in memory for Central Publisher Portal-compatible signing.
         useInMemoryPgpKeys(signingKey, signingPassword)
         sign(publishing.publications["release"])
     }
@@ -7220,12 +7243,16 @@ Release artifacts should include:
 ### Android (Maven Central / JitPack)
 
 1. Ensure `android/lib/build.gradle.kts` has publishing metadata and signing configured.
-2. Export credentials for Sonatype and signing:
-   - `SONATYPE_USERNAME`, `SONATYPE_PASSWORD`
+2. Export credentials for the Central Publisher Portal and signing:
+   - `CENTRAL_USERNAME`, `CENTRAL_PASSWORD`
    - `SIGNING_KEY`, `SIGNING_PASSWORD`
-3. Publish the release artifacts:
+3. Run preflight checks:
+   - Confirm the Central Portal namespace is verified for `io.grin`.
+   - Validate that the in-memory PGP key matches the published public key.
+   - Verify the Android version matches the release tag and CHANGELOG entry.
+4. Publish the release artifacts:
    - `./gradlew :lib:publish` (from `android/`)
-4. Close and release the staging repository in Sonatype OSSRH.
+5. In the Central Publisher Portal, review the deployment status and publish it.
 
 For JitPack, push a Git tag and confirm the build at `https://jitpack.io/#grin-format/grin`.
 
@@ -9390,15 +9417,15 @@ This directory contains shared fixtures for GRIN tests.
 
 ## Required Follow-ups (Actionable)
 - [ ] Review `docs/release-preparation.md` for accuracy before the next release cut.
-- [ ] Validate Android publishing credentials and signing keys in a staging environment.
+- [ ] Validate Central Publisher Portal credentials and signing keys in a dry-run environment.
 - [ ] Verify npm publish access for the `@grin-format/web` scope.
 
 ## Maven Central (Android) — User-Friendly Publishing Steps
 1. **Prepare credentials**
-   - Obtain Sonatype OSSRH credentials for the GRIN organization.
+   - Obtain Central Publisher Portal credentials for the GRIN organization.
    - Export environment variables:
-     - `SONATYPE_USERNAME`
-     - `SONATYPE_PASSWORD`
+     - `CENTRAL_USERNAME`
+     - `CENTRAL_PASSWORD`
      - `SIGNING_KEY` (ASCII-armored PGP private key)
      - `SIGNING_PASSWORD`
 2. **Verify Gradle config**
@@ -9408,8 +9435,8 @@ This directory contains shared fixtures for GRIN tests.
      ```bash
      ./gradlew :lib:publish
      ```
-4. **Release from staging**
-   - Log in to Sonatype OSSRH, close the staging repository, and release it.
+4. **Publish the deployment**
+   - Use the Central Publisher Portal to review the deployment and publish it.
 5. **Optional: JitPack**
    - Push a Git tag (e.g., `v0.1.0`) and verify the build at:
      `https://jitpack.io/#grin-format/grin`.
