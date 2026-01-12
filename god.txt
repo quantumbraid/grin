@@ -134,7 +134,6 @@ grin/
 │   └── tutorial-grin-groups.md
 ├── grin_technical_specification.md
 ├── grin_technical_specification_v_2.md
-├── immediateTODO.md
 ├── package-lock.json
 ├── samples
 │   ├── README.md
@@ -2548,35 +2547,51 @@ clean:
 #####/README.md#####
 # GRIN (Graphic Readdressable Indexed Nodes)
 
-GRIN is a deterministic image container format with 5-byte pixels (RGBA + control byte)
-and a fixed 128-byte header with a bounded rules block. This repo includes working
-implementations for web and Android, CLI tools, tests, and sample files.
+GRIN is a deterministic image container format designed as an upgrade to traditional
+images and GIFs. Instead of storing static frames or frame sequences, GRIN treats an
+image as a programmable field of pixels that can be dynamically grouped, addressed,
+and modulated over time.
 
-## Highlights
+## Core concept
 
-- Fixed-size header and rules block (no unbounded metadata).
-- 16 groups per pixel with a lock bit and opcode-driven modulation.
-- Web TypeScript library with a Canvas renderer and `<grin-player>` component.
-- Android Kotlin library with a demo app.
-- CLI tools: `grin-validate`, `grin-inspect`, `grin-encode`, `grin-decode`.
-- Tests and benchmarks across web and Android.
+- A `.grin` file is not a loop of frames.
+- Nearly all animation logic lives in the file header.
+- Narrow, bounded scripts operate on pixel groups and can shift colors, animate values,
+  loop or diverge, and run once or indefinitely.
+- Because logic is embedded, a `.grin` file can branch, repeat, or evolve without
+  duplicating image data.
+- Rendering requires only minimal runtime code. For web playback, a small amount of
+  JavaScript is sufficient.
+- GRIN is designed to be artist-friendly, portable, and low-infrastructure, while
+  remaining fully deterministic.
 
-## Specs and docs
+## Technical summary
 
-- Format spec: `grin_technical_specification.md` (implementation-aligned)
-- Spec draft: `grin_technical_specification_v_2.md`
-- Architecture: `ARCHITECTURE.md`
-- Contributing: `CONTRIBUTING.md`
-- Security: `SECURITY.md`
-- Samples: `samples/README.md`
-- Docs index: `docs/README.md`
+- Deterministic image container format
+- 5-byte pixels: RGBA + control byte
+- Fixed 128-byte header
+- Bounded rules block (no unbounded metadata)
+- 16 addressable groups per pixel
+- Lock bit per pixel
+- Opcode-driven modulation
+- No frame storage required
+
+This repository includes working implementations, tools, tests, and sample files.
+
+## Implementations included
+
+- Web TypeScript library with Canvas renderer
+- `<grin-player>` web component
+- Android Kotlin library with demo app
+- CLI tools for validation, inspection, encoding, and decoding
+- Tests and benchmarks for web and Android
 
 ## Repository layout
 
 - `web/` - TypeScript implementation, web component, demo, tests
 - `android/` - Kotlin implementation and demo app
 - `tools/` - Node.js CLI utilities
-- `samples/` - Reference `.grin` files (valid + invalid)
+- `samples/` - Reference `.grin` files (valid and invalid)
 - `benchmarks/` - Performance harness
 - `tests/` - Shared fixtures and generators
 - `core/` - Reserved for a future cross-platform reference core
@@ -2601,6 +2616,33 @@ npm run build
 
 The demo lives in `web/demo/`. Build first so `web/demo/demo.js` can load `web/dist`.
 
+## Minimal web embed (load a `.grin` URL)
+
+A minimal embed uses the tiny loader in `web/embed/grin-embed.js`. It finds elements
+with `data-grin-src`, loads `grin-player`, and mounts playback for you.
+
+```html
+<div data-grin-src="https://example.com/art/minimal.grin"></div>
+<script type="module" src="web/embed/grin-embed.js"></script>
+```
+
+Optional attributes:
+
+- `data-grin-autoplay` - set to `true` to auto-start playback.
+- `data-grin-playbackrate` - numeric speed multiplier (for example `0.5` or `2`).
+- `data-grin-lib` (on the script tag) - overrides the `grin-player` bundle URL.
+
+Example using a custom `grin-player` bundle:
+
+```html
+<div data-grin-src="/media/pulse_red.grin" data-grin-autoplay="true"></div>
+<script
+  type="module"
+  src="web/embed/grin-embed.js"
+  data-grin-lib="/web/dist/grin-player.js"
+></script>
+```
+
 ## Android library and demo
 
 ```bash
@@ -2617,6 +2659,37 @@ Regenerate sample files with:
 ```bash
 node scripts/generate-samples.mjs
 ```
+
+## Documentation
+
+- Format specification: `grin_technical_specification_v_2.md`
+- Architecture: `ARCHITECTURE.md`
+- Contributing: `CONTRIBUTING.md`
+- Security: `SECURITY.md`
+- Samples: `samples/README.md`
+- Docs index: `docs/README.md`
+
+## Planned work
+
+- Photoshop, Illustrator, and GIMP plugins
+- Translation of `.grin` files to real DMX stage control
+- Compatibility with large video walls and LED arrays
+
+## Licensing status
+
+THIS REPOSITORY IS CURRENTLY UNLICENSED.
+
+You may build, experiment, and explore this code for personal and research purposes.
+
+You may not redistribute the code, incorporate it into unrelated projects, or use the
+code or its outputs for commercial purposes without explicit consent.
+
+For commercial use, redistribution, or related project releases, contact:
+
+quantumbraid@gmail.com
+
+This standard is intentionally constrained for security reasons and to encourage
+thoughtful, novel usage.
 
 #####/SECURITY.md#####
 # Security Policy
@@ -8083,31 +8156,6 @@ It does not belong in GRIN.
 
 Minimalism here is **structural**, not aesthetic.
 
-#####/immediateTODO.md#####
-# Immediate Remaining Tasks
-
-These are the outstanding items from `todo.md` after completing optional tasks.
-
-## Phase 13
-- Define semantic versioning scheme
-- Tag initial release (v0.1.0)
-- Create CHANGELOG.md with release notes
-- Publish Android library to Maven Central / JitPack
-- Publish JavaScript library to npm
-- Create GitHub Releases with artifacts
-- Document Android API level compatibility
-- Document browser version compatibility
-- Document Node.js version compatibility
-- Choose and apply open-source license
-- Add license headers to all source files
-- Create NOTICE file for third-party attributions
-
-## Planned Upgrades (Unimplemented)
-- Photoshop plugin for painting GRIN channel groups and lock bits as layers
-- Illustrator plugin for painting GRIN channel groups and lock bits as layers
-- GIMP plugin for painting GRIN channel groups and lock bits as layers
-- Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
-
 #####/package-lock.json#####
 {
   "name": "grin",
@@ -10111,11 +10159,64 @@ This directory contains shared fixtures for GRIN tests.
 
 ---
 
+## Phase 14: Creative Suite + GIMP Plugins
+
+### 14.1 Shared foundations (all plugins)
+- [ ] Define the pixel-group editing model and UX goals for painting group IDs + lock bits
+  - Deliverable: a 1-page UX spec describing how artists select groups, toggle lock, and preview rules.
+- [ ] Decide on an interchange format between host apps and the GRIN toolchain
+  - Likely: export a layered PNG + JSON sidecar with group/lock metadata.
+- [ ] Create a shared validation CLI workflow for plugin export
+  - Use `tools/bin/grin-validate.js` and `tools/bin/grin-inspect.js` as post-export checks.
+- [ ] Draft a shared palette/legend for group IDs (0-15) and lock state overlays
+  - Define color mapping and UI affordances for every plugin.
+- [ ] Define output paths and naming conventions for exports (`.grin`, `.png`, `.json`)
+  - Make sure it matches `tools/bin/grin-encode.js` expectations.
+
+### 14.2 Photoshop plugin (UXP)
+- [ ] Set up `plugins/photoshop/` workspace with UXP manifest + dev tooling
+  - Include a simple panel scaffold for group/lock selection and export.
+- [ ] Implement layer metadata capture
+  - Map layer names or layer tags to group IDs (0-15) and lock bit.
+- [ ] Implement pixel-to-group map extraction
+  - Render a flattened bitmap with hidden metadata encoding group + lock values.
+- [ ] Implement export pipeline
+  - Generate a JSON sidecar and call `tools/bin/grin-encode.js`.
+- [ ] Add preview/validation step
+  - Use `grin-validate` and report errors in the panel UI.
+- [ ] Write Photoshop plugin README with install + usage steps
+
+### 14.3 Illustrator plugin (UXP)
+- [ ] Set up `plugins/illustrator/` workspace with UXP manifest + dev tooling
+  - Include a panel scaffold matching Photoshop UX.
+- [ ] Implement vector art flattening rules for GRIN export
+  - Define how artboards/paths map to pixels, group IDs, and lock bit.
+- [ ] Implement group/lock metadata tagging in document model
+  - Use layer names, object tags, or custom metadata fields.
+- [ ] Implement export pipeline
+  - Rasterize at user-specified resolution and call `grin-encode.js`.
+- [ ] Add preview/validation step
+  - Use `grin-validate` and surface errors to the panel.
+- [ ] Write Illustrator plugin README with install + usage steps
+
+### 14.4 GIMP plugin (Python)
+- [ ] Set up `plugins/gimp/` with Python-Fu entry point + menu registration
+  - Add configuration dialog for group/lock editing and export settings.
+- [ ] Implement group/lock editing overlays
+  - Use layer groups or selection masks to represent group IDs.
+- [ ] Implement pixel map extraction
+  - Read pixel data + custom metadata for group and lock state.
+- [ ] Implement export pipeline
+  - Export PNG + JSON sidecar and call `grin-encode.js`.
+- [ ] Add preview/validation step
+  - Use `grin-validate` and show errors in a dialog.
+- [ ] Write GIMP plugin README with install + usage steps
+
+---
+
 ## Planned Upgrades (Unimplemented)
 
-- [ ] Photoshop plugin for painting GRIN channel groups and lock bits as layers
-- [ ] Illustrator plugin for painting GRIN channel groups and lock bits as layers
-- [ ] GIMP plugin for painting GRIN channel groups and lock bits as layers
+- [ ] Photoshop, Illustrator, and GIMP plugins (see Phase 14 for detailed plan)
 - [ ] Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
 
 ---
@@ -19621,4 +19722,3 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
   },
 });
-
