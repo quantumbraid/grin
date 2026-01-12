@@ -40,17 +40,32 @@ grin/
 │   │           │   └── io
 │   │           │       └── grin
 │   │           │           └── demo
+│   │           │               ├── CaptureBuffer.kt
+│   │           │               ├── CaptureReviewActivity.kt
+│   │           │               ├── ChannelLabels.kt
+│   │           │               ├── EditorActivity.kt
+│   │           │               ├── GalleryActivity.kt
+│   │           │               ├── GalleryAdapter.kt
 │   │           │               ├── GridCameraActivity.kt
 │   │           │               ├── GridOverlayView.kt
+│   │           │               ├── GifEncoder.kt
+│   │           │               ├── GrinAssetModels.kt
+│   │           │               ├── GrinAssetStore.kt
+│   │           │               ├── GrinPreviewRenderer.kt
 │   │           │               ├── MainActivity.kt
+│   │           │               ├── NavigationConstants.kt
 │   │           │               ├── PosterizedCameraAnalyzer.kt
 │   │           │               └── PosterizedPalette.kt
 │   │           └── res
 │   │               ├── drawable
 │   │               │   └── ic_launcher_foreground.xml
 │   │               ├── layout
+│   │               │   ├── activity_capture_review.xml
+│   │               │   ├── activity_editor.xml
+│   │               │   ├── activity_gallery.xml
 │   │               │   ├── activity_grid_camera.xml
-│   │               │   └── activity_main.xml
+│   │               │   ├── activity_main.xml
+│   │               │   └── item_gallery_asset.xml
 │   │               ├── mipmap-anydpi-v26
 │   │               │   ├── ic_launcher.xml
 │   │               │   └── ic_launcher_round.xml
@@ -25507,3 +25522,3086 @@ data class PosterizedPalette(
         android:layout_marginTop="8dp"
         android:text="@string/close" />
 </LinearLayout>
+
+SOURCE DUMP
+(Only project source files; dependency code omitted.)
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/PosterizedCameraAnalyzer.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.graphics.Bitmap
+import android.graphics.Color
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
+
+// Holds a posterized frame and grid metadata for UI rendering.
+data class PosterizedFrame(
+    val bitmap: Bitmap,
+    val gridCols: Int,
+    val gridRows: Int,
+    val paletteIndices: IntArray,
+    val paletteLabels: List<String>,
+    val paletteSize: Int,
+    val paletteHistogram: IntArray,
+    val paletteColors: IntArray
+)
+
+// Encapsulates performance targets and fallback behavior for posterization.
+data class PosterizationPerformanceConfig(
+    val targetFps: Int,
+    val fallbackFps: Int,
+    val slowdownThresholdMs: Long,
+    val fallbackGridScale: Float,
+    val fallbackPaletteSize: Int
+)
+
+// Analyzer that converts camera frames into posterized, grid-aligned bitmaps.
+class PosterizedCameraAnalyzer(
+    private val baseGridCols: Int,
+    private val baseGridRows: Int,
+    private val palette: PosterizedPalette,
+    private val performanceConfig: PosterizationPerformanceConfig,
+    private val onFrame: (PosterizedFrame) -> Unit
+) : ImageAnalysis.Analyzer {
+    private var lastFrameTimestampNs: Long = 0L
+    private var useFallbackSettings: Boolean = false
+
+    override fun analyze(image: ImageProxy) {
+        val timestampNs = image.imageInfo.timestamp
+        val activeTargetFps = if (useFallbackSettings) {
+            performanceConfig.fallbackFps
+        } else {
+            performanceConfig.targetFps
+        }
+        val frameIntervalNs = 1_000_000_000L / activeTargetFps
+        if (timestampNs - lastFrameTimestampNs < frameIntervalNs) {
+            // Throttle analysis to the target FPS to avoid overloading the CPU.
+            image.close()
+            return
+        }
+        lastFrameTimestampNs = timestampNs
+
+        val startTimeMs = System.currentTimeMillis()
+        val effectiveGridCols = if (useFallbackSettings) {
+            (baseGridCols * performanceConfig.fallbackGridScale).roundToInt().coerceAtLeast(8)
+        } else {
+            baseGridCols
+        }
+        val effectiveGridRows = if (useFallbackSettings) {
+            (baseGridRows * performanceConfig.fallbackGridScale).roundToInt().coerceAtLeast(8)
+        } else {
+            baseGridRows
+        }
+        val effectivePalette = if (useFallbackSettings) {
+            palette.clampSize(performanceConfig.fallbackPaletteSize)
+        } else {
+            palette
+        }
+
+        val frame = buildPosterizedFrame(image, effectiveGridCols, effectiveGridRows, effectivePalette)
+        val elapsedMs = System.currentTimeMillis() - startTimeMs
+        useFallbackSettings = elapsedMs > performanceConfig.slowdownThresholdMs
+        onFrame(frame)
+        image.close()
+    }
+
+    private fun buildPosterizedFrame(
+        image: ImageProxy,
+        gridCols: Int,
+        gridRows: Int,
+        palette: PosterizedPalette
+    ): PosterizedFrame {
+        val crop = computeCenterCrop(image.width, image.height, gridCols, gridRows)
+        val bitmap = Bitmap.createBitmap(gridCols, gridRows, Bitmap.Config.ARGB_8888)
+        val paletteIndices = IntArray(gridCols * gridRows)
+        // Track per-bin counts for channel assignment and gallery metadata.
+        val histogram = IntArray(palette.colors.size)
+
+        for (row in 0 until gridRows) {
+            val sourceY = crop.top + ((row + 0.5f) * crop.height / gridRows).roundToInt()
+            for (col in 0 until gridCols) {
+                val sourceX = crop.left + ((col + 0.5f) * crop.width / gridCols).roundToInt()
+                val rgb = readRgbFromYuv(image, sourceX, sourceY)
+                val paletteIndex = findNearestPaletteIndex(rgb, palette.colors)
+                bitmap.setPixel(col, row, palette.colors[paletteIndex])
+                paletteIndices[row * gridCols + col] = paletteIndex
+                histogram[paletteIndex] += 1
+            }
+        }
+
+        return PosterizedFrame(
+            bitmap = bitmap,
+            gridCols = gridCols,
+            gridRows = gridRows,
+            paletteIndices = paletteIndices,
+            paletteLabels = palette.labels,
+            paletteSize = palette.colors.size,
+            paletteHistogram = histogram,
+            paletteColors = palette.colors.copyOf()
+        )
+    }
+
+    private fun computeCenterCrop(
+        imageWidth: Int,
+        imageHeight: Int,
+        gridCols: Int,
+        gridRows: Int
+    ): CropRect {
+        val targetAspect = gridCols.toFloat() / gridRows.toFloat()
+        val sourceAspect = imageWidth.toFloat() / imageHeight.toFloat()
+        return if (sourceAspect > targetAspect) {
+            val cropWidth = (imageHeight * targetAspect).roundToInt()
+            val offsetX = ((imageWidth - cropWidth) / 2f).roundToInt()
+            CropRect(offsetX, 0, cropWidth, imageHeight)
+        } else {
+            val cropHeight = (imageWidth / targetAspect).roundToInt()
+            val offsetY = ((imageHeight - cropHeight) / 2f).roundToInt()
+            CropRect(0, offsetY, imageWidth, cropHeight)
+        }
+    }
+
+    private fun readRgbFromYuv(image: ImageProxy, x: Int, y: Int): Int {
+        // Convert a single YUV_420_888 pixel to RGB using the standard formula.
+        val yPlane = image.planes[0]
+        val uPlane = image.planes[1]
+        val vPlane = image.planes[2]
+        val clampedX = x.coerceIn(0, image.width - 1)
+        val clampedY = y.coerceIn(0, image.height - 1)
+        val yIndex = yPlane.rowStride * clampedY + yPlane.pixelStride * clampedX
+        val uvX = clampedX / 2
+        val uvY = clampedY / 2
+        val uIndex = uPlane.rowStride * uvY + uPlane.pixelStride * uvX
+        val vIndex = vPlane.rowStride * uvY + vPlane.pixelStride * uvX
+
+        val yValue = yPlane.buffer.get(yIndex).toInt() and 0xFF
+        val uValue = (uPlane.buffer.get(uIndex).toInt() and 0xFF) - 128
+        val vValue = (vPlane.buffer.get(vIndex).toInt() and 0xFF) - 128
+
+        val r = clampColorChannel(yValue + (1.402f * vValue).roundToInt())
+        val g = clampColorChannel(yValue - (0.344f * uValue).roundToInt() - (0.714f * vValue).roundToInt())
+        val b = clampColorChannel(yValue + (1.772f * uValue).roundToInt())
+        return Color.rgb(r, g, b)
+    }
+
+    private fun clampColorChannel(value: Int): Int {
+        return value.coerceIn(0, 255)
+    }
+
+    private fun findNearestPaletteIndex(rgb: Int, palette: IntArray): Int {
+        // Find the palette entry with the smallest Euclidean distance in RGB space.
+        val red = Color.red(rgb)
+        val green = Color.green(rgb)
+        val blue = Color.blue(rgb)
+        var bestIndex = 0
+        var bestDistance = Double.MAX_VALUE
+        for (index in palette.indices) {
+            val paletteColor = palette[index]
+            val distance = colorDistance(
+                red,
+                green,
+                blue,
+                Color.red(paletteColor),
+                Color.green(paletteColor),
+                Color.blue(paletteColor)
+            )
+            if (distance < bestDistance) {
+                bestDistance = distance
+                bestIndex = index
+            }
+        }
+        return bestIndex
+    }
+
+    private fun colorDistance(
+        red: Int,
+        green: Int,
+        blue: Int,
+        paletteRed: Int,
+        paletteGreen: Int,
+        paletteBlue: Int
+    ): Double {
+        val redDelta = (red - paletteRed).toDouble()
+        val greenDelta = (green - paletteGreen).toDouble()
+        val blueDelta = (blue - paletteBlue).toDouble()
+        return sqrt(redDelta * redDelta + greenDelta * greenDelta + blueDelta * blueDelta)
+    }
+
+    // Stores crop origin and dimensions for the grid-aligned sampling area.
+    private data class CropRect(val left: Int, val top: Int, val width: Int, val height: Int)
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/GridCameraActivity.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.content.ContextCompat
+import io.grin.demo.databinding.ActivityGridCameraBinding
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+
+// Displays the live, posterized camera preview with a grid overlay.
+class GridCameraActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityGridCameraBinding
+    private lateinit var cameraExecutor: ExecutorService
+    private var latestFrame: PosterizedFrame? = null
+
+    private val permissionRequest =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                startCamera()
+            } else {
+                Toast.makeText(this, getString(R.string.camera_permission_denied), Toast.LENGTH_LONG).show()
+                finish()
+            }
+        }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityGridCameraBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
+        binding.closeButton.setOnClickListener {
+            // Return to the main demo screen.
+            finish()
+        }
+        binding.captureButton.setOnClickListener {
+            // Freeze the most recent posterized frame for review.
+            val frame = latestFrame
+            if (frame != null) {
+                CaptureBuffer.frame = frame
+                startActivity(Intent(this, CaptureReviewActivity::class.java))
+            } else {
+                Toast.makeText(this, getString(R.string.capture_no_frame), Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        if (hasCameraPermission()) {
+            startCamera()
+        } else {
+            permissionRequest.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Shut down the camera executor to release resources.
+        cameraExecutor.shutdown()
+    }
+
+    private fun hasCameraPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
+            PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener(
+            {
+                val cameraProvider = cameraProviderFuture.get()
+                bindAnalysisUseCase(cameraProvider)
+            },
+            ContextCompat.getMainExecutor(this)
+        )
+    }
+
+    private fun bindAnalysisUseCase(cameraProvider: ProcessCameraProvider) {
+        cameraProvider.unbindAll()
+        val palette = PosterizedPalette.defaultPalette()
+        val performanceConfig = PosterizationPerformanceConfig(
+            targetFps = 30,
+            fallbackFps = 24,
+            slowdownThresholdMs = 42,
+            fallbackGridScale = 0.75f,
+            fallbackPaletteSize = 12
+        )
+        val analyzer = PosterizedCameraAnalyzer(
+            baseGridCols = 48,
+            baseGridRows = 64,
+            palette = palette,
+            performanceConfig = performanceConfig
+        ) { frame ->
+            runOnUiThread {
+                // Update the preview image and overlay metadata on the main thread.
+                binding.posterizedPreview.setImageBitmap(frame.bitmap)
+                binding.gridOverlay.updateGrid(
+                    frame.gridCols,
+                    frame.gridRows,
+                    frame.paletteIndices,
+                    frame.paletteLabels
+                )
+                binding.performanceText.text = getString(
+                    R.string.camera_performance_format,
+                    frame.gridCols,
+                    frame.gridRows,
+                    frame.paletteSize
+                )
+                // Cache the latest frame for capture review.
+                latestFrame = frame
+            }
+        }
+
+        val analysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also { it.setAnalyzer(cameraExecutor, analyzer) }
+
+        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+        try {
+            cameraProvider.bindToLifecycle(this, cameraSelector, analysis)
+        } catch (exception: Exception) {
+            Toast.makeText(this, getString(R.string.camera_start_failed), Toast.LENGTH_LONG).show()
+        }
+    }
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/MainActivity.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.SeekBar
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import io.grin.demo.databinding.ActivityMainBinding
+import io.grin.lib.GrinFile
+import io.grin.lib.GrinUriLoader
+
+class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+
+    private val filePicker =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                loadUri(uri)
+            }
+        }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.loadButton.setOnClickListener {
+            filePicker.launch(arrayOf("application/octet-stream"))
+        }
+        binding.cameraButton.setOnClickListener {
+            // Launch the grid camera preview workflow.
+            startActivity(Intent(this, GridCameraActivity::class.java))
+        }
+        binding.galleryButton.setOnClickListener {
+            // Open the capture gallery grid.
+            startActivity(Intent(this, GalleryActivity::class.java))
+        }
+        binding.playButton.setOnClickListener { binding.grinView.play() }
+        binding.pauseButton.setOnClickListener { binding.grinView.pause() }
+        binding.stopButton.setOnClickListener { binding.grinView.stop() }
+
+        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    binding.grinView.seek(progress.toLong())
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        setupSampleList()
+
+        intent?.data?.let { loadUri(it) }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        intent?.data?.let { loadUri(it) }
+    }
+
+    private fun setupSampleList() {
+        val samples = assets.list("samples")?.sorted() ?: emptyList()
+        if (samples.isEmpty()) {
+            binding.samplesTitle.text = getString(R.string.no_samples)
+            return
+        }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, samples)
+        binding.samplesList.adapter = adapter
+        binding.samplesList.setOnItemClickListener { _, _, position, _ ->
+            val assetName = samples[position]
+            val file = GrinUriLoader.fromAsset(this, "samples/$assetName")
+            loadFile(file)
+        }
+    }
+
+    private fun loadUri(uri: Uri) {
+        try {
+            val file = GrinUriLoader.load(this, uri)
+            loadFile(file)
+        } catch (exception: Exception) {
+            Toast.makeText(this, getString(R.string.error_loading), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun loadFile(file: GrinFile) {
+        binding.grinView.load(file)
+        binding.metadataText.text = buildMetadata(file)
+    }
+
+    private fun buildMetadata(file: GrinFile): String {
+        val header = file.header
+        val dimensions = getString(R.string.dimensions_format, header.width.toInt(), header.height.toInt())
+        val rules = getString(R.string.rule_count_format, header.ruleCount)
+        val tickRate = getString(R.string.tick_rate_format, header.tickMicros.toInt())
+        return listOf(dimensions, rules, tickRate).joinToString(separator = "\n")
+    }
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/CaptureBuffer.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+// Holds the most recent posterized frame for the capture review workflow.
+object CaptureBuffer {
+    var frame: PosterizedFrame? = null
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/CaptureReviewActivity.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import io.grin.demo.databinding.ActivityCaptureReviewBinding
+
+// Displays the frozen posterized frame and actions to accept or retake.
+class CaptureReviewActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityCaptureReviewBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityCaptureReviewBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        val frame = CaptureBuffer.frame
+        if (frame == null) {
+            Toast.makeText(this, getString(R.string.capture_no_frame), Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
+        binding.previewImage.setImageBitmap(frame.bitmap)
+        binding.gridOverlay.updateGrid(
+            frame.gridCols,
+            frame.gridRows,
+            frame.paletteIndices,
+            frame.paletteLabels
+        )
+        binding.captureMetadata.text = getString(
+            R.string.capture_metadata_format,
+            frame.gridCols,
+            frame.gridRows,
+            frame.paletteSize
+        )
+
+        binding.retakeButton.setOnClickListener {
+            // Return to the camera preview without saving.
+            finish()
+        }
+        binding.acceptButton.setOnClickListener {
+            // Persist the capture and open the gallery.
+            val asset = GrinAssetStore(this).createAssetFromFrame(frame, DEFAULT_TICK_MICROS)
+            CaptureBuffer.frame = null
+            startActivity(Intent(this, GalleryActivity::class.java).putExtra(EXTRA_ASSET_ID, asset.id))
+            finish()
+        }
+        binding.editButton.setOnClickListener {
+            // Persist the capture and jump directly into the editor.
+            val asset = GrinAssetStore(this).createAssetFromFrame(frame, DEFAULT_TICK_MICROS)
+            CaptureBuffer.frame = null
+            startActivity(Intent(this, EditorActivity::class.java).putExtra(EXTRA_ASSET_ID, asset.id))
+            finish()
+        }
+    }
+
+    companion object {
+        // Use the preview cadence for initial tick micros.
+        private const val DEFAULT_TICK_MICROS = 33_333L
+    }
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/ChannelLabels.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+// Helper for converting channel indices to hexadecimal labels and back.
+object ChannelLabels {
+    val labels: List<String> = (0..15).map { index -> index.toString(16).uppercase() }
+
+    fun labelFor(channelId: Int): String {
+        // Clamp to 0-15 so UI labels remain valid.
+        return labels[channelId.coerceIn(0, 15)]
+    }
+
+    fun indexOf(label: String): Int {
+        // Normalize input to uppercase hex for consistent lookups.
+        val normalized = label.trim().uppercase()
+        return labels.indexOf(normalized).coerceAtLeast(0)
+    }
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/GalleryActivity.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import io.grin.demo.databinding.ActivityGalleryBinding
+
+// Displays a grid of captured GRIN assets with lazy paging.
+class GalleryActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityGalleryBinding
+    private lateinit var adapter: GalleryAdapter
+    private lateinit var store: GrinAssetStore
+
+    private val allAssets: MutableList<GrinAssetMetadata> = mutableListOf()
+    private val loadedAssets: MutableList<GrinAssetMetadata> = mutableListOf()
+    private var pageIndex = 0
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityGalleryBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        store = GrinAssetStore(this)
+        adapter = GalleryAdapter(store) { asset ->
+            startActivity(Intent(this, EditorActivity::class.java).putExtra(EXTRA_ASSET_ID, asset.id))
+        }
+
+        binding.galleryRecycler.layoutManager = GridLayoutManager(this, 2)
+        binding.galleryRecycler.adapter = adapter
+        binding.galleryRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (dy > 0) {
+                    val layoutManager = recyclerView.layoutManager as? GridLayoutManager ?: return
+                    val lastVisible = layoutManager.findLastVisibleItemPosition()
+                    if (lastVisible >= loadedAssets.size - 4) {
+                        loadNextPage()
+                    }
+                }
+            }
+        })
+
+        binding.captureNewButton.setOnClickListener {
+            startActivity(Intent(this, GridCameraActivity::class.java))
+        }
+        binding.backButton.setOnClickListener {
+            finish()
+        }
+
+        refreshAssets()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh the gallery list to reflect any edits or exports.
+        refreshAssets()
+    }
+
+    private fun refreshAssets() {
+        // Reload metadata from disk and reset paging.
+        allAssets.clear()
+        allAssets.addAll(store.loadAllMetadata())
+        loadedAssets.clear()
+        pageIndex = 0
+        adapter.setItems(emptyList())
+        binding.emptyState.visibility = if (allAssets.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+        loadNextPage()
+    }
+
+    private fun loadNextPage() {
+        // Append the next page of gallery assets.
+        val start = pageIndex * PAGE_SIZE
+        if (start >= allAssets.size) {
+            return
+        }
+        val end = (start + PAGE_SIZE).coerceAtMost(allAssets.size)
+        val nextPage = allAssets.subList(start, end)
+        if (pageIndex == 0) {
+            adapter.setItems(nextPage)
+        } else {
+            adapter.appendItems(nextPage)
+        }
+        loadedAssets.addAll(nextPage)
+        pageIndex += 1
+    }
+
+    companion object {
+        // Keep page size small to simulate lazy loading and caching.
+        private const val PAGE_SIZE = 20
+    }
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/GalleryAdapter.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.graphics.Bitmap
+import android.util.LruCache
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import io.grin.demo.databinding.ItemGalleryAssetBinding
+
+// Adapter that renders posterized thumbnails in a grid for the gallery screen.
+class GalleryAdapter(
+    private val store: GrinAssetStore,
+    private val onItemSelected: (GrinAssetMetadata) -> Unit
+) : RecyclerView.Adapter<GalleryAdapter.GalleryViewHolder>() {
+
+    private val assets: MutableList<GrinAssetMetadata> = mutableListOf()
+    private val thumbnailCache = object : LruCache<String, Bitmap>(32) {}
+
+    fun setItems(items: List<GrinAssetMetadata>) {
+        // Replace the adapter contents with a new list of assets.
+        assets.clear()
+        assets.addAll(items)
+        notifyDataSetChanged()
+    }
+
+    fun appendItems(items: List<GrinAssetMetadata>) {
+        // Append assets when paging additional results.
+        val start = assets.size
+        assets.addAll(items)
+        notifyItemRangeInserted(start, items.size)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GalleryViewHolder {
+        val binding = ItemGalleryAssetBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return GalleryViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: GalleryViewHolder, position: Int) {
+        val asset = assets[position]
+        holder.bind(asset)
+    }
+
+    override fun getItemCount(): Int = assets.size
+
+    inner class GalleryViewHolder(private val binding: ItemGalleryAssetBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(asset: GrinAssetMetadata) {
+            // Load cached thumbnail, falling back to disk.
+            val cached = thumbnailCache.get(asset.id)
+            val thumbnail = cached ?: store.loadThumbnailBitmap(asset)
+            if (thumbnail != null && cached == null) {
+                thumbnailCache.put(asset.id, thumbnail)
+            }
+            binding.thumbnail.setImageBitmap(thumbnail)
+            binding.assetMetadata.text = itemView.context.getString(
+                R.string.gallery_asset_metadata,
+                asset.width,
+                asset.height,
+                asset.paletteBins
+            )
+            binding.root.setOnClickListener {
+                onItemSelected(asset)
+            }
+        }
+    }
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/GrinAssetModels.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import org.json.JSONArray
+import org.json.JSONObject
+
+// Represents editable channel metadata for a single GRIN channel.
+data class ChannelSetting(
+    val channelId: Int,
+    var frequency: Int,
+    var intonation: Int,
+    var transparency: Int
+)
+
+// Captures persisted metadata for a GRIN/GRIM asset pair.
+data class GrinAssetMetadata(
+    val id: String,
+    val createdAt: Long,
+    var lastEditedAt: Long,
+    val width: Int,
+    val height: Int,
+    val gridCols: Int,
+    val gridRows: Int,
+    val paletteBins: Int,
+    var tickMicros: Long,
+    var ruleCount: Int,
+    val channelMap: List<Int>,
+    val channelOrder: List<Int>,
+    val paletteHistogram: List<Int>,
+    val previewPath: String,
+    val thumbnailPath: String,
+    val grinPath: String,
+    val grimPath: String,
+    var channelSettings: List<ChannelSetting>
+) {
+    fun toJson(): JSONObject {
+        // Serialize metadata to JSON for disk persistence and gallery indexing.
+        val json = JSONObject()
+        json.put("id", id)
+        json.put("createdAt", createdAt)
+        json.put("lastEditedAt", lastEditedAt)
+        json.put("width", width)
+        json.put("height", height)
+        json.put("gridCols", gridCols)
+        json.put("gridRows", gridRows)
+        json.put("paletteBins", paletteBins)
+        json.put("tickMicros", tickMicros)
+        json.put("ruleCount", ruleCount)
+        json.put("previewPath", previewPath)
+        json.put("thumbnailPath", thumbnailPath)
+        json.put("grinPath", grinPath)
+        json.put("grimPath", grimPath)
+        json.put("channelMap", JSONArray(channelMap))
+        json.put("channelOrder", JSONArray(channelOrder))
+        json.put("paletteHistogram", JSONArray(paletteHistogram))
+
+        val settingsArray = JSONArray()
+        channelSettings.forEach { setting ->
+            val settingJson = JSONObject()
+            settingJson.put("channelId", setting.channelId)
+            settingJson.put("frequency", setting.frequency)
+            settingJson.put("intonation", setting.intonation)
+            settingJson.put("transparency", setting.transparency)
+            settingsArray.put(settingJson)
+        }
+        json.put("channelSettings", settingsArray)
+        return json
+    }
+
+    companion object {
+        fun fromJson(json: JSONObject): GrinAssetMetadata {
+            // Deserialize metadata from JSON stored on disk.
+            val channelMap = json.getJSONArray("channelMap").toIntList()
+            val channelOrder = json.getJSONArray("channelOrder").toIntList()
+            val histogram = json.getJSONArray("paletteHistogram").toIntList()
+            val settings = json.getJSONArray("channelSettings").toChannelSettings()
+            return GrinAssetMetadata(
+                id = json.getString("id"),
+                createdAt = json.getLong("createdAt"),
+                lastEditedAt = json.getLong("lastEditedAt"),
+                width = json.getInt("width"),
+                height = json.getInt("height"),
+                gridCols = json.getInt("gridCols"),
+                gridRows = json.getInt("gridRows"),
+                paletteBins = json.getInt("paletteBins"),
+                tickMicros = json.getLong("tickMicros"),
+                ruleCount = json.getInt("ruleCount"),
+                channelMap = channelMap,
+                channelOrder = channelOrder,
+                paletteHistogram = histogram,
+                previewPath = json.getString("previewPath"),
+                thumbnailPath = json.getString("thumbnailPath"),
+                grinPath = json.getString("grinPath"),
+                grimPath = json.getString("grimPath"),
+                channelSettings = settings
+            )
+        }
+    }
+}
+
+private fun JSONArray.toIntList(): List<Int> {
+    // Parse a JSON array into a list of integers.
+    val list = mutableListOf<Int>()
+    for (index in 0 until length()) {
+        list.add(getInt(index))
+    }
+    return list
+}
+
+private fun JSONArray.toChannelSettings(): List<ChannelSetting> {
+    // Parse channel settings from a JSON array.
+    val list = mutableListOf<ChannelSetting>()
+    for (index in 0 until length()) {
+        val item = getJSONObject(index)
+        list.add(
+            ChannelSetting(
+                channelId = item.getInt("channelId"),
+                frequency = item.getInt("frequency"),
+                intonation = item.getInt("intonation"),
+                transparency = item.getInt("transparency")
+            )
+        )
+    }
+    return list
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/GrinAssetStore.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.util.Log
+import io.grin.lib.BaseOpcodes
+import io.grin.lib.GrinFile
+import io.grin.lib.GrinFormat
+import io.grin.lib.GrinHeader
+import io.grin.lib.GrinPixel
+import io.grin.lib.GrinRule
+import java.io.File
+import java.util.UUID
+import kotlin.math.roundToInt
+
+// Handles disk persistence for GRIM/GRIN assets, previews, and metadata JSON.
+class GrinAssetStore(private val context: Context) {
+    private val baseDir = File(context.filesDir, "grin_gallery")
+    private val metadataDir = File(baseDir, "metadata")
+    private val previewDir = File(baseDir, "preview")
+    private val thumbnailDir = File(baseDir, "thumbnails")
+    private val grinDir = File(baseDir, "grin")
+    private val grimDir = File(baseDir, "grim")
+    private val exportDir = File(baseDir, "exports")
+
+    init {
+        // Ensure storage directories exist before any writes.
+        listOf(metadataDir, previewDir, thumbnailDir, grinDir, grimDir, exportDir).forEach { dir ->
+            if (!dir.exists()) {
+                dir.mkdirs()
+            }
+        }
+    }
+
+    fun createAssetFromFrame(frame: PosterizedFrame, tickMicros: Long): GrinAssetMetadata {
+        // Build channel mapping and histogram from the captured frame.
+        val assignment = assignBinsToChannels(frame.paletteHistogram, frame.paletteColors)
+        val channelMap = assignment.channelMap
+        val channelOrder = assignment.channelOrder
+        val channelSettings = buildDefaultChannelSettings(channelOrder)
+        val pixels = buildGrinPixels(frame, channelMap)
+        val rules = buildRules(channelSettings, assignment.activeChannels)
+
+        val header = buildHeader(
+            width = frame.gridCols,
+            height = frame.gridRows,
+            tickMicros = tickMicros,
+            ruleCount = rules.size
+        )
+        val grinFile = GrinFile(header, pixels, rules)
+
+        val id = UUID.randomUUID().toString()
+        val previewPath = File(previewDir, "$id.png").absolutePath
+        val thumbnailPath = File(thumbnailDir, "$id.png").absolutePath
+        val grinPath = File(grinDir, "$id.grin").absolutePath
+        val grimPath = File(grimDir, "$id.grim").absolutePath
+
+        // Save preview and thumbnail to disk for the gallery grid.
+        writeBitmap(frame.bitmap, previewPath)
+        writeBitmap(Bitmap.createScaledBitmap(frame.bitmap, 192, 256, true), thumbnailPath)
+
+        // Persist both GRIN and GRIM payloads.
+        grinFile.save(grinPath)
+        grinFile.save(grimPath)
+
+        val timestamp = System.currentTimeMillis()
+        val metadata = GrinAssetMetadata(
+            id = id,
+            createdAt = timestamp,
+            lastEditedAt = timestamp,
+            width = frame.gridCols,
+            height = frame.gridRows,
+            gridCols = frame.gridCols,
+            gridRows = frame.gridRows,
+            paletteBins = frame.paletteSize,
+            tickMicros = tickMicros,
+            ruleCount = rules.size,
+            channelMap = channelMap,
+            channelOrder = channelOrder,
+            paletteHistogram = frame.paletteHistogram.toList(),
+            previewPath = previewPath,
+            thumbnailPath = thumbnailPath,
+            grinPath = grinPath,
+            grimPath = grimPath,
+            channelSettings = channelSettings
+        )
+
+        // Log capture metadata for gallery indexing and debugging.
+        Log.i(
+            "GrinCapture",
+            "Captured ${metadata.width}x${metadata.height} bins=${metadata.paletteBins} at=${metadata.createdAt}"
+        )
+
+        saveMetadata(metadata)
+        return metadata
+    }
+
+    fun saveMetadata(metadata: GrinAssetMetadata) {
+        // Write the metadata JSON to disk for persistence across sessions.
+        val file = File(metadataDir, "${metadata.id}.json")
+        file.writeText(metadata.toJson().toString())
+    }
+
+    fun loadAllMetadata(): List<GrinAssetMetadata> {
+        // Load metadata entries sorted by most recent capture first.
+        if (!metadataDir.exists()) {
+            return emptyList()
+        }
+        return metadataDir.listFiles { file -> file.extension == "json" }
+            ?.mapNotNull { file ->
+                runCatching {
+                    GrinAssetMetadata.fromJson(org.json.JSONObject(file.readText()))
+                }.getOrNull()
+            }
+            ?.sortedByDescending { it.createdAt }
+            ?: emptyList()
+    }
+
+    fun loadMetadata(id: String): GrinAssetMetadata? {
+        // Read a single metadata record by ID.
+        val file = File(metadataDir, "$id.json")
+        if (!file.exists()) {
+            return null
+        }
+        return GrinAssetMetadata.fromJson(org.json.JSONObject(file.readText()))
+    }
+
+    fun loadPreviewBitmap(metadata: GrinAssetMetadata): Bitmap? {
+        // Load a preview bitmap from disk for gallery or editor use.
+        val file = File(metadata.previewPath)
+        return if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
+    }
+
+    fun loadThumbnailBitmap(metadata: GrinAssetMetadata): Bitmap? {
+        // Load cached thumbnails for the gallery grid.
+        val file = File(metadata.thumbnailPath)
+        return if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
+    }
+
+    fun loadGrinFile(metadata: GrinAssetMetadata): GrinFile? {
+        // Load the GRIN payload for editor previews and exports.
+        val file = File(metadata.grinPath)
+        return if (file.exists()) GrinFile.load(file.absolutePath) else null
+    }
+
+    fun exportPng(bitmap: Bitmap, fileName: String): File {
+        // Write a PNG snapshot to the export directory.
+        val output = File(exportDir, fileName)
+        writeBitmap(bitmap, output.absolutePath)
+        return output
+    }
+
+    fun exportGif(fileName: String, frames: List<Bitmap>, delayMs: Int): File {
+        // Encode a looping GIF from preview frames.
+        val output = File(exportDir, fileName)
+        GifEncoder().encode(frames, delayMs, output)
+        return output
+    }
+
+    fun exportGrinAndGrim(metadata: GrinAssetMetadata, grinFile: GrinFile, baseName: String): Pair<File, File> {
+        // Persist updated GRIN and GRIM files to the export directory.
+        val grinOutput = File(exportDir, \"$baseName.grin\")
+        val grimOutput = File(exportDir, \"$baseName.grim\")
+        grinFile.save(grinOutput.absolutePath)
+        grinFile.save(grimOutput.absolutePath)
+        metadata.tickMicros = grinFile.header.tickMicros
+        metadata.ruleCount = grinFile.header.ruleCount
+        metadata.lastEditedAt = System.currentTimeMillis()
+        saveMetadata(metadata)
+        return Pair(grinOutput, grimOutput)
+    }
+
+    fun updateAssetMetadata(metadata: GrinAssetMetadata, settings: List<ChannelSetting>, preview: Bitmap?) {
+        // Persist channel overrides and updated previews back to disk.
+        metadata.channelSettings = settings
+        metadata.lastEditedAt = System.currentTimeMillis()
+        if (preview != null) {
+            writeBitmap(preview, metadata.previewPath)
+            writeBitmap(Bitmap.createScaledBitmap(preview, 192, 256, true), metadata.thumbnailPath)
+        }
+        saveMetadata(metadata)
+    }
+
+    fun buildUpdatedGrinFile(metadata: GrinAssetMetadata, baseFile: GrinFile, settings: List<ChannelSetting>): GrinFile {
+        // Apply channel overrides to the rule block while keeping pixel data intact.
+        val activeChannels = metadata.channelOrder.distinct()
+        val rules = buildRules(settings, activeChannels)
+        val header = buildHeader(
+            width = metadata.width,
+            height = metadata.height,
+            tickMicros = metadata.tickMicros,
+            ruleCount = rules.size
+        )
+        return GrinFile(header, baseFile.pixels, rules)
+    }
+
+    private fun writeBitmap(bitmap: Bitmap, path: String) {
+        // Write an ARGB_8888 bitmap as a PNG file.
+        File(path).outputStream().use { output ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+        }
+    }
+
+    private fun assignBinsToChannels(histogram: IntArray, paletteColors: IntArray): ChannelAssignment {
+        // Assign palette bins to channel IDs using a stable frequency-first sort.
+        val bins = histogram.indices.map { index ->
+            PaletteBin(
+                index = index,
+                count = histogram[index],
+                luminance = computeLuminance(paletteColors[index])
+            )
+        }
+        val sortedBins = bins.sortedWith(
+            compareByDescending<PaletteBin> { it.count }
+                .thenBy { it.luminance }
+                .thenBy { it.index }
+        )
+
+        val channelMap = IntArray(histogram.size)
+        val channelOrder = mutableListOf<Int>()
+        sortedBins.forEachIndexed { position, bin ->
+            val channelId = position.coerceIn(0, 15)
+            channelMap[bin.index] = channelId
+            channelOrder.add(channelId)
+        }
+        val activeChannels = channelOrder.distinct()
+        return ChannelAssignment(channelMap.toList(), channelOrder, activeChannels)
+    }
+
+    private fun buildDefaultChannelSettings(channelOrder: List<Int>): List<ChannelSetting> {
+        // Initialize channel settings for every channel with defaults.
+        val settings = mutableListOf<ChannelSetting>()
+        for (channelId in 0..15) {
+            settings.add(
+                ChannelSetting(
+                    channelId = channelId,
+                    frequency = 50,
+                    intonation = 50,
+                    transparency = 100
+                )
+            )
+        }
+        // Keep the most frequent channel slightly emphasized.
+        val defaultChannel = channelOrder.firstOrNull() ?: 0
+        settings.firstOrNull { it.channelId == defaultChannel }?.frequency = 60
+        return settings
+    }
+
+    private fun buildGrinPixels(frame: PosterizedFrame, channelMap: List<Int>): List<GrinPixel> {
+        // Convert the posterized preview into GRIN pixels with group IDs.
+        val pixels = mutableListOf<GrinPixel>()
+        for (index in frame.paletteIndices.indices) {
+            val paletteIndex = frame.paletteIndices[index]
+            val color = frame.paletteColors[paletteIndex]
+            val channelId = channelMap[paletteIndex]
+            val pixel = GrinPixel(
+                r = Color.red(color),
+                g = Color.green(color),
+                b = Color.blue(color),
+                a = Color.alpha(color),
+                c = 0
+            )
+            pixel.setGroupId(channelId)
+            pixels.add(pixel)
+        }
+        return pixels
+    }
+
+    private fun buildRules(settings: List<ChannelSetting>, activeChannels: List<Int>): List<GrinRule> {
+        // Build rule entries for each active channel using the current settings.
+        val rules = mutableListOf<GrinRule>()
+        activeChannels.forEach { channelId ->
+            val setting = settings.firstOrNull { it.channelId == channelId }
+            if (setting != null) {
+                val timing = mapFrequencyToTiming(setting.frequency)
+                val opcode = mapIntonationToOpcode(setting.intonation)
+                val groupMask = 1 shl (channelId and 0x0F)
+                rules.add(GrinRule(groupMask, opcode, timing))
+            }
+        }
+        return rules
+    }
+
+    private fun mapFrequencyToTiming(frequency: Int): Int {
+        // Map 0-100 slider values to an 8-bit timing value.
+        val clamped = frequency.coerceIn(0, 100)
+        return (clamped / 100.0 * 255).roundToInt().coerceIn(0, 255)
+    }
+
+    private fun mapIntonationToOpcode(intonation: Int): Int {
+        // Map intonation to a GRIN opcode bucket for header persistence.
+        return when {
+            intonation >= 70 -> BaseOpcodes.ROTATE_HUE
+            intonation >= 55 -> BaseOpcodes.SHIFT_R
+            intonation <= 30 -> BaseOpcodes.SHIFT_B
+            else -> BaseOpcodes.NOP
+        }
+    }
+
+    private fun computeLuminance(color: Int): Double {
+        // Compute luminance for stable bin ordering.
+        val red = Color.red(color).toDouble()
+        val green = Color.green(color).toDouble()
+        val blue = Color.blue(color).toDouble()
+        return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+    }
+
+    private fun buildHeader(width: Int, height: Int, tickMicros: Long, ruleCount: Int): GrinHeader {
+        // Compose a GRIN header with correct lengths for saving.
+        val pixelDataLength = width.toLong() * height.toLong() * GrinFormat.PIXEL_SIZE_BYTES.toLong()
+        val fileLength = GrinFormat.HEADER_SIZE_BYTES.toLong() + pixelDataLength
+        return GrinHeader(
+            magic = GrinFormat.MAGIC_BYTES,
+            versionMajor = GrinFormat.VERSION_MAJOR,
+            versionMinor = GrinFormat.VERSION_MINOR,
+            headerSize = GrinFormat.HEADER_SIZE_BYTES,
+            width = width.toLong(),
+            height = height.toLong(),
+            tickMicros = tickMicros,
+            ruleCount = ruleCount,
+            opcodeSetId = 0,
+            flags = 0,
+            pixelDataLength = pixelDataLength,
+            fileLength = fileLength,
+            pixelDataOffset = GrinFormat.HEADER_SIZE_BYTES.toLong(),
+            reservedA = 0,
+            reservedB = 0,
+            rulesBlock = ByteArray(GrinFormat.RULES_BLOCK_SIZE)
+        )
+    }
+
+    private data class ChannelAssignment(
+        val channelMap: List<Int>,
+        val channelOrder: List<Int>,
+        val activeChannels: List<Int>
+    )
+
+    private data class PaletteBin(
+        val index: Int,
+        val count: Int,
+        val luminance: Double
+    )
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/GrinPreviewRenderer.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.graphics.Bitmap
+import android.graphics.Color
+import io.grin.lib.GrinFile
+import io.grin.lib.GrinPixel
+import kotlin.math.PI
+import kotlin.math.sin
+
+// Renders preview bitmaps from GRIN files with channel settings applied.
+class GrinPreviewRenderer {
+    fun renderPreview(grinFile: GrinFile, settings: List<ChannelSetting>, focusedChannelId: Int?): Bitmap {
+        // Render a static preview with the latest slider settings applied.
+        return renderFrame(grinFile, settings, focusedChannelId, frameIndex = 0, frameCount = 1)
+    }
+
+    fun renderFrame(
+        grinFile: GrinFile,
+        settings: List<ChannelSetting>,
+        focusedChannelId: Int?,
+        frameIndex: Int,
+        frameCount: Int
+    ): Bitmap {
+        // Render a single frame with optional frequency-based modulation.
+        val width = grinFile.header.width.toInt()
+        val height = grinFile.header.height.toInt()
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+        val settingsByChannel = settings.associateBy { it.channelId }
+        grinFile.pixels.forEachIndexed { index, pixel ->
+            val channelId = pixel.getGroupId()
+            val setting = settingsByChannel[channelId]
+            val shouldApply = focusedChannelId == null || focusedChannelId == channelId
+            val color = if (setting != null && shouldApply) {
+                applySetting(pixel, setting, frameIndex, frameCount)
+            } else {
+                Color.argb(pixel.a, pixel.r, pixel.g, pixel.b)
+            }
+            val x = index % width
+            val y = index / width
+            bitmap.setPixel(x, y, color)
+        }
+        return bitmap
+    }
+
+    private fun applySetting(pixel: GrinPixel, setting: ChannelSetting, frameIndex: Int, frameCount: Int): Int {
+        // Apply intonation (RGB bias) and transparency modulation to a pixel.
+        val intonationDelta = ((setting.intonation - 50) * 2).coerceIn(-100, 100)
+        val red = (pixel.r + intonationDelta).coerceIn(0, 255)
+        val green = (pixel.g + intonationDelta).coerceIn(0, 255)
+        val blue = (pixel.b + intonationDelta).coerceIn(0, 255)
+
+        val alphaScale = setting.transparency.coerceIn(0, 100) / 100.0
+        val frequencyScale = setting.frequency.coerceIn(0, 100) / 100.0
+        val phase = 2 * PI * frameIndex / frameCount * (0.5 + frequencyScale)
+        val pulse = 0.5 + 0.5 * sin(phase)
+        val alpha = (pixel.a * alphaScale * pulse).coerceIn(0.0, 255.0).toInt()
+
+        return Color.argb(alpha, red, green, blue)
+    }
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/GifEncoder.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.graphics.Bitmap
+import android.graphics.Color
+import java.io.File
+import java.io.OutputStream
+import kotlin.math.ceil
+import kotlin.math.log2
+import kotlin.math.max
+
+// Encodes a list of ARGB_8888 frames into a looping GIF.
+class GifEncoder {
+    fun encode(frames: List<Bitmap>, delayMs: Int, output: File) {
+        require(frames.isNotEmpty()) { "GIF export requires at least one frame" }
+        val width = frames.first().width
+        val height = frames.first().height
+        frames.forEach { frame ->
+            require(frame.width == width && frame.height == height) {
+                "All GIF frames must share the same dimensions"
+            }
+        }
+
+        val palette = buildPalette(frames.first())
+        val paletteSize = nextPowerOfTwo(max(2, palette.colors.size))
+        val colorDepth = max(2, ceil(log2(paletteSize.toDouble())).toInt())
+        val globalColorTable = buildColorTable(palette.colors, paletteSize)
+
+        output.outputStream().use { stream ->
+            writeHeader(stream)
+            writeLogicalScreenDescriptor(stream, width, height, colorDepth)
+            stream.write(globalColorTable)
+            writeLoopExtension(stream)
+
+            frames.forEach { frame ->
+                val pixels = mapPixelsToPalette(frame, palette)
+                writeGraphicsControlExtension(stream, delayMs)
+                writeImageDescriptor(stream, width, height)
+                GifLzwEncoder(width, height, pixels, colorDepth).encode(stream)
+            }
+
+            stream.write(0x3B) // GIF trailer.
+        }
+    }
+
+    private fun buildPalette(bitmap: Bitmap): PaletteResult {
+        // Build a stable palette ordered by frequency for posterized frames.
+        val counts = linkedMapOf<Int, Int>()
+        for (y in 0 until bitmap.height) {
+            for (x in 0 until bitmap.width) {
+                val color = bitmap.getPixel(x, y)
+                counts[color] = (counts[color] ?: 0) + 1
+            }
+        }
+        val sortedColors = counts.entries
+            .sortedWith(compareByDescending<Map.Entry<Int, Int>> { it.value }.thenBy { it.key })
+            .map { it.key }
+        require(sortedColors.size <= 256) { "GIF palette exceeds 256 colors" }
+        val mapping = sortedColors.mapIndexed { index, color -> color to index }.toMap()
+        return PaletteResult(sortedColors, mapping)
+    }
+
+    private fun buildColorTable(colors: List<Int>, size: Int): ByteArray {
+        // Build the RGB color table padded to a power-of-two length.
+        val table = ByteArray(size * 3)
+        colors.forEachIndexed { index, color ->
+            table[index * 3] = Color.red(color).toByte()
+            table[index * 3 + 1] = Color.green(color).toByte()
+            table[index * 3 + 2] = Color.blue(color).toByte()
+        }
+        return table
+    }
+
+    private fun mapPixelsToPalette(bitmap: Bitmap, palette: PaletteResult): ByteArray {
+        // Convert ARGB pixels to palette indices for LZW encoding.
+        val pixels = ByteArray(bitmap.width * bitmap.height)
+        var offset = 0
+        for (y in 0 until bitmap.height) {
+            for (x in 0 until bitmap.width) {
+                val color = bitmap.getPixel(x, y)
+                pixels[offset] = (palette.colorToIndex[color] ?: 0).toByte()
+                offset += 1
+            }
+        }
+        return pixels
+    }
+
+    private fun writeHeader(stream: OutputStream) {
+        // Write the GIF header signature.
+        stream.write("GIF89a".toByteArray())
+    }
+
+    private fun writeLogicalScreenDescriptor(stream: OutputStream, width: Int, height: Int, colorDepth: Int) {
+        // Define global palette usage and canvas size.
+        writeShort(stream, width)
+        writeShort(stream, height)
+        val packed = 0x80 or ((colorDepth - 1) shl 4) or (colorDepth - 1)
+        stream.write(packed)
+        stream.write(0) // Background color index.
+        stream.write(0) // Pixel aspect ratio.
+    }
+
+    private fun writeLoopExtension(stream: OutputStream) {
+        // Enable infinite looping for playback.
+        stream.write(0x21)
+        stream.write(0xFF)
+        stream.write(0x0B)
+        stream.write("NETSCAPE2.0".toByteArray())
+        stream.write(0x03)
+        stream.write(0x01)
+        writeShort(stream, 0)
+        stream.write(0x00)
+    }
+
+    private fun writeGraphicsControlExtension(stream: OutputStream, delayMs: Int) {
+        // Configure per-frame delay and disposal.
+        stream.write(0x21)
+        stream.write(0xF9)
+        stream.write(0x04)
+        stream.write(0x00)
+        writeShort(stream, (delayMs / 10).coerceAtLeast(1))
+        stream.write(0x00) // Transparent index.
+        stream.write(0x00)
+    }
+
+    private fun writeImageDescriptor(stream: OutputStream, width: Int, height: Int) {
+        // Describe the image frame and use the global color table.
+        stream.write(0x2C)
+        writeShort(stream, 0)
+        writeShort(stream, 0)
+        writeShort(stream, width)
+        writeShort(stream, height)
+        stream.write(0x00)
+    }
+
+    private fun writeShort(stream: OutputStream, value: Int) {
+        // Write a 16-bit little-endian value.
+        stream.write(value and 0xFF)
+        stream.write((value shr 8) and 0xFF)
+    }
+
+    private fun nextPowerOfTwo(value: Int): Int {
+        // Compute the next power-of-two size for the GIF color table.
+        var result = 1
+        while (result < value) {
+            result = result shl 1
+        }
+        return result
+    }
+
+    private data class PaletteResult(
+        val colors: List<Int>,
+        val colorToIndex: Map<Int, Int>
+    )
+}
+
+// Minimal LZW encoder for GIF palette indices.
+private class GifLzwEncoder(
+    private val width: Int,
+    private val height: Int,
+    private val pixels: ByteArray,
+    private val colorDepth: Int
+) {
+    private val initCodeSize = max(2, colorDepth)
+    private val clearCode = 1 shl initCodeSize
+    private val eofCode = clearCode + 1
+    private var remaining = width * height
+    private var pixelIndex = 0
+    private var curAccum = 0
+    private var curBits = 0
+    private var aCount = 0
+    private val accum = ByteArray(256)
+
+    fun encode(output: OutputStream) {
+        // Write initial code size for the image data.
+        output.write(initCodeSize)
+        compress(output)
+        output.write(0x00)
+    }
+
+    private fun compress(output: OutputStream) {
+        // Perform GIF LZW compression using a hash table.
+        val hsize = 5003
+        val htab = IntArray(hsize) { -1 }
+        val codetab = IntArray(hsize)
+        var freeEnt = eofCode + 1
+        var nBits = initCodeSize + 1
+        var maxCode = (1 shl nBits) - 1
+        val maxMaxCode = 1 shl 12
+        val clearFlag = BooleanArray(1)
+
+        outputCode(clearCode, output, nBits, maxCode, clearFlag)
+
+        var ent = nextPixel()
+        while (true) {
+            val c = nextPixel()
+            if (c == -1) {
+                break
+            }
+            val fcode = (c shl 12) + ent
+            var i = (c shl 8) xor ent
+            if (htab[i] == fcode) {
+                ent = codetab[i]
+                continue
+            } else if (htab[i] >= 0) {
+                val disp = hsize - i
+                if (i == 0) {
+                    i = 1
+                }
+                while (true) {
+                    i -= disp
+                    if (i < 0) {
+                        i += hsize
+                    }
+                    if (htab[i] == fcode) {
+                        ent = codetab[i]
+                        break
+                    }
+                    if (htab[i] < 0) {
+                        break
+                    }
+                }
+                if (htab[i] == fcode) {
+                    continue
+                }
+            }
+
+            outputCode(ent, output, nBits, maxCode, clearFlag)
+            ent = c
+            if (freeEnt < maxMaxCode) {
+                codetab[i] = freeEnt
+                htab[i] = fcode
+                freeEnt += 1
+            } else {
+                clearFlag[0] = true
+                outputCode(clearCode, output, nBits, maxCode, clearFlag)
+                htab.fill(-1)
+                freeEnt = eofCode + 1
+            }
+
+            if (freeEnt > maxCode && !clearFlag[0]) {
+                nBits += 1
+                if (nBits == 12) {
+                    maxCode = maxMaxCode - 1
+                } else {
+                    maxCode = (1 shl nBits) - 1
+                }
+            }
+        }
+
+        outputCode(ent, output, nBits, maxCode, clearFlag)
+        outputCode(eofCode, output, nBits, maxCode, clearFlag)
+    }
+
+    private fun nextPixel(): Int {
+        // Read the next palette index from the pixel stream.
+        if (remaining == 0) {
+            return -1
+        }
+        remaining -= 1
+        val value = pixels[pixelIndex].toInt() and 0xFF
+        pixelIndex += 1
+        return value
+    }
+
+    private fun outputCode(code: Int, output: OutputStream, nBits: Int, maxCode: Int, clearFlag: BooleanArray) {
+        // Buffer and output variable-length codes as GIF sub-blocks.
+        if (clearFlag[0]) {
+            curAccum = 0
+            curBits = 0
+            clearFlag[0] = false
+        }
+        curAccum = curAccum or (code shl curBits)
+        curBits += nBits
+        while (curBits >= 8) {
+            charOut(curAccum and 0xFF, output)
+            curAccum = curAccum shr 8
+            curBits -= 8
+        }
+        if (code == eofCode) {
+            // Flush trailing bits on EOF.
+            while (curBits > 0) {
+                charOut(curAccum and 0xFF, output)
+                curAccum = curAccum shr 8
+                curBits -= 8
+            }
+            flush(output)
+        }
+    }
+
+    private fun charOut(value: Int, output: OutputStream) {
+        // Write encoded bytes into the current sub-block.
+        accum[aCount] = value.toByte()
+        aCount += 1
+        if (aCount >= 254) {
+            flush(output)
+        }
+    }
+
+    private fun flush(output: OutputStream) {
+        // Flush the current sub-block to the output stream.
+        if (aCount > 0) {
+            output.write(aCount)
+            output.write(accum, 0, aCount)
+            aCount = 0
+        }
+    }
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/NavigationConstants.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+// Shared intent extras for navigation between demo screens.
+const val EXTRA_ASSET_ID = "io.grin.demo.extra.ASSET_ID"
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/EditorActivity.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.os.Bundle
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.SeekBar
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import io.grin.demo.databinding.ActivityEditorBinding
+import io.grin.lib.GrinFile
+
+// Editor for adjusting channel metadata and exporting assets.
+class EditorActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityEditorBinding
+    private lateinit var store: GrinAssetStore
+    private lateinit var metadata: GrinAssetMetadata
+    private lateinit var grinFile: GrinFile
+    private val renderer = GrinPreviewRenderer()
+
+    private var currentSettings: MutableList<ChannelSetting> = mutableListOf()
+    private var originalSettings: List<ChannelSetting> = emptyList()
+    private var selectedChannelId = 0
+    private var isUpdatingSliders = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityEditorBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        store = GrinAssetStore(this)
+        val assetId = intent.getStringExtra(EXTRA_ASSET_ID)
+        if (assetId == null) {
+            Toast.makeText(this, getString(R.string.editor_missing_asset), Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
+        val loadedMetadata = store.loadMetadata(assetId)
+        val loadedFile = loadedMetadata?.let { store.loadGrinFile(it) }
+        if (loadedMetadata == null || loadedFile == null) {
+            Toast.makeText(this, getString(R.string.editor_missing_asset), Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+
+        metadata = loadedMetadata
+        grinFile = loadedFile
+        originalSettings = metadata.channelSettings.map { it.copy() }
+        currentSettings = metadata.channelSettings.map { it.copy() }.toMutableList()
+
+        setupChannelSpinner()
+        setupSeekBars()
+        updatePreview()
+
+        binding.applyButton.setOnClickListener {
+            applyEdits()
+        }
+        binding.revertButton.setOnClickListener {
+            revertEdits()
+        }
+        binding.exportPngButton.setOnClickListener {
+            exportPng()
+        }
+        binding.exportGifButton.setOnClickListener {
+            exportGif()
+        }
+        binding.exportGrinButton.setOnClickListener {
+            exportGrin()
+        }
+        binding.backButton.setOnClickListener {
+            finish()
+        }
+    }
+
+    private fun setupChannelSpinner() {
+        // Populate the channel selector with hex labels.
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ChannelLabels.labels)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.channelSpinner.adapter = adapter
+
+        val defaultChannel = metadata.channelOrder.firstOrNull() ?: 0
+        binding.channelSpinner.setSelection(defaultChannel)
+        selectedChannelId = defaultChannel
+        binding.channelSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                selectedChannelId = position
+                updateSliderValues()
+                updatePreview()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
+
+    private fun setupSeekBars() {
+        // Attach change listeners for live preview updates.
+        binding.frequencySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (!isUpdatingSliders) {
+                    updateSetting { it.frequency = progress }
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+        binding.intonationSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (!isUpdatingSliders) {
+                    updateSetting { it.intonation = progress }
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+        binding.transparencySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (!isUpdatingSliders) {
+                    updateSetting { it.transparency = progress }
+                }
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        updateSliderValues()
+    }
+
+    private fun updateSetting(update: (ChannelSetting) -> Unit) {
+        // Apply slider updates to the selected channel and refresh preview.
+        val setting = currentSettings.firstOrNull { it.channelId == selectedChannelId }
+        if (setting != null) {
+            update(setting)
+            updatePreview()
+        }
+    }
+
+    private fun updateSliderValues() {
+        // Synchronize slider positions with the selected channel settings.
+        val setting = currentSettings.firstOrNull { it.channelId == selectedChannelId } ?: return
+        isUpdatingSliders = true
+        binding.frequencySeek.progress = setting.frequency
+        binding.intonationSeek.progress = setting.intonation
+        binding.transparencySeek.progress = setting.transparency
+        isUpdatingSliders = false
+    }
+
+    private fun updatePreview() {
+        // Render a live preview using the current slider settings.
+        val preview = renderer.renderPreview(grinFile, currentSettings, selectedChannelId)
+        binding.editorPreview.setImageBitmap(preview)
+    }
+
+    private fun applyEdits() {
+        // Persist updated channel overrides and GRIN rules.
+        val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
+        grinFile = updatedFile
+        updatedFile.save(metadata.grinPath)
+        updatedFile.save(metadata.grimPath)
+        val preview = renderer.renderPreview(grinFile, currentSettings, null)
+        store.updateAssetMetadata(metadata, currentSettings.map { it.copy() }, preview)
+        originalSettings = currentSettings.map { it.copy() }
+        Toast.makeText(this, getString(R.string.editor_applied), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun revertEdits() {
+        // Restore channel settings to the last applied state.
+        currentSettings = originalSettings.map { it.copy() }.toMutableList()
+        updateSliderValues()
+        updatePreview()
+    }
+
+    private fun exportPng() {
+        // Export a PNG snapshot of the current GRIN preview.
+        val snapshot = renderer.renderPreview(grinFile, currentSettings, null)
+        store.exportPng(snapshot, "${metadata.id}_snapshot.png")
+        Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun exportGif() {
+        // Render a short loop derived from the GRIN playback cadence.
+        val frames = mutableListOf<android.graphics.Bitmap>()
+        val frameCount = 12
+        for (index in 0 until frameCount) {
+            frames.add(renderer.renderFrame(grinFile, currentSettings, null, index, frameCount))
+        }
+        val delayMs = (metadata.tickMicros / 1000L).toInt().coerceAtLeast(50)
+        store.exportGif("${metadata.id}_loop.gif", frames, delayMs)
+        Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
+    }
+
+    private fun exportGrin() {
+        // Export the updated GRIN payload with current header settings.
+        val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
+        store.exportGrinAndGrim(metadata, updatedFile, "${metadata.id}_updated")
+        Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
+    }
+}
+
+---
+FILE: android/demo/src/main/res/layout/activity_grid_camera.xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/gridCameraRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/previewTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/grid_camera_title"
+        android:textStyle="bold" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/posterizedPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/black"
+            android:scaleType="fitCenter" />
+
+        <io.grin.demo.GridOverlayView
+            android:id="@+id/gridOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/performanceText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/camera_performance_default" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/captureButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/capture" />
+
+        <Button
+            android:id="@+id/closeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/close" />
+    </LinearLayout>
+</LinearLayout>
+
+---
+FILE: android/demo/src/main/res/layout/activity_main.xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <io.grin.lib.GrinView
+        android:id="@+id/grinView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#000000" />
+
+    <TextView
+        android:id="@+id/metadataText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:text="@string/file_info_title" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:max="1000" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/loadButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/load_file" />
+
+        <Button
+            android:id="@+id/cameraButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/open_camera" />
+
+        <Button
+            android:id="@+id/galleryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/open_gallery" />
+
+        <Button
+            android:id="@+id/playButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/play" />
+
+        <Button
+            android:id="@+id/pauseButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/pause" />
+
+        <Button
+            android:id="@+id/stopButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/stop" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/samplesTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/samples_title"
+        android:textStyle="bold" />
+
+    <ListView
+        android:id="@+id/samplesList"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginTop="4dp"
+        android:dividerHeight="1dp" />
+</LinearLayout>
+
+---
+FILE: android/demo/src/main/res/layout/activity_capture_review.xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/captureReviewRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/captureReviewTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/capture_review_title"
+        android:textStyle="bold" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/previewImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/black"
+            android:scaleType="fitCenter" />
+
+        <io.grin.demo.GridOverlayView
+            android:id="@+id/gridOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/captureMetadata"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/capture_metadata_default" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/retakeButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/retake" />
+
+        <Button
+            android:id="@+id/editButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/open_editor" />
+
+        <Button
+            android:id="@+id/acceptButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/accept" />
+    </LinearLayout>
+</LinearLayout>
+
+---
+FILE: android/demo/src/main/res/layout/activity_gallery.xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/galleryRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/galleryTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/gallery_title"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/emptyState"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/gallery_empty_state" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/galleryRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/captureNewButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/capture_new" />
+
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/back" />
+    </LinearLayout>
+</LinearLayout>
+
+---
+FILE: android/demo/src/main/res/layout/activity_editor.xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/editorScrollRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/editorRoot"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/editorTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/editor_title"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/editorPreview"
+            android:layout_width="match_parent"
+            android:layout_height="240dp"
+            android:layout_marginTop="8dp"
+            android:background="@android:color/black"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:id="@+id/channelLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/channel_selector" />
+
+        <Spinner
+            android:id="@+id/channelSpinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/frequencyLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/channel_frequency" />
+
+        <SeekBar
+            android:id="@+id/frequencySeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
+
+        <TextView
+            android:id="@+id/intonationLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/channel_intonation" />
+
+        <SeekBar
+            android:id="@+id/intonationSeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
+
+        <TextView
+            android:id="@+id/transparencyLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/channel_transparency" />
+
+        <SeekBar
+            android:id="@+id/transparencySeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/applyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/apply" />
+
+            <Button
+                android:id="@+id/revertButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/revert" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/exportPngButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/export_png" />
+
+            <Button
+                android:id="@+id/exportGifButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/export_gif" />
+
+            <Button
+                android:id="@+id/exportGrinButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/export_grin" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/back" />
+    </LinearLayout>
+</ScrollView>
+
+---
+FILE: android/demo/src/main/res/layout/item_gallery_asset.xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/galleryItemRoot"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/thumbnail"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:background="@android:color/black"
+        android:contentDescription="@string/gallery_thumbnail"
+        android:scaleType="centerCrop" />
+
+    <TextView
+        android:id="@+id/assetMetadata"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/gallery_asset_metadata_default"
+        android:textSize="12sp" />
+</LinearLayout>
+
+---
+FILE: android/demo/src/main/res/values/strings.xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<resources>
+    <string name="app_name">GRIN Demo</string>
+    <string name="description">Graphic Readdressable Indexed Nodes - Demo</string>
+    
+    <!-- UI Strings -->
+    <string name="load_file">Load .grin File</string>
+    <string name="open_camera">Open Grid Camera</string>
+    <string name="open_gallery">Open Gallery</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+    <string name="samples_title">Sample Files</string>
+    <string name="no_samples">No samples found</string>
+    
+    <!-- File info -->
+    <string name="file_info_title">File Information</string>
+    <string name="dimensions_format">Dimensions: %1$d × %2$d</string>
+    <string name="rule_count_format">Rules: %1$d</string>
+    <string name="tick_rate_format">Tick Rate: %1$d µs</string>
+
+    <!-- Grid camera -->
+    <string name="grid_camera_title">Grid Camera Preview</string>
+    <string name="camera_performance_default">Grid: -- × -- · Palette: --</string>
+    <string name="camera_performance_format">Grid: %1$d × %2$d · Palette: %3$d</string>
+    <string name="close">Close</string>
+    <string name="capture">Capture</string>
+    <string name="capture_review_title">Capture Review</string>
+    <string name="capture_metadata_default">Grid: -- × -- · Bins: --</string>
+    <string name="capture_metadata_format">Grid: %1$d × %2$d · Bins: %3$d</string>
+    <string name="retake">Retake</string>
+    <string name="accept">Accept</string>
+    <string name="open_editor">Open Editor</string>
+    <string name="capture_no_frame">No frame available to capture.</string>
+
+    <!-- Gallery -->
+    <string name="gallery_title">Gallery</string>
+    <string name="gallery_empty_state">No captures yet. Use the grid camera to add assets.</string>
+    <string name="gallery_thumbnail">Gallery thumbnail</string>
+    <string name="gallery_asset_metadata_default">-- × -- · Bins: --</string>
+    <string name="gallery_asset_metadata">%1$d × %2$d · Bins: %3$d</string>
+    <string name="capture_new">Capture New</string>
+    <string name="back">Back</string>
+
+    <!-- Editor -->
+    <string name="editor_title">Channel Editor</string>
+    <string name="channel_selector">Channel</string>
+    <string name="channel_frequency">Frequency</string>
+    <string name="channel_intonation">Color Intonation</string>
+    <string name="channel_transparency">Transparency</string>
+    <string name="apply">Apply</string>
+    <string name="revert">Revert</string>
+    <string name="export_png">Export PNG</string>
+    <string name="export_gif">Export GIF</string>
+    <string name="export_grin">Export GRIN</string>
+    <string name="editor_missing_asset">Unable to load selected capture.</string>
+    <string name="editor_applied">Edits applied.</string>
+    <string name="export_complete">Export complete.</string>
+    
+    <!-- Errors -->
+    <string name="error_invalid_file">Invalid GRIN file</string>
+    <string name="error_file_not_found">File not found</string>
+    <string name="error_loading">Error loading file</string>
+    <string name="camera_permission_denied">Camera permission denied.</string>
+    <string name="camera_start_failed">Unable to start camera preview.</string>
+</resources>
+
+---
+FILE: android/demo/src/main/AndroidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<!--
+  GRIN Demo Application Manifest
+  Demonstrates .grin file loading and playback
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Camera permission required for the grid preview pipeline. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.GrinDemo">
+
+        <provider
+            android:name="io.grin.lib.GrinContentProvider"
+            android:authorities="${applicationId}.grin"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+        
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.GrinDemo">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            
+            <!-- Handle .grin and .grn file opens -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:pathPattern=".*\\.grin" />
+                <data android:pathPattern=".*\\.grn" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".GridCameraActivity"
+            android:exported="false"
+            android:label="@string/grid_camera_title"
+            android:theme="@style/Theme.GrinDemo" />
+
+        <activity
+            android:name=".CaptureReviewActivity"
+            android:exported="false"
+            android:label="@string/capture_review_title"
+            android:theme="@style/Theme.GrinDemo" />
+
+        <activity
+            android:name=".GalleryActivity"
+            android:exported="false"
+            android:label="@string/gallery_title"
+            android:theme="@style/Theme.GrinDemo" />
+
+        <activity
+            android:name=".EditorActivity"
+            android:exported="false"
+            android:label="@string/editor_title"
+            android:theme="@style/Theme.GrinDemo" />
+    </application>
+
+</manifest>
+
+---
+FILE: android/demo/build.gradle.kts
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+// GRIN Android Demo Application
+// Demonstrates GRIN file loading, validation, and playback
+
+plugins {
+    id("com.android.application")
+    kotlin("android")
+}
+
+android {
+    namespace = "io.grin.demo"
+    compileSdk = 34
+
+    defaultConfig {
+        applicationId = "io.grin.demo"
+        minSdk = 21  // Match library minimum
+        targetSdk = 34
+        versionCode = 1
+        versionName = "0.1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
+            isDebuggable = true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    buildFeatures {
+        viewBinding = true
+    }
+}
+
+dependencies {
+    // GRIN library
+    implementation(project(":lib"))
+    
+    // AndroidX core - stable, minimal
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.activity:activity-ktx:1.8.2")
+    
+    // Material Design for demo UI
+    implementation("com.google.android.material:material:1.11.0")
+    
+    // ConstraintLayout for demo layouts
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    
+    // Lifecycle for demo
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    // CameraX for grid camera preview
+    implementation("androidx.camera:camera-core:1.3.2")
+    implementation("androidx.camera:camera-camera2:1.3.2")
+    implementation("androidx.camera:camera-lifecycle:1.3.2")
+    
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+}
+
+---
+FILE: docs/android-grid-camera-ux.md
+# Android Grid Camera + Gallery UX & Data Model
+
+## UX Flow Overview
+
+### Screen Map
+1. **Camera Preview**
+   - Live posterized preview with grid overlay.
+   - Primary actions: capture, toggle grid, palette view, settings.
+2. **Capture Review**
+   - Frozen posterized frame with channel mapping summary.
+   - Actions: accept (save GRIM/GRIN), retake, open editor.
+3. **Gallery Grid**
+   - Posterized thumbnails in a grid, with quick metadata badges (resolution, palette size).
+   - Actions: open editor, export, delete, share.
+4. **Editor**
+   - Channel selector (0-9/A-F) plus sliders for frequency, color intonation, transparency.
+   - Actions: apply, revert, export, back to gallery.
+
+### Navigation Rules
+- Camera Preview is the default entry point.
+- Capture Review is modal; accepting moves to Gallery and allows immediate Editor open.
+- Gallery is the primary browsing surface; Editor is a detail view scoped to one capture.
+
+## Data Model
+
+### Entities
+- **CaptureSession**
+  - `id` (UUID)
+  - `createdAt` (epoch millis)
+  - `width`, `height`
+  - `gridCols`, `gridRows`
+  - `paletteBins` (12-14)
+  - `sourceUri` (raw capture or temp buffer)
+- **GrinAsset**
+  - `id` (UUID)
+  - `fileUri` (GRIM/GRIN output path)
+  - `previewUri` (posterized PNG)
+  - `width`, `height`
+  - `tickMicros`
+  - `ruleCount`
+  - `channelMap` (ordered list of channel assignments)
+  - `paletteHistogram` (bin -> count)
+  - `createdAt`, `lastEditedAt`
+- **ChannelSetting**
+  - `channelId` (0-15)
+  - `frequency`
+  - `intonation`
+  - `alpha`
+
+### Storage Plan
+- Persist `GrinAsset` and `ChannelSetting` metadata in Room (SQLite).
+- Store GRIM/GRIN payloads and preview PNGs in app-scoped storage with stable file names.
+- Cache derived thumbnails; invalidate on edit export.
+
+### Demo Implementation Notes
+- The demo app persists `GrinAsset` metadata as JSON files under app-scoped storage.
+- Preview PNGs, thumbnails, and GRIM/GRIN payloads are stored in sibling folders for fast gallery paging.
+- Editor exports write PNG, GIF, and updated GRIN payloads into an app-scoped `exports` directory.
+
+## Posterization & Channel Mapping
+
+### Palette Handling
+- Target 12-14 color bins per capture; bins built from a posterization LUT.
+- For high-variance scenes, allow adaptive bin count within the 12-14 range.
+- Persist ordered palette bins for consistent channel mapping across edits/exports.
+
+### Preview Pipeline Targets
+- Aim for 30fps on mid-tier devices, with headroom for 60fps on flagship devices.
+- If analysis latency exceeds ~40ms, drop to a fallback profile (75% grid resolution, 12 bins).
+- Use CPU posterization with nearest-palette matching; keep frames capped by analysis FPS.
+
+### Channel Mapping Rules
+- Assign bins to channels 0-9/A-F using stable sort by frequency, then luminance.
+- Keep a deterministic mapping table in `channelMap` to guarantee replayability.
+- Provide editor overrides that reassign channels without re-running posterization.
+
+## GRIM/GRIN Metadata Updates
+- Update `TickMicros` based on capture preview cadence (e.g., 33_333 for 30fps).
+- Set `RuleCount` to the number of active channels.
+- Write channel metadata into rule block entries (group mask + opcode + timing) to reflect editor settings.
+- Ensure header `PixelDataLength` and `FileLength` reflect generated payload sizes.
+
+## Export Options
+
+### GRIM/GRIN
+- Persist updated header settings, channel map, and rules for playback parity.
+
+### PNG Snapshot
+- Export an ARGB_8888 bitmap with alpha preserved from the posterized preview.
+
+### GIF Loop
+- Render 12-15 frames from GRIN playback at fixed tick intervals.
+- Package as a looping GIF with consistent palette ordering.

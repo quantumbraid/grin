@@ -61,6 +61,10 @@ class MainActivity : AppCompatActivity() {
             // Launch the grid camera preview workflow.
             startActivity(Intent(this, GridCameraActivity::class.java))
         }
+        binding.galleryButton.setOnClickListener {
+            // Open the capture gallery grid.
+            startActivity(Intent(this, GalleryActivity::class.java))
+        }
         binding.playButton.setOnClickListener { binding.grinView.play() }
         binding.pauseButton.setOnClickListener { binding.grinView.pause() }
         binding.stopButton.setOnClickListener { binding.grinView.stop() }

@@ -24,6 +24,7 @@
 package io.grin.demo
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Toast
@@ -41,6 +42,7 @@ import java.util.concurrent.Executors
 class GridCameraActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGridCameraBinding
     private lateinit var cameraExecutor: ExecutorService
+    private var latestFrame: PosterizedFrame? = null
 
     private val permissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -62,6 +64,16 @@ class GridCameraActivity : AppCompatActivity() {
         binding.closeButton.setOnClickListener {
             // Return to the main demo screen.
             finish()
+        }
+        binding.captureButton.setOnClickListener {
+            // Freeze the most recent posterized frame for review.
+            val frame = latestFrame
+            if (frame != null) {
+                CaptureBuffer.frame = frame
+                startActivity(Intent(this, CaptureReviewActivity::class.java))
+            } else {
+                Toast.makeText(this, getString(R.string.capture_no_frame), Toast.LENGTH_SHORT).show()
+            }
         }
 
         if (hasCameraPermission()) {
@@ -124,6 +136,8 @@ class GridCameraActivity : AppCompatActivity() {
                     frame.gridRows,
                     frame.paletteSize
                 )
+                // Cache the latest frame for capture review.
+                latestFrame = frame
             }
         }
 

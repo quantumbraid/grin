@@ -52,6 +52,11 @@
 - Store GRIM/GRIN payloads and preview PNGs in app-scoped storage with stable file names.
 - Cache derived thumbnails; invalidate on edit export.
 
+### Demo Implementation Notes
+- The demo app persists `GrinAsset` metadata as JSON files under app-scoped storage.
+- Preview PNGs, thumbnails, and GRIM/GRIN payloads are stored in sibling folders for fast gallery paging.
+- Editor exports write PNG, GIF, and updated GRIN payloads into an app-scoped `exports` directory.
+
 ## Posterization & Channel Mapping
 
 ### Palette Handling

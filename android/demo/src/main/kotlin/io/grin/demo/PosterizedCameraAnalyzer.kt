@@ -37,7 +37,9 @@ data class PosterizedFrame(
     val gridRows: Int,
     val paletteIndices: IntArray,
     val paletteLabels: List<String>,
-    val paletteSize: Int
+    val paletteSize: Int,
+    val paletteHistogram: IntArray,
+    val paletteColors: IntArray
 )
 
 // Encapsulates performance targets and fallback behavior for posterization.
@@ -108,6 +110,8 @@ class PosterizedCameraAnalyzer(
         val crop = computeCenterCrop(image.width, image.height, gridCols, gridRows)
         val bitmap = Bitmap.createBitmap(gridCols, gridRows, Bitmap.Config.ARGB_8888)
         val paletteIndices = IntArray(gridCols * gridRows)
+        // Track per-bin counts for channel assignment and gallery metadata.
+        val histogram = IntArray(palette.colors.size)
 
         for (row in 0 until gridRows) {
             val sourceY = crop.top + ((row + 0.5f) * crop.height / gridRows).roundToInt()
@@ -117,6 +121,7 @@ class PosterizedCameraAnalyzer(
                 val paletteIndex = findNearestPaletteIndex(rgb, palette.colors)
                 bitmap.setPixel(col, row, palette.colors[paletteIndex])
                 paletteIndices[row * gridCols + col] = paletteIndex
+                histogram[paletteIndex] += 1
             }
         }
 
@@ -126,7 +131,9 @@ class PosterizedCameraAnalyzer(
             gridRows = gridRows,
             paletteIndices = paletteIndices,
             paletteLabels = palette.labels,
-            paletteSize = palette.colors.size
+            paletteSize = palette.colors.size,
+            paletteHistogram = histogram,
+            paletteColors = palette.colors.copyOf()
         )
     }
 

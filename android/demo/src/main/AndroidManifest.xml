@@ -73,6 +73,24 @@
             android:exported="false"
             android:label="@string/grid_camera_title"
             android:theme="@style/Theme.GrinDemo" />
+
+        <activity
+            android:name=".CaptureReviewActivity"
+            android:exported="false"
+            android:label="@string/capture_review_title"
+            android:theme="@style/Theme.GrinDemo" />
+
+        <activity
+            android:name=".GalleryActivity"
+            android:exported="false"
+            android:label="@string/gallery_title"
+            android:theme="@style/Theme.GrinDemo" />
+
+        <activity
+            android:name=".EditorActivity"
+            android:exported="false"
+            android:label="@string/editor_title"
+            android:theme="@style/Theme.GrinDemo" />
     </application>
 
 </manifest>

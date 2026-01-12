@@ -24,32 +24,44 @@
   SOFTWARE.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/root"
+    android:id="@+id/captureReviewRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <io.grin.lib.GrinView
-        android:id="@+id/grinView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#000000" />
-
     <TextView
-        android:id="@+id/metadataText"
+        android:id="@+id/captureReviewTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
-        android:text="@string/file_info_title" />
+        android:text="@string/capture_review_title"
+        android:textStyle="bold" />
 
-    <SeekBar
-        android:id="@+id/seekBar"
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/previewImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/black"
+            android:scaleType="fitCenter" />
+
+        <io.grin.demo.GridOverlayView
+            android:id="@+id/gridOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/captureMetadata"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:max="1000" />
+        android:text="@string/capture_metadata_default" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -59,59 +71,23 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/loadButton"
+            android:id="@+id/retakeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/load_file" />
+            android:text="@string/retake" />
 
         <Button
-            android:id="@+id/cameraButton"
+            android:id="@+id/editButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="@string/open_camera" />
+            android:text="@string/open_editor" />
 
         <Button
-            android:id="@+id/galleryButton"
+            android:id="@+id/acceptButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="@string/open_gallery" />
-
-        <Button
-            android:id="@+id/playButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/play" />
-
-        <Button
-            android:id="@+id/pauseButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/pause" />
-
-        <Button
-            android:id="@+id/stopButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/stop" />
+            android:text="@string/accept" />
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/samplesTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/samples_title"
-        android:textStyle="bold" />
-
-    <ListView
-        android:id="@+id/samplesList"
-        android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:layout_marginTop="4dp"
-        android:dividerHeight="1dp" />
 </LinearLayout>
