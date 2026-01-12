@@ -67,7 +67,7 @@ CLI QUICK START (Node >= 18)
   node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
 ```
 ##WEB LIBRARY
-'''bash
+```bash
   cd web
 ```
 ```npm
