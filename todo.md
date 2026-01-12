@@ -1049,17 +1049,23 @@
   - Summary: Documented installation, flattening, tagging, and export workflow in `plugins/illustrator/README.md`.
 
 ### 14.4 GIMP plugin (Python)
-- [ ] Set up `plugins/gimp/` with Python-Fu entry point + menu registration
+- [x] Set up `plugins/gimp/` with Python-Fu entry point + menu registration
   - Add configuration dialog for group/lock editing and export settings.
-- [ ] Implement group/lock editing overlays
+  - Summary: Added the Python-Fu entry point, menu registration, and configuration parameters in `plugins/gimp/grin_gimp_plugin.py`.
+- [x] Implement group/lock editing overlays
   - Use layer groups or selection masks to represent group IDs.
-- [ ] Implement pixel map extraction
+  - Summary: Implemented group/lock metadata layers and selection painting overlays in `plugins/gimp/grin_gimp_plugin.py`.
+- [x] Implement pixel map extraction
   - Read pixel data + custom metadata for group and lock state.
-- [ ] Implement export pipeline
+  - Summary: Added grayscale pixel extraction and group/lock summaries in `plugins/gimp/grin_gimp_plugin.py`.
+- [x] Implement export pipeline
   - Export PNG + JSON sidecar and call `grin-encode.js`.
-- [ ] Add preview/validation step
+  - Summary: Implemented PNG exports, rules sidecar writing, and optional CLI invocation in `plugins/gimp/grin_gimp_plugin.py`.
+- [x] Add preview/validation step
   - Use `grin-validate` and show errors in a dialog.
-- [ ] Write GIMP plugin README with install + usage steps
+  - Summary: Added preview metadata summaries and validation output dialogs in `plugins/gimp/grin_gimp_plugin.py`.
+- [x] Write GIMP plugin README with install + usage steps
+  - Summary: Documented installation, metadata authoring, and export workflow in `plugins/gimp/README.md`.
 
 ---
 
