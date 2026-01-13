@@ -59,7 +59,7 @@ class GrinAssetStore(private val context: Context) {
 
     fun createAssetFromFrame(frame: PosterizedFrame, tickMicros: Long): GrinAssetMetadata {
         // Build channel mapping and histogram from the captured frame.
-        val assignment = assignBinsToChannels(frame.paletteHistogram, frame.paletteColors)
+        val assignment = assignBinsToChannels(frame.paletteHistogram)
         val channelMap = assignment.channelMap
         val channelOrder = assignment.channelOrder
         val channelSettings = buildDefaultChannelSettings(channelOrder)
@@ -226,18 +226,16 @@ class GrinAssetStore(private val context: Context) {
         }
     }
 
-    private fun assignBinsToChannels(histogram: IntArray, paletteColors: IntArray): ChannelAssignment {
+    private fun assignBinsToChannels(histogram: IntArray): ChannelAssignment {
         // Assign palette bins to channel IDs using a stable frequency-first sort.
         val bins = histogram.indices.map { index ->
             PaletteBin(
                 index = index,
-                count = histogram[index],
-                luminance = computeLuminance(paletteColors[index])
+                count = histogram[index]
             )
         }
         val sortedBins = bins.sortedWith(
             compareByDescending<PaletteBin> { it.count }
-                .thenBy { it.luminance }
                 .thenBy { it.index }
         )
 
@@ -322,14 +320,6 @@ class GrinAssetStore(private val context: Context) {
         }
     }
 
-    private fun computeLuminance(color: Int): Double {
-        // Compute luminance for stable bin ordering.
-        val red = Color.red(color).toDouble()
-        val green = Color.green(color).toDouble()
-        val blue = Color.blue(color).toDouble()
-        return 0.2126 * red + 0.7152 * green + 0.0722 * blue
-    }
-
     private fun buildHeader(width: Int, height: Int, tickMicros: Long, ruleCount: Int): GrinHeader {
         // Compose a GRIN header with correct lengths for saving.
         val pixelDataLength = width.toLong() * height.toLong() * GrinFormat.PIXEL_SIZE_BYTES.toLong()
@@ -362,7 +352,6 @@ class GrinAssetStore(private val context: Context) {
 
     private data class PaletteBin(
         val index: Int,
-        val count: Int,
-        val luminance: Double
+        val count: Int
     )
 }

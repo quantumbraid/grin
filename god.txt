@@ -8457,7 +8457,7 @@ function safeReadBaseline(baselinePath) {
 - Use CPU posterization with nearest-palette matching; keep frames capped by analysis FPS.
 
 ### Channel Mapping Rules
-- Assign bins to channels 0-9/A-F using stable sort by frequency, then luminance.
+- Assign bins to channels 0-9/A-F using a stable sort by frequency.
 - Keep a deterministic mapping table in `channelMap` to guarantee replayability.
 - Provide editor overrides that reassign channels without re-running posterization.
 
@@ -13437,16 +13437,18 @@ This directory contains shared fixtures for GRIN tests.
   - [x] Apply 12-14 color posterization shader (RenderScript/RenderEffect) or CPU pipeline (LUT + k-means fallback)
   - [x] Display posterized preview with live grid overlay (cell borders + channel labels)
   - [x] Document performance targets (30/60fps) and fallback quality settings (reduced grid, lower poster bins)
-- [ ] Implement capture flow and channel assignment
-  - [ ] Capture posterized frame buffer and generate GRIM/GRIN payload (RGBA+C)
-  - [ ] Build palette histogram and auto-assign bins to channels 0-9/A-F (stable sort by frequency)
-  - [ ] Persist GRIM/GRIN files with updated header settings (TickMicros, RuleCount, channel metadata)
-  - [ ] Log capture metadata for gallery indexing (timestamp, dimensions, palette bins)
-- [ ] Build gallery grid and editor UI
-  - [ ] Render gallery grid of GRIN/GRIM assets with posterized thumbnails (lazy paging, disk cache)
-  - [ ] Add channel selector dropdown (0-9/A-F) in editor (default to most frequent bin)
-  - [ ] Add sliders for frequency, color intonation, and transparency (live preview updates)
-  - [ ] Apply edits to in-memory preview and persist to header settings (rules + channel overrides)
+- [x] Implement capture flow and channel assignment
+  - [x] Capture posterized frame buffer and generate GRIM/GRIN payload (RGBA+C)
+  - [x] Build palette histogram and auto-assign bins to channels 0-9/A-F (stable sort by frequency)
+  - [x] Persist GRIM/GRIN files with updated header settings (TickMicros, RuleCount, channel metadata)
+  - [x] Log capture metadata for gallery indexing (timestamp, dimensions, palette bins)
+  - Summary: Capture flow saves posterized frames to GRIN/GRIM with stable channel mapping plus metadata logging in `android/demo/src/main/kotlin/io/grin/demo/GrinAssetStore.kt`.
+- [x] Build gallery grid and editor UI
+  - [x] Render gallery grid of GRIN/GRIM assets with posterized thumbnails (lazy paging, disk cache)
+  - [x] Add channel selector dropdown (0-9/A-F) in editor (default to most frequent bin)
+  - [x] Add sliders for frequency, color intonation, and transparency (live preview updates)
+  - [x] Apply edits to in-memory preview and persist to header settings (rules + channel overrides)
+  - Summary: Gallery grid and editor controls implemented in `android/demo/src/main/kotlin/io/grin/demo/GalleryActivity.kt`, `GalleryAdapter.kt`, and `EditorActivity.kt`.
 - [ ] Export workflows
   - [ ] Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
   - [ ] Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
@@ -26634,7 +26636,7 @@ class GrinAssetStore(private val context: Context) {
 
     fun createAssetFromFrame(frame: PosterizedFrame, tickMicros: Long): GrinAssetMetadata {
         // Build channel mapping and histogram from the captured frame.
-        val assignment = assignBinsToChannels(frame.paletteHistogram, frame.paletteColors)
+        val assignment = assignBinsToChannels(frame.paletteHistogram)
         val channelMap = assignment.channelMap
         val channelOrder = assignment.channelOrder
         val channelSettings = buildDefaultChannelSettings(channelOrder)
@@ -26801,18 +26803,16 @@ class GrinAssetStore(private val context: Context) {
         }
     }
 
-    private fun assignBinsToChannels(histogram: IntArray, paletteColors: IntArray): ChannelAssignment {
+    private fun assignBinsToChannels(histogram: IntArray): ChannelAssignment {
         // Assign palette bins to channel IDs using a stable frequency-first sort.
         val bins = histogram.indices.map { index ->
             PaletteBin(
                 index = index,
-                count = histogram[index],
-                luminance = computeLuminance(paletteColors[index])
+                count = histogram[index]
             )
         }
         val sortedBins = bins.sortedWith(
             compareByDescending<PaletteBin> { it.count }
-                .thenBy { it.luminance }
                 .thenBy { it.index }
         )
 
@@ -26897,14 +26897,6 @@ class GrinAssetStore(private val context: Context) {
         }
     }
 
-    private fun computeLuminance(color: Int): Double {
-        // Compute luminance for stable bin ordering.
-        val red = Color.red(color).toDouble()
-        val green = Color.green(color).toDouble()
-        val blue = Color.blue(color).toDouble()
-        return 0.2126 * red + 0.7152 * green + 0.0722 * blue
-    }
-
     private fun buildHeader(width: Int, height: Int, tickMicros: Long, ruleCount: Int): GrinHeader {
         // Compose a GRIN header with correct lengths for saving.
         val pixelDataLength = width.toLong() * height.toLong() * GrinFormat.PIXEL_SIZE_BYTES.toLong()
@@ -26937,8 +26929,7 @@ class GrinAssetStore(private val context: Context) {
 
     private data class PaletteBin(
         val index: Int,
-        val count: Int,
-        val luminance: Double
+        val count: Int
     )
 }
 

@@ -70,7 +70,7 @@
 - Use CPU posterization with nearest-palette matching; keep frames capped by analysis FPS.
 
 ### Channel Mapping Rules
-- Assign bins to channels 0-9/A-F using stable sort by frequency, then luminance.
+- Assign bins to channels 0-9/A-F using a stable sort by frequency.
 - Keep a deterministic mapping table in `channelMap` to guarantee replayability.
 - Provide editor overrides that reassign channels without re-running posterization.
 
