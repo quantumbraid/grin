@@ -653,10 +653,10 @@
   - [x] Add sliders for frequency, color intonation, and transparency (live preview updates)
   - [x] Apply edits to in-memory preview and persist to header settings (rules + channel overrides)
   - Summary: Gallery grid and editor controls implemented in `android/demo/src/main/kotlin/io/grin/demo/GalleryActivity.kt`, `GalleryAdapter.kt`, and `EditorActivity.kt`.
-- [ ] Export workflows
-  - [ ] Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
-  - [ ] Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
-  - [ ] Export updated GRIN/GRIM file with new header settings (channel metadata + rules)
+- [x] Export workflows
+  - [x] Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
+  - [x] Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
+  - [x] Export updated GRIN/GRIM file with new header settings (channel metadata + rules)
 - [ ] Validation, tests, and documentation
   - [ ] Validate posterization color bin counts and channel mapping (unit tests for palette mapping)
   - [ ] Add unit tests for channel assignment and header updates

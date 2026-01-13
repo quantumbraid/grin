@@ -51,6 +51,7 @@ grin/
 │   │           │               ├── GifEncoder.kt
 │   │           │               ├── GrinAssetModels.kt
 │   │           │               ├── GrinAssetStore.kt
+│   │           │               ├── GrinPlaybackRenderer.kt
 │   │           │               ├── GrinPreviewRenderer.kt
 │   │           │               ├── MainActivity.kt
 │   │           │               ├── NavigationConstants.kt
@@ -8474,10 +8475,12 @@ function safeReadBaseline(baselinePath) {
 
 ### PNG Snapshot
 - Export an ARGB_8888 bitmap with alpha preserved from the posterized preview.
+  - Implementation detail: snapshot renders the updated GRIN file at tick 0 using the playback engine.
 
 ### GIF Loop
 - Render 12-15 frames from GRIN playback at fixed tick intervals.
 - Package as a looping GIF with consistent palette ordering.
+  - Implementation detail: loop renders 12 frames at a 1-tick step using the current header tick rate.
 #####/docs/README.md#####
 # GRIN Documentation
 
@@ -13449,10 +13452,10 @@ This directory contains shared fixtures for GRIN tests.
   - [x] Add sliders for frequency, color intonation, and transparency (live preview updates)
   - [x] Apply edits to in-memory preview and persist to header settings (rules + channel overrides)
   - Summary: Gallery grid and editor controls implemented in `android/demo/src/main/kotlin/io/grin/demo/GalleryActivity.kt`, `GalleryAdapter.kt`, and `EditorActivity.kt`.
-- [ ] Export workflows
-  - [ ] Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
-  - [ ] Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
-  - [ ] Export updated GRIN/GRIM file with new header settings (channel metadata + rules)
+- [x] Export workflows
+  - [x] Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
+  - [x] Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
+  - [x] Export updated GRIN/GRIM file with new header settings (channel metadata + rules)
 - [ ] Validation, tests, and documentation
   - [ ] Validate posterization color bin counts and channel mapping (unit tests for palette mapping)
   - [ ] Add unit tests for channel assignment and header updates
@@ -26759,15 +26762,21 @@ class GrinAssetStore(private val context: Context) {
         return output
     }
 
-    fun exportGrinAndGrim(metadata: GrinAssetMetadata, grinFile: GrinFile, baseName: String): Pair<File, File> {
+    fun exportGrinAndGrim(
+        metadata: GrinAssetMetadata,
+        grinFile: GrinFile,
+        settings: List<ChannelSetting>,
+        baseName: String
+    ): Pair<File, File> {
         // Persist updated GRIN and GRIM files to the export directory.
-        val grinOutput = File(exportDir, \"$baseName.grin\")
-        val grimOutput = File(exportDir, \"$baseName.grim\")
+        val grinOutput = File(exportDir, "$baseName.grin")
+        val grimOutput = File(exportDir, "$baseName.grim")
         grinFile.save(grinOutput.absolutePath)
         grinFile.save(grimOutput.absolutePath)
         metadata.tickMicros = grinFile.header.tickMicros
         metadata.ruleCount = grinFile.header.ruleCount
         metadata.lastEditedAt = System.currentTimeMillis()
+        metadata.channelSettings = settings.map { it.copy() }
         saveMetadata(metadata)
         return Pair(grinOutput, grimOutput)
     }
@@ -26931,6 +26940,74 @@ class GrinAssetStore(private val context: Context) {
         val index: Int,
         val count: Int
     )
+}
+
+---
+FILE: android/demo/src/main/kotlin/io/grin/demo/GrinPlaybackRenderer.kt
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.grin.demo
+
+import android.graphics.Bitmap
+import io.grin.lib.GrinBitmapRenderer
+import io.grin.lib.GrinFile
+import io.grin.lib.GrinPlayer
+import io.grin.lib.TestTickScheduler
+
+// Renders playback-derived bitmaps for export snapshots and GIF loops.
+class GrinPlaybackRenderer(
+    private val bitmapRenderer: GrinBitmapRenderer = GrinBitmapRenderer()
+) {
+    fun renderSnapshot(grinFile: GrinFile, tick: Long = 0L): Bitmap {
+        // Render a single playback frame at the specified tick.
+        val player = buildPlayer(grinFile)
+        player.seek(tick)
+        return bitmapRenderer.render(player.getCurrentFrame())
+    }
+
+    fun renderFrames(grinFile: GrinFile, frameCount: Int, tickStep: Long): List<Bitmap> {
+        // Render a list of playback frames at fixed tick intervals.
+        require(frameCount in 1..60) { "Frame count must be between 1 and 60" }
+        require(tickStep >= 1L) { "Tick step must be at least 1" }
+
+        val player = buildPlayer(grinFile)
+        val frames = mutableListOf<Bitmap>()
+        var tick = 0L
+        repeat(frameCount) {
+            player.seek(tick)
+            frames.add(bitmapRenderer.render(player.getCurrentFrame()))
+            tick += tickStep
+        }
+        return frames
+    }
+
+    private fun buildPlayer(grinFile: GrinFile): GrinPlayer {
+        // Build a player with a deterministic scheduler for offline rendering.
+        val player = GrinPlayer(schedulerFactory = { TestTickScheduler() })
+        player.load(grinFile)
+        return player
+    }
 }
 
 ---
@@ -27426,6 +27503,7 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var metadata: GrinAssetMetadata
     private lateinit var grinFile: GrinFile
     private val renderer = GrinPreviewRenderer()
+    private val playbackRenderer = GrinPlaybackRenderer()
 
     private var currentSettings: MutableList<ChannelSetting> = mutableListOf()
     private var originalSettings: List<ChannelSetting> = emptyList()
@@ -27584,19 +27662,19 @@ class EditorActivity : AppCompatActivity() {
 
     private fun exportPng() {
         // Export a PNG snapshot of the current GRIN preview.
-        val snapshot = renderer.renderPreview(grinFile, currentSettings, null)
+        val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
+        val snapshot = playbackRenderer.renderSnapshot(updatedFile, tick = 0L)
         store.exportPng(snapshot, "${metadata.id}_snapshot.png")
         Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
     }
 
     private fun exportGif() {
         // Render a short loop derived from the GRIN playback cadence.
-        val frames = mutableListOf<android.graphics.Bitmap>()
+        val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
         val frameCount = 12
-        for (index in 0 until frameCount) {
-            frames.add(renderer.renderFrame(grinFile, currentSettings, null, index, frameCount))
-        }
-        val delayMs = (metadata.tickMicros / 1000L).toInt().coerceAtLeast(50)
+        val tickStep = 1L
+        val frames = playbackRenderer.renderFrames(updatedFile, frameCount, tickStep)
+        val delayMs = (updatedFile.header.tickMicros / 1000L).toInt().coerceAtLeast(50)
         store.exportGif("${metadata.id}_loop.gif", frames, delayMs)
         Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
     }
@@ -27604,7 +27682,7 @@ class EditorActivity : AppCompatActivity() {
     private fun exportGrin() {
         // Export the updated GRIN payload with current header settings.
         val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
-        store.exportGrinAndGrim(metadata, updatedFile, "${metadata.id}_updated")
+        store.exportGrinAndGrim(metadata, updatedFile, currentSettings, "${metadata.id}_updated")
         Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
     }
 }

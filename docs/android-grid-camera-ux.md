@@ -87,7 +87,9 @@
 
 ### PNG Snapshot
 - Export an ARGB_8888 bitmap with alpha preserved from the posterized preview.
+  - Implementation detail: snapshot renders the updated GRIN file at tick 0 using the playback engine.
 
 ### GIF Loop
 - Render 12-15 frames from GRIN playback at fixed tick intervals.
 - Package as a looping GIF with consistent palette ordering.
+  - Implementation detail: loop renders 12 frames at a 1-tick step using the current header tick rate.
