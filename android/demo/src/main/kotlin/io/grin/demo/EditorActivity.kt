@@ -26,9 +26,9 @@ package io.grin.demo
 import android.os.Bundle
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.slider.Slider
 import io.grin.demo.databinding.ActivityEditorBinding
 import io.grin.lib.GrinFile
 
@@ -118,36 +118,21 @@ class EditorActivity : AppCompatActivity() {
 
     private fun setupSeekBars() {
         // Attach change listeners for live preview updates.
-        binding.frequencySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (!isUpdatingSliders) {
-                    updateSetting { it.frequency = progress }
-                }
+        binding.frequencySeek.addOnChangeListener { _: Slider, value: Float, fromUser: Boolean ->
+            if (!isUpdatingSliders && fromUser) {
+                updateSetting { it.frequency = value.toInt() }
             }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-        binding.intonationSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (!isUpdatingSliders) {
-                    updateSetting { it.intonation = progress }
-                }
+        }
+        binding.intonationSeek.addOnChangeListener { _: Slider, value: Float, fromUser: Boolean ->
+            if (!isUpdatingSliders && fromUser) {
+                updateSetting { it.intonation = value.toInt() }
             }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-        binding.transparencySeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (!isUpdatingSliders) {
-                    updateSetting { it.transparency = progress }
-                }
+        }
+        binding.transparencySeek.addOnChangeListener { _: Slider, value: Float, fromUser: Boolean ->
+            if (!isUpdatingSliders && fromUser) {
+                updateSetting { it.transparency = value.toInt() }
             }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
+        }
 
         updateSliderValues()
     }
@@ -165,9 +150,9 @@ class EditorActivity : AppCompatActivity() {
         // Synchronize slider positions with the selected channel settings.
         val setting = currentSettings.firstOrNull { it.channelId == selectedChannelId } ?: return
         isUpdatingSliders = true
-        binding.frequencySeek.progress = setting.frequency
-        binding.intonationSeek.progress = setting.intonation
-        binding.transparencySeek.progress = setting.transparency
+        binding.frequencySeek.value = setting.frequency.toFloat()
+        binding.intonationSeek.value = setting.intonation.toFloat()
+        binding.transparencySeek.value = setting.transparency.toFloat()
         isUpdatingSliders = false
     }
 

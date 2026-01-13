@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "io.grin.demo-mergeDebugResources-34:/values-watch-v21/values-watch-v21.xml",
+            "outputFile": "io.grin.demo-mergeDebugResources-38:/values-watch-v21/values-watch-v21.xml",
             "map": [
                 {
-                    "source": "/home/amber/.gradle/caches/transforms-3/c83745f8b1750632e69aff0f8fc95565/transformed/appcompat-1.6.1/res/values-watch-v21/values-watch-v21.xml",
+                    "source": "C:\\Users\\fourm\\.gradle\\caches\\transforms-3\\4115a4400f4368e957ed47a980881135\\transformed\\appcompat-1.6.1\\res\\values-watch-v21\\values-watch-v21.xml",
                     "from": {
                         "startLines": "2,6,10",
                         "startColumns": "4,4,4",

@@ -1,13 +1,36 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<!--
-3  GRIN Android Library Manifest
-4  Grouped Readdressable Indexed Nodes
-5  
-6  This library requires no special permissions.
-7  All GRIN file parsing is done in-memory with bounded resource consumption.
-8-->
-9<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-10    package="io.grin.lib" > <!-- No permissions required - GRIN is a self-contained format -->
-11    <uses-sdk android:minSdkVersion="21" />
-12
-13</manifest>
+3  MIT License
+4
+5  Copyright (c) 2025 GRIN Project Contributors
+6
+7  Permission is hereby granted, free of charge, to any person obtaining a copy
+8  of this software and associated documentation files (the "Software"), to deal
+9  in the Software without restriction, including without limitation the rights
+10  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+11  copies of the Software, and to permit persons to whom the Software is
+12  furnished to do so, subject to the following conditions:
+13
+14  The above copyright notice and this permission notice shall be included in
+15  all copies or substantial portions of the Software.
+16
+17  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+18  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+19  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+20  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+21  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+22  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+23  SOFTWARE.
+24-->
+25<!--
+26  GRIN Android Library Manifest
+27  Graphic Readdressable Indexed Nodes
+28  
+29  This library requires no special permissions.
+30  All GRIN file parsing is done in-memory with bounded resource consumption.
+31-->
+32<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+33    package="io.grin.lib" > <!-- No permissions required - GRIN is a self-contained format -->
+34    <uses-sdk android:minSdkVersion="21" />
+35
+36</manifest>

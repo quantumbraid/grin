@@ -4,15 +4,16 @@ package io.grin.demo.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.slider.Slider;
+import com.google.android.material.textview.MaterialTextView;
 import io.grin.demo.R;
 import io.grin.lib.GrinView;
 import java.lang.NullPointerException;
@@ -24,19 +25,28 @@ public final class ActivityMainBinding implements ViewBinding {
   private final LinearLayout rootView;
 
   @NonNull
+  public final MaterialButton cameraButton;
+
+  @NonNull
+  public final MaterialButton galleryButton;
+
+  @NonNull
   public final GrinView grinView;
 
   @NonNull
-  public final Button loadButton;
+  public final MaterialButton loadButton;
 
   @NonNull
-  public final TextView metadataText;
+  public final MaterialToolbar mainToolbar;
 
   @NonNull
-  public final Button pauseButton;
+  public final MaterialTextView metadataText;
 
   @NonNull
-  public final Button playButton;
+  public final MaterialButton pauseButton;
+
+  @NonNull
+  public final MaterialButton playButton;
 
   @NonNull
   public final LinearLayout root;
@@ -45,21 +55,27 @@ public final class ActivityMainBinding implements ViewBinding {
   public final ListView samplesList;
 
   @NonNull
-  public final TextView samplesTitle;
+  public final MaterialTextView samplesTitle;
 
   @NonNull
-  public final SeekBar seekBar;
+  public final Slider seekBar;
 
   @NonNull
-  public final Button stopButton;
+  public final MaterialButton stopButton;
 
-  private ActivityMainBinding(@NonNull LinearLayout rootView, @NonNull GrinView grinView,
-      @NonNull Button loadButton, @NonNull TextView metadataText, @NonNull Button pauseButton,
-      @NonNull Button playButton, @NonNull LinearLayout root, @NonNull ListView samplesList,
-      @NonNull TextView samplesTitle, @NonNull SeekBar seekBar, @NonNull Button stopButton) {
+  private ActivityMainBinding(@NonNull LinearLayout rootView, @NonNull MaterialButton cameraButton,
+      @NonNull MaterialButton galleryButton, @NonNull GrinView grinView,
+      @NonNull MaterialButton loadButton, @NonNull MaterialToolbar mainToolbar,
+      @NonNull MaterialTextView metadataText, @NonNull MaterialButton pauseButton,
+      @NonNull MaterialButton playButton, @NonNull LinearLayout root, @NonNull ListView samplesList,
+      @NonNull MaterialTextView samplesTitle, @NonNull Slider seekBar,
+      @NonNull MaterialButton stopButton) {
     this.rootView = rootView;
+    this.cameraButton = cameraButton;
+    this.galleryButton = galleryButton;
     this.grinView = grinView;
     this.loadButton = loadButton;
+    this.mainToolbar = mainToolbar;
     this.metadataText = metadataText;
     this.pauseButton = pauseButton;
     this.playButton = playButton;
@@ -97,6 +113,18 @@ public final class ActivityMainBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.cameraButton;
+      MaterialButton cameraButton = ViewBindings.findChildViewById(rootView, id);
+      if (cameraButton == null) {
+        break missingId;
+      }
+
+      id = R.id.galleryButton;
+      MaterialButton galleryButton = ViewBindings.findChildViewById(rootView, id);
+      if (galleryButton == null) {
+        break missingId;
+      }
+
       id = R.id.grinView;
       GrinView grinView = ViewBindings.findChildViewById(rootView, id);
       if (grinView == null) {
@@ -104,25 +132,31 @@ public final class ActivityMainBinding implements ViewBinding {
       }
 
       id = R.id.loadButton;
-      Button loadButton = ViewBindings.findChildViewById(rootView, id);
+      MaterialButton loadButton = ViewBindings.findChildViewById(rootView, id);
       if (loadButton == null) {
         break missingId;
       }
 
+      id = R.id.mainToolbar;
+      MaterialToolbar mainToolbar = ViewBindings.findChildViewById(rootView, id);
+      if (mainToolbar == null) {
+        break missingId;
+      }
+
       id = R.id.metadataText;
-      TextView metadataText = ViewBindings.findChildViewById(rootView, id);
+      MaterialTextView metadataText = ViewBindings.findChildViewById(rootView, id);
       if (metadataText == null) {
         break missingId;
       }
 
       id = R.id.pauseButton;
-      Button pauseButton = ViewBindings.findChildViewById(rootView, id);
+      MaterialButton pauseButton = ViewBindings.findChildViewById(rootView, id);
       if (pauseButton == null) {
         break missingId;
       }
 
       id = R.id.playButton;
-      Button playButton = ViewBindings.findChildViewById(rootView, id);
+      MaterialButton playButton = ViewBindings.findChildViewById(rootView, id);
       if (playButton == null) {
         break missingId;
       }
@@ -136,25 +170,26 @@ public final class ActivityMainBinding implements ViewBinding {
       }
 
       id = R.id.samplesTitle;
-      TextView samplesTitle = ViewBindings.findChildViewById(rootView, id);
+      MaterialTextView samplesTitle = ViewBindings.findChildViewById(rootView, id);
       if (samplesTitle == null) {
         break missingId;
       }
 
       id = R.id.seekBar;
-      SeekBar seekBar = ViewBindings.findChildViewById(rootView, id);
+      Slider seekBar = ViewBindings.findChildViewById(rootView, id);
       if (seekBar == null) {
         break missingId;
       }
 
       id = R.id.stopButton;
-      Button stopButton = ViewBindings.findChildViewById(rootView, id);
+      MaterialButton stopButton = ViewBindings.findChildViewById(rootView, id);
       if (stopButton == null) {
         break missingId;
       }
 
-      return new ActivityMainBinding((LinearLayout) rootView, grinView, loadButton, metadataText,
-          pauseButton, playButton, root, samplesList, samplesTitle, seekBar, stopButton);
+      return new ActivityMainBinding((LinearLayout) rootView, cameraButton, galleryButton, grinView,
+          loadButton, mainToolbar, metadataText, pauseButton, playButton, root, samplesList,
+          samplesTitle, seekBar, stopButton);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

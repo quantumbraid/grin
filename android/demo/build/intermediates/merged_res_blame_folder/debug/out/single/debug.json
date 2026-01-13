@@ -1,18 +1,38 @@
 [
     {
-        "merged": "io.grin.demo-merged_res-36:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "io.grin.demo-main-38:/mipmap-anydpi-v26/ic_launcher.xml"
+        "merged": "io.grin.demo-merged_res-40:/layout_activity_grid_camera.xml.flat",
+        "source": "io.grin.demo-main-42:/layout/activity_grid_camera.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-36:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "io.grin.demo-main-38:/mipmap-anydpi-v26/ic_launcher_round.xml"
+        "merged": "io.grin.demo-merged_res-40:/layout_activity_main.xml.flat",
+        "source": "io.grin.demo-main-42:/layout/activity_main.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-36:/drawable_ic_launcher_foreground.xml.flat",
-        "source": "io.grin.demo-main-38:/drawable/ic_launcher_foreground.xml"
+        "merged": "io.grin.demo-merged_res-40:/layout_activity_capture_review.xml.flat",
+        "source": "io.grin.demo-main-42:/layout/activity_capture_review.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-36:/layout_activity_main.xml.flat",
-        "source": "io.grin.demo-main-38:/layout/activity_main.xml"
+        "merged": "io.grin.demo-merged_res-40:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "io.grin.demo-main-42:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "io.grin.demo-merged_res-40:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "io.grin.demo-main-42:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "io.grin.demo-merged_res-40:/layout_activity_editor.xml.flat",
+        "source": "io.grin.demo-main-42:/layout/activity_editor.xml"
+    },
+    {
+        "merged": "io.grin.demo-merged_res-40:/layout_item_gallery_asset.xml.flat",
+        "source": "io.grin.demo-main-42:/layout/item_gallery_asset.xml"
+    },
+    {
+        "merged": "io.grin.demo-merged_res-40:/layout_activity_gallery.xml.flat",
+        "source": "io.grin.demo-main-42:/layout/activity_gallery.xml"
+    },
+    {
+        "merged": "io.grin.demo-merged_res-40:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "io.grin.demo-main-42:/drawable/ic_launcher_foreground.xml"
     }
 ]

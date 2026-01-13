@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<!--
   GRIN Demo Application Manifest
   Demonstrates .grin file loading and playback
 -->
@@ -11,6 +34,13 @@
     <uses-sdk
         android:minSdkVersion="21"
         android:targetSdkVersion="34" />
+
+    <!-- Camera permission required for the grid preview pipeline. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <permission
         android:name="io.grin.demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
@@ -56,6 +86,35 @@
                 <data android:pathPattern=".*\\.grn" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="io.grin.demo.GridCameraActivity"
+            android:exported="false"
+            android:label="@string/grid_camera_title"
+            android:theme="@style/Theme.GrinDemo" />
+        <activity
+            android:name="io.grin.demo.CaptureReviewActivity"
+            android:exported="false"
+            android:label="@string/capture_review_title"
+            android:theme="@style/Theme.GrinDemo" />
+        <activity
+            android:name="io.grin.demo.GalleryActivity"
+            android:exported="false"
+            android:label="@string/gallery_title"
+            android:theme="@style/Theme.GrinDemo" />
+        <activity
+            android:name="io.grin.demo.EditorActivity"
+            android:exported="false"
+            android:label="@string/editor_title"
+            android:theme="@style/Theme.GrinDemo" />
+
+        <service
+            android:name="androidx.camera.core.impl.MetadataHolderService"
+            android:enabled="false"
+            android:exported="false" >
+            <meta-data
+                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
+                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
+        </service>
 
         <provider
             android:name="androidx.startup.InitializationProvider"

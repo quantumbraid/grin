@@ -87,12 +87,44 @@
                 aria-label="Seek animation"
               />
             </label>
+            <div class="shortcuts" aria-label="Keyboard shortcuts">
+              <p>Shortcuts: Space play/pause · Left/Right step (Shift x10) · 0-9/A-F filter · Esc reset</p>
+            </div>
           </div>
 
           <div class="panel inspector">
             <h2>Inspector</h2>
             <div class="meta" id="metadata" role="status" aria-live="polite">
               <p>Load a file to see metadata.</p>
+            </div>
+            <div class="validation" id="validationPanel">
+              <div class="validation-row">
+                <span class="label">Validation</span>
+                <span id="validationStatus">No file loaded</span>
+              </div>
+              <div class="validation-grid">
+                <div>
+                  <span class="label">Errors</span>
+                  <span id="validationErrors">0</span>
+                </div>
+                <div>
+                  <span class="label">Warnings</span>
+                  <span id="validationWarnings">0</span>
+                </div>
+                <div>
+                  <span class="label">Invalid Pixels</span>
+                  <span id="validationInvalidPixels">0</span>
+                </div>
+                <div>
+                  <span class="label">Rule Count</span>
+                  <span id="validationRuleCount">0</span>
+                </div>
+              </div>
+              <div class="validation-row">
+                <span class="label">Group Filter</span>
+                <span id="groupFilterStatus">All</span>
+              </div>
+              <div class="validation-notes" id="validationNotes">No validation run yet.</div>
             </div>
           </div>
         </div>

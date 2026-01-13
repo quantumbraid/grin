@@ -27,10 +27,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.ArrayAdapter
-import android.widget.SeekBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.slider.Slider
 import io.grin.demo.databinding.ActivityMainBinding
 import io.grin.lib.GrinFile
 import io.grin.lib.GrinUriLoader
@@ -69,16 +69,11 @@ class MainActivity : AppCompatActivity() {
         binding.pauseButton.setOnClickListener { binding.grinView.pause() }
         binding.stopButton.setOnClickListener { binding.grinView.stop() }
 
-        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    binding.grinView.seek(progress.toLong())
-                }
+        binding.seekBar.addOnChangeListener { _: Slider, value: Float, fromUser: Boolean ->
+            if (fromUser) {
+                binding.grinView.seek(value.toLong())
             }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
+        }
 
         setupSampleList()
 

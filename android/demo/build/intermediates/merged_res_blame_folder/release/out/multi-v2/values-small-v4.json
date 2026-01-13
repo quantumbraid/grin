@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "io.grin.demo-mergeReleaseResources-34:/values-small-v4/values-small-v4.xml",
+            "outputFile": "io.grin.demo-mergeReleaseResources-38:/values-small-v4/values-small-v4.xml",
             "map": [
                 {
-                    "source": "/home/amber/.gradle/caches/transforms-3/29a555e966d39d82e0d15d107709e6e3/transformed/material-1.11.0/res/values-small-v4/values-small-v4.xml",
+                    "source": "C:\\Users\\fourm\\.gradle\\caches\\transforms-3\\f10a42fde9191f93f59a14adac61f409\\transformed\\material-1.11.0\\res\\values-small-v4\\values-small-v4.xml",
                     "from": {
                         "startLines": "2,3,4,5",
                         "startColumns": "4,4,4,4",

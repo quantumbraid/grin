@@ -1,16 +1,16 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /home/amber/Documents/grin/android/lib/src/main/AndroidManifest.xml:9:1-11:12
-INJECTED from /home/amber/Documents/grin/android/lib/src/main/AndroidManifest.xml:9:1-11:12
+ADDED from D:\sorted coding\grin\grin\android\lib\src\main\AndroidManifest.xml:33:1-35:12
+INJECTED from D:\sorted coding\grin\grin\android\lib\src\main\AndroidManifest.xml:33:1-35:12
 	package
-		INJECTED from /home/amber/Documents/grin/android/lib/src/main/AndroidManifest.xml
+		INJECTED from D:\sorted coding\grin\grin\android\lib\src\main\AndroidManifest.xml
 	xmlns:android
-		ADDED from /home/amber/Documents/grin/android/lib/src/main/AndroidManifest.xml:9:11-69
+		ADDED from D:\sorted coding\grin\grin\android\lib\src\main\AndroidManifest.xml:33:11-69
 uses-sdk
-INJECTED from /home/amber/Documents/grin/android/lib/src/main/AndroidManifest.xml reason: use-sdk injection requested
-INJECTED from /home/amber/Documents/grin/android/lib/src/main/AndroidManifest.xml
-INJECTED from /home/amber/Documents/grin/android/lib/src/main/AndroidManifest.xml
+INJECTED from D:\sorted coding\grin\grin\android\lib\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from D:\sorted coding\grin\grin\android\lib\src\main\AndroidManifest.xml
+INJECTED from D:\sorted coding\grin\grin\android\lib\src\main\AndroidManifest.xml
 	android:targetSdkVersion
-		INJECTED from /home/amber/Documents/grin/android/lib/src/main/AndroidManifest.xml
+		INJECTED from D:\sorted coding\grin\grin\android\lib\src\main\AndroidManifest.xml
 	android:minSdkVersion
-		INJECTED from /home/amber/Documents/grin/android/lib/src/main/AndroidManifest.xml
+		INJECTED from D:\sorted coding\grin\grin\android\lib\src\main\AndroidManifest.xml

@@ -24,32 +24,49 @@
   SOFTWARE.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <io.grin.lib.GrinView
-        android:id="@+id/grinView"
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/mainToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:title="@string/app_name" />
+
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="12dp"
         android:layout_weight="1"
-        android:background="#000000" />
+        app:cardCornerRadius="16dp"
+        app:cardUseCompatPadding="true">
 
-    <TextView
+        <io.grin.lib.GrinView
+            android:id="@+id/grinView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#000000" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/metadataText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
+        android:layout_marginTop="8dp"
         android:text="@string/file_info_title" />
 
-    <SeekBar
+    <com.google.android.material.slider.Slider
         android:id="@+id/seekBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:max="1000" />
+        app:stepSize="1"
+        app:valueFrom="0"
+        app:valueTo="1000" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -58,60 +75,71 @@
         android:gravity="center_horizontal"
         android:orientation="horizontal">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/loadButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/load_file" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/cameraButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="@string/open_camera" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/galleryButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="@string/open_gallery" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/playButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="@string/play" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/pauseButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="@string/pause" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/stopButton"
+            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text="@string/stop" />
     </LinearLayout>
 
-    <TextView
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/samplesTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         android:text="@string/samples_title"
-        android:textStyle="bold" />
+        android:textAppearance="@style/TextAppearance.Material3.TitleSmall" />
 
-    <ListView
-        android:id="@+id/samplesList"
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="120dp"
         android:layout_marginTop="4dp"
-        android:dividerHeight="1dp" />
+        app:cardCornerRadius="12dp"
+        app:cardUseCompatPadding="true">
+
+        <ListView
+            android:id="@+id/samplesList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:dividerHeight="1dp" />
+    </com.google.android.material.card.MaterialCardView>
 </LinearLayout>

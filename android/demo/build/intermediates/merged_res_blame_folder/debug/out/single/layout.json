@@ -1,6 +1,26 @@
 [
     {
-        "merged": "io.grin.demo-mergeDebugResources-35:/layout/activity_main.xml",
-        "source": "io.grin.demo-main-38:/layout/activity_main.xml"
+        "merged": "io.grin.demo-mergeDebugResources-39:/layout/activity_gallery.xml",
+        "source": "io.grin.demo-main-42:/layout/activity_gallery.xml"
+    },
+    {
+        "merged": "io.grin.demo-mergeDebugResources-39:/layout/activity_grid_camera.xml",
+        "source": "io.grin.demo-main-42:/layout/activity_grid_camera.xml"
+    },
+    {
+        "merged": "io.grin.demo-mergeDebugResources-39:/layout/activity_editor.xml",
+        "source": "io.grin.demo-main-42:/layout/activity_editor.xml"
+    },
+    {
+        "merged": "io.grin.demo-mergeDebugResources-39:/layout/activity_main.xml",
+        "source": "io.grin.demo-main-42:/layout/activity_main.xml"
+    },
+    {
+        "merged": "io.grin.demo-mergeDebugResources-39:/layout/activity_capture_review.xml",
+        "source": "io.grin.demo-main-42:/layout/activity_capture_review.xml"
+    },
+    {
+        "merged": "io.grin.demo-mergeDebugResources-39:/layout/item_gallery_asset.xml",
+        "source": "io.grin.demo-main-42:/layout/item_gallery_asset.xml"
     }
 ]

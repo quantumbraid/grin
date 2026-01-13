@@ -1131,13 +1131,16 @@
 - [x] Improve empty, loading, and error states (missing file, validation errors, decode failures)
   - Summary: Added status messaging plus sample/file load error handling and control disabling in the web demo.
   - Provide actionable messaging with next steps.
-- [ ] Add keyboard shortcuts for playback, frame stepping, and group filtering
+- [x] Add keyboard shortcuts for playback, frame stepping, and group filtering
+  - Summary: Added document-level shortcuts for play/pause, frame stepping, and group filter selection in the web demo.
   - Surface shortcuts in a help tooltip or modal.
-- [ ] Add a validation summary panel (header warnings, rule count, invalid pixels)
+- [x] Add a validation summary panel (header warnings, rule count, invalid pixels)
+  - Summary: Added a validation summary panel with error/warning counts, invalid pixel tracking, and rule count in the web demo inspector.
   - Link to existing validation error outputs.
 
 ### 15.3 Android Demo UI Polish (Android)
-- [ ] Align the demo UI with Material 3 components in `android/demo/`
+- [x] Align the demo UI with Material 3 components in `android/demo/`
+  - Summary: Swapped demo layouts to Material 3 widgets (MaterialToolbar, MaterialButton, MaterialCardView, MaterialTextView, Slider) and updated slider logic in MainActivity and EditorActivity.
   - Rebuild the activity layout with proper app bars, cards, and controls.
 - [ ] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
   - Ensure touch targets meet accessibility guidelines.
