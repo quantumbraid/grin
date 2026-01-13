@@ -641,16 +641,18 @@
   - [x] Apply 12-14 color posterization shader (RenderScript/RenderEffect) or CPU pipeline (LUT + k-means fallback)
   - [x] Display posterized preview with live grid overlay (cell borders + channel labels)
   - [x] Document performance targets (30/60fps) and fallback quality settings (reduced grid, lower poster bins)
-- [ ] Implement capture flow and channel assignment
-  - [ ] Capture posterized frame buffer and generate GRIM/GRIN payload (RGBA+C)
-  - [ ] Build palette histogram and auto-assign bins to channels 0-9/A-F (stable sort by frequency)
-  - [ ] Persist GRIM/GRIN files with updated header settings (TickMicros, RuleCount, channel metadata)
-  - [ ] Log capture metadata for gallery indexing (timestamp, dimensions, palette bins)
-- [ ] Build gallery grid and editor UI
-  - [ ] Render gallery grid of GRIN/GRIM assets with posterized thumbnails (lazy paging, disk cache)
-  - [ ] Add channel selector dropdown (0-9/A-F) in editor (default to most frequent bin)
-  - [ ] Add sliders for frequency, color intonation, and transparency (live preview updates)
-  - [ ] Apply edits to in-memory preview and persist to header settings (rules + channel overrides)
+- [x] Implement capture flow and channel assignment
+  - [x] Capture posterized frame buffer and generate GRIM/GRIN payload (RGBA+C)
+  - [x] Build palette histogram and auto-assign bins to channels 0-9/A-F (stable sort by frequency)
+  - [x] Persist GRIM/GRIN files with updated header settings (TickMicros, RuleCount, channel metadata)
+  - [x] Log capture metadata for gallery indexing (timestamp, dimensions, palette bins)
+  - Summary: Capture flow saves posterized frames to GRIN/GRIM with stable channel mapping plus metadata logging in `android/demo/src/main/kotlin/io/grin/demo/GrinAssetStore.kt`.
+- [x] Build gallery grid and editor UI
+  - [x] Render gallery grid of GRIN/GRIM assets with posterized thumbnails (lazy paging, disk cache)
+  - [x] Add channel selector dropdown (0-9/A-F) in editor (default to most frequent bin)
+  - [x] Add sliders for frequency, color intonation, and transparency (live preview updates)
+  - [x] Apply edits to in-memory preview and persist to header settings (rules + channel overrides)
+  - Summary: Gallery grid and editor controls implemented in `android/demo/src/main/kotlin/io/grin/demo/GalleryActivity.kt`, `GalleryAdapter.kt`, and `EditorActivity.kt`.
 - [ ] Export workflows
   - [ ] Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
   - [ ] Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
