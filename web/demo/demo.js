@@ -40,6 +40,7 @@ const dropZone = document.getElementById("dropZone");
 const fileInput = document.getElementById("fileInput");
 const fileButton = document.querySelector(".file-button");
 const sampleList = document.getElementById("sampleList");
+const statusPanel = document.getElementById("statusPanel");
 
 const renderer = new GrinCanvasRenderer();
 let player = null;
@@ -52,14 +53,53 @@ const makePlayer = () =>
     renderer.render(player.getCurrentFrame(), canvas);
   });
 
+setControlsEnabled(false);
+
+function setControlsEnabled(enabled) {
+  [playButton, pauseButton, stopButton, seekSlider].forEach((element) => {
+    element.disabled = !enabled;
+    element.setAttribute("aria-disabled", String(!enabled));
+  });
+}
+
+function setStatus(state, message) {
+  statusPanel.textContent = message;
+  if (state) {
+    statusPanel.setAttribute("data-state", state);
+  } else {
+    statusPanel.removeAttribute("data-state");
+  }
+}
+
+function handleLoadError(error, fallbackMessage) {
+  const detail = error instanceof Error ? error.message : "";
+  setStatus("error", detail ? `${fallbackMessage} (${detail})` : fallbackMessage);
+  metadata.textContent = "Load a file to see metadata.";
+  setControlsEnabled(false);
+}
+
 async function loadFile(file) {
-  const grinFile = await GrinLoader.fromFile(file);
-  initializePlayer(grinFile);
+  setStatus("loading", "Loading file...");
+  setControlsEnabled(false);
+  try {
+    const grinFile = await GrinLoader.fromFile(file);
+    initializePlayer(grinFile);
+    setStatus("success", "File loaded. Ready to play.");
+  } catch (error) {
+    handleLoadError(error, "Could not load that file. Ensure it is a valid .grin or .grn.");
+  }
 }
 
 async function loadFromUrl(url) {
-  const grinFile = await GrinLoader.fromURL(url);
-  initializePlayer(grinFile);
+  setStatus("loading", "Loading sample...");
+  setControlsEnabled(false);
+  try {
+    const grinFile = await GrinLoader.fromURL(url);
+    initializePlayer(grinFile);
+    setStatus("success", "Sample loaded. Ready to play.");
+  } catch (error) {
+    handleLoadError(error, "Sample failed to load. Check the sample path.");
+  }
 }
 
 function initializePlayer(grinFile) {
@@ -74,6 +114,7 @@ function initializePlayer(grinFile) {
     `Tick Rate: ${grinFile.header.tickMicros} µs`,
   ].join("\n");
   seekSlider.value = "0";
+  setControlsEnabled(true);
 }
 
 playButton.addEventListener("click", () => {
@@ -143,7 +184,7 @@ async function loadSamples() {
   try {
     const response = await fetch("./samples/samples.json");
     if (!response.ok) {
-      sampleList.innerHTML = "<li>No samples available</li>";
+      sampleList.innerHTML = "<li>No samples available. Check ./samples/samples.json.</li>";
       return;
     }
     const samples = await response.json();
@@ -164,7 +205,7 @@ async function loadSamples() {
       sampleList.appendChild(li);
     });
   } catch (error) {
-    sampleList.innerHTML = "<li>No samples available</li>";
+    sampleList.innerHTML = "<li>No samples available. Check the samples folder.</li>";
   } finally {
     sampleList.setAttribute("aria-busy", "false");
   }

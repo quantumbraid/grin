@@ -1,7 +1,7 @@
 - [ ] Add license headers to all source files
-- [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
+- [x] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
 - [x] Add accessibility coverage (ARIA labels, focus order, contrast checks)
-- [ ] Improve empty, loading, and error states (missing file, validation errors, decode failures)
+- [x] Improve empty, loading, and error states (missing file, validation errors, decode failures)
 - [ ] Add keyboard shortcuts for playback, frame stepping, and group filtering
 - [ ] Add a validation summary panel (header warnings, rule count, invalid pixels)
 - [ ] Align the demo UI with Material 3 components in `android/demo/`

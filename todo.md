@@ -1122,12 +1122,14 @@
   - Summary: Added a prioritized, labeled UX backlog to `docs/ui-ux-audit.md`.
 
 ### 15.2 Web Demo UI Polish (Web)
-- [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
+- [x] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
+  - Summary: Split the web demo layout into a playback panel and a dedicated inspector panel with updated sidebar styling.
   - Ensure consistent spacing, typography, and control grouping.
 - [x] Add accessibility coverage (ARIA labels, focus order, contrast checks)
   - Summary: Added ARIA labels, keyboard focus support, and stronger focus/contrast styling in the web demo.
   - Document a11y checks in `docs/ui-ux-audit.md`.
-- [ ] Improve empty, loading, and error states (missing file, validation errors, decode failures)
+- [x] Improve empty, loading, and error states (missing file, validation errors, decode failures)
+  - Summary: Added status messaging plus sample/file load error handling and control disabling in the web demo.
   - Provide actionable messaging with next steps.
 - [ ] Add keyboard shortcuts for playback, frame stepping, and group filtering
   - Surface shortcuts in a help tooltip or modal.

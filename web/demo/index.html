@@ -65,26 +65,35 @@
       </header>
 
       <section class="stage">
-        <div class="panel">
-          <h2>Playback</h2>
-          <div class="controls">
-            <button id="playButton" aria-label="Play animation">Play</button>
-            <button id="pauseButton" aria-label="Pause animation">Pause</button>
-            <button id="stopButton" aria-label="Stop animation">Stop</button>
+        <div class="sidebar">
+          <div class="panel">
+            <h2>Playback</h2>
+            <div class="status" id="statusPanel" role="status" aria-live="polite">
+              Drop a file or pick a sample to begin.
+            </div>
+            <div class="controls">
+              <button id="playButton" aria-label="Play animation">Play</button>
+              <button id="pauseButton" aria-label="Pause animation">Pause</button>
+              <button id="stopButton" aria-label="Stop animation">Stop</button>
+            </div>
+            <label class="slider">
+              <span>Seek</span>
+              <input
+                id="seekSlider"
+                type="range"
+                min="0"
+                max="1000"
+                value="0"
+                aria-label="Seek animation"
+              />
+            </label>
           </div>
-          <label class="slider">
-            <span>Seek</span>
-            <input
-              id="seekSlider"
-              type="range"
-              min="0"
-              max="1000"
-              value="0"
-              aria-label="Seek animation"
-            />
-          </label>
-          <div class="meta" id="metadata" role="status" aria-live="polite">
-            <p>Load a file to see metadata.</p>
+
+          <div class="panel inspector">
+            <h2>Inspector</h2>
+            <div class="meta" id="metadata" role="status" aria-live="polite">
+              <p>Load a file to see metadata.</p>
+            </div>
           </div>
         </div>
 
