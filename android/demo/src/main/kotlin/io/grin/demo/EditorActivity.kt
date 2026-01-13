@@ -39,6 +39,7 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var metadata: GrinAssetMetadata
     private lateinit var grinFile: GrinFile
     private val renderer = GrinPreviewRenderer()
+    private val playbackRenderer = GrinPlaybackRenderer()
 
     private var currentSettings: MutableList<ChannelSetting> = mutableListOf()
     private var originalSettings: List<ChannelSetting> = emptyList()
@@ -197,19 +198,19 @@ class EditorActivity : AppCompatActivity() {
 
     private fun exportPng() {
         // Export a PNG snapshot of the current GRIN preview.
-        val snapshot = renderer.renderPreview(grinFile, currentSettings, null)
+        val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
+        val snapshot = playbackRenderer.renderSnapshot(updatedFile, tick = 0L)
         store.exportPng(snapshot, "${metadata.id}_snapshot.png")
         Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
     }
 
     private fun exportGif() {
         // Render a short loop derived from the GRIN playback cadence.
-        val frames = mutableListOf<android.graphics.Bitmap>()
+        val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
         val frameCount = 12
-        for (index in 0 until frameCount) {
-            frames.add(renderer.renderFrame(grinFile, currentSettings, null, index, frameCount))
-        }
-        val delayMs = (metadata.tickMicros / 1000L).toInt().coerceAtLeast(50)
+        val tickStep = 1L
+        val frames = playbackRenderer.renderFrames(updatedFile, frameCount, tickStep)
+        val delayMs = (updatedFile.header.tickMicros / 1000L).toInt().coerceAtLeast(50)
         store.exportGif("${metadata.id}_loop.gif", frames, delayMs)
         Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
     }
@@ -217,7 +218,7 @@ class EditorActivity : AppCompatActivity() {
     private fun exportGrin() {
         // Export the updated GRIN payload with current header settings.
         val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
-        store.exportGrinAndGrim(metadata, updatedFile, "${metadata.id}_updated")
+        store.exportGrinAndGrim(metadata, updatedFile, currentSettings, "${metadata.id}_updated")
         Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
     }
 }

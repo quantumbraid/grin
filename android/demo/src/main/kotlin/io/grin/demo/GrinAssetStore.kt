@@ -182,15 +182,21 @@ class GrinAssetStore(private val context: Context) {
         return output
     }
 
-    fun exportGrinAndGrim(metadata: GrinAssetMetadata, grinFile: GrinFile, baseName: String): Pair<File, File> {
+    fun exportGrinAndGrim(
+        metadata: GrinAssetMetadata,
+        grinFile: GrinFile,
+        settings: List<ChannelSetting>,
+        baseName: String
+    ): Pair<File, File> {
         // Persist updated GRIN and GRIM files to the export directory.
-        val grinOutput = File(exportDir, \"$baseName.grin\")
-        val grimOutput = File(exportDir, \"$baseName.grim\")
+        val grinOutput = File(exportDir, "$baseName.grin")
+        val grimOutput = File(exportDir, "$baseName.grim")
         grinFile.save(grinOutput.absolutePath)
         grinFile.save(grimOutput.absolutePath)
         metadata.tickMicros = grinFile.header.tickMicros
         metadata.ruleCount = grinFile.header.ruleCount
         metadata.lastEditedAt = System.currentTimeMillis()
+        metadata.channelSettings = settings.map { it.copy() }
         saveMetadata(metadata)
         return Pair(grinOutput, grimOutput)
     }
