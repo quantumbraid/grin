@@ -93,3 +93,8 @@
 - Render 12-15 frames from GRIN playback at fixed tick intervals.
 - Package as a looping GIF with consistent palette ordering.
   - Implementation detail: loop renders 12 frames at a 1-tick step using the current header tick rate.
+
+### Export Validation + Storage
+- Store exports in the app-scoped `grin_gallery/exports` directory with deterministic filenames.
+- Validate PNG snapshots by decoding and confirming dimensions and key pixels.
+- Validate GIF loops by decoding the header and ensuring frame dimensions match the source.

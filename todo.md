@@ -657,11 +657,12 @@
   - [x] Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
   - [x] Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
   - [x] Export updated GRIN/GRIM file with new header settings (channel metadata + rules)
-- [ ] Validation, tests, and documentation
-  - [ ] Validate posterization color bin counts and channel mapping (unit tests for palette mapping)
-  - [ ] Add unit tests for channel assignment and header updates
-  - [ ] Add integration tests for export formats (PNG/GIF round-trip)
-  - [ ] Update docs for camera/gallery workflow and export options
+- [x] Validation, tests, and documentation
+  - [x] Validate posterization color bin counts and channel mapping (unit tests for palette mapping)
+  - [x] Add unit tests for channel assignment and header updates
+  - [x] Add integration tests for export formats (PNG/GIF round-trip)
+  - [x] Update docs for camera/gallery workflow and export options
+  - Summary: Added Android instrumented tests for channel mapping/header updates and PNG/GIF export round-trips; updated grid camera docs with export validation/storage notes.
 
 ---
 
