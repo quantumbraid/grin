@@ -48,10 +48,17 @@
             see it pulse.
           </p>
         </div>
-        <div class="drop" id="dropZone">
-          <span>Drop a .grin file</span>
-          <label class="file-button">
-            <input id="fileInput" type="file" accept=".grin,.grn" />
+        <div
+          class="drop"
+          id="dropZone"
+          role="button"
+          tabindex="0"
+          aria-label="Drop a GRIN file or choose one"
+          aria-describedby="dropHint"
+        >
+          <span id="dropHint">Drop a .grin file</span>
+          <label class="file-button" for="fileInput" role="button" tabindex="0">
+            <input id="fileInput" type="file" accept=".grin,.grn" aria-label="Choose a GRIN file" />
             Choose file
           </label>
         </div>
@@ -61,21 +68,28 @@
         <div class="panel">
           <h2>Playback</h2>
           <div class="controls">
-            <button id="playButton">Play</button>
-            <button id="pauseButton">Pause</button>
-            <button id="stopButton">Stop</button>
+            <button id="playButton" aria-label="Play animation">Play</button>
+            <button id="pauseButton" aria-label="Pause animation">Pause</button>
+            <button id="stopButton" aria-label="Stop animation">Stop</button>
           </div>
           <label class="slider">
             <span>Seek</span>
-            <input id="seekSlider" type="range" min="0" max="1000" value="0" />
+            <input
+              id="seekSlider"
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              aria-label="Seek animation"
+            />
           </label>
-          <div class="meta" id="metadata">
+          <div class="meta" id="metadata" role="status" aria-live="polite">
             <p>Load a file to see metadata.</p>
           </div>
         </div>
 
         <div class="screen">
-          <canvas id="previewCanvas"></canvas>
+          <canvas id="previewCanvas" role="img" aria-label="GRIN preview"></canvas>
           <div class="badge">Live RGBA Buffer</div>
         </div>
       </section>
@@ -85,7 +99,7 @@
           <h2>Sample Gallery</h2>
           <p>Quick-start with bundled samples.</p>
         </div>
-        <ul id="sampleList"></ul>
+        <ul id="sampleList" aria-label="Sample gallery"></ul>
       </section>
     </main>
 

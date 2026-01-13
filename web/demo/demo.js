@@ -38,6 +38,7 @@ const seekSlider = document.getElementById("seekSlider");
 const metadata = document.getElementById("metadata");
 const dropZone = document.getElementById("dropZone");
 const fileInput = document.getElementById("fileInput");
+const fileButton = document.querySelector(".file-button");
 const sampleList = document.getElementById("sampleList");
 
 const renderer = new GrinCanvasRenderer();
@@ -116,6 +117,20 @@ dropZone.addEventListener("drop", (event) => {
   }
 });
 
+dropZone.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    fileInput.click();
+  }
+});
+
+fileButton.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    fileInput.click();
+  }
+});
+
 fileInput.addEventListener("change", (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -124,6 +139,7 @@ fileInput.addEventListener("change", (event) => {
 });
 
 async function loadSamples() {
+  sampleList.setAttribute("aria-busy", "true");
   try {
     const response = await fetch("./samples/samples.json");
     if (!response.ok) {
@@ -134,12 +150,23 @@ async function loadSamples() {
     sampleList.innerHTML = "";
     samples.forEach((sample) => {
       const li = document.createElement("li");
+      li.setAttribute("role", "button");
+      li.setAttribute("tabindex", "0");
+      li.setAttribute("aria-label", `Load sample ${sample.name}`);
       li.textContent = sample.name;
       li.addEventListener("click", () => loadFromUrl(sample.path));
+      li.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          loadFromUrl(sample.path);
+        }
+      });
       sampleList.appendChild(li);
     });
   } catch (error) {
     sampleList.innerHTML = "<li>No samples available</li>";
+  } finally {
+    sampleList.setAttribute("aria-busy", "false");
   }
 }
 

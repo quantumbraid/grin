@@ -1124,7 +1124,8 @@
 ### 15.2 Web Demo UI Polish (Web)
 - [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
   - Ensure consistent spacing, typography, and control grouping.
-- [ ] Add accessibility coverage (ARIA labels, focus order, contrast checks)
+- [x] Add accessibility coverage (ARIA labels, focus order, contrast checks)
+  - Summary: Added ARIA labels, keyboard focus support, and stronger focus/contrast styling in the web demo.
   - Document a11y checks in `docs/ui-ux-audit.md`.
 - [ ] Improve empty, loading, and error states (missing file, validation errors, decode failures)
   - Provide actionable messaging with next steps.
