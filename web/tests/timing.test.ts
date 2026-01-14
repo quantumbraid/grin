@@ -30,6 +30,7 @@ const TIMING_TRIANGLE_PERIOD_2 = 0x11;
 const TIMING_SINE_PERIOD_2 = 0x21;
 const TIMING_SAW_PERIOD_2 = 0x31;
 const TIMING_SQUARE_PHASE_2 = 0x41;
+const TIMING_ONE_SHOT = 0x00;
 
 test("TimingInterpreter exposes waveform metadata", () => {
   assert.equal(TimingInterpreter.getPeriod(TIMING_SQUARE_PERIOD_2), 2);
@@ -49,4 +50,11 @@ test("TimingInterpreter evaluates square waves on period boundaries", () => {
 test("TimingInterpreter evaluates triangle waves symmetrically", () => {
   const value = TimingInterpreter.evaluate(TIMING_TRIANGLE_PERIOD_2, 1);
   assert.equal(value, 1);
+});
+
+test("TimingInterpreter treats timing 0 as a one-shot activation", () => {
+  // Timing zero should pulse once at the start, then remain inactive.
+  assert.equal(TimingInterpreter.evaluate(TIMING_ONE_SHOT, 0), 1);
+  assert.equal(TimingInterpreter.evaluate(TIMING_ONE_SHOT, 1), 0);
+  assert.equal(TimingInterpreter.evaluate(TIMING_ONE_SHOT, 2), 0);
 });

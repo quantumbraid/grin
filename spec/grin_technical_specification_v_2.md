@@ -180,6 +180,12 @@ Each rule entry is 4 bytes (16 rules × 4 bytes = 64 bytes):
 
 Rules express **declarative schedules**, not programs.
 
+Timing is evaluated per rule on each global tick. Each rule’s timing and phase
+offset is independent, so channels can drift or diverge indefinitely without
+re-synchronizing to a file-level loop. Timing value `0x00` is reserved for
+one-shot activation (active on tick 0, inactive afterward); non-zero timings
+define recurring modulation periods.
+
 ---
 
 ## 8. Opcodes (Fixed Set)
@@ -292,4 +298,3 @@ If a feature:
 It does not belong in GRIN.
 
 Minimalism here is **structural**, not aesthetic.
-

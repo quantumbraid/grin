@@ -21,6 +21,21 @@ phaseOffset = ((timing >> 6) & 0x03) / 4
 position = ((tick / period) + phaseOffset) % 1
 ```
 
+## Channel Timing Independence
+
+Timing is evaluated per rule on each global tick. Each rule can target its own
+channel group and carry its own period and phase offset, so different channels
+can remain permanently out of phase without re-synchronizing. This is not a
+file-level loop; playback continues with a shared tick counter, and each rule
+evaluates its own oscillator independently.
+
+## One-Shot Timing
+
+Timing value `0x00` is reserved for one-shot activation. Readers should treat it
+as a single activation on tick 0 and inactive on subsequent ticks. This allows
+authors to apply a one-time color shift by setting timing to zero, while
+non-zero timing values define the repeat cadence for ongoing modulation.
+
 Waveform mapping:
 
 | Value | Waveform | Output |
@@ -32,7 +47,7 @@ Waveform mapping:
 
 ## Examples
 
-- `0x00`: period 1, square wave, phase 0.
+- `0x00`: one-shot activation on tick 0.
 - `0x17`: period 8, triangle wave, phase 0.
 - `0x27`: period 8, sine wave, phase 0.
 - `0xE3`: period 4, sawtooth wave, phase 3 (offset 0.75).
