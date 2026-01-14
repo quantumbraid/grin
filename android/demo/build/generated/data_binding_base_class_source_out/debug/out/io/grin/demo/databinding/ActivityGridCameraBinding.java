@@ -12,7 +12,6 @@ import androidx.constraintlayout.widget.Guideline;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textview.MaterialTextView;
 import io.grin.demo.GridOverlayView;
 import io.grin.demo.R;
 import java.lang.NullPointerException;
@@ -57,9 +56,6 @@ public final class ActivityGridCameraBinding implements ViewBinding {
   public final GridOverlayView gridOverlay;
 
   @NonNull
-  public final MaterialTextView performanceText;
-
-  @NonNull
   public final ImageView posterizedPreview;
 
   @NonNull
@@ -97,11 +93,11 @@ public final class ActivityGridCameraBinding implements ViewBinding {
       @NonNull Guideline col1, @NonNull Guideline col2, @NonNull Guideline col3,
       @NonNull Guideline col4, @NonNull Guideline col5, @NonNull MaterialButton flashButton,
       @NonNull MaterialButton flipButton, @NonNull ConstraintLayout gridCameraRoot,
-      @NonNull GridOverlayView gridOverlay, @NonNull MaterialTextView performanceText,
-      @NonNull ImageView posterizedPreview, @NonNull MaterialButton presetButton,
-      @NonNull Guideline row1, @NonNull Guideline row2, @NonNull Guideline row3,
-      @NonNull Guideline row4, @NonNull Guideline row5, @NonNull Guideline row6,
-      @NonNull Guideline row7, @NonNull Guideline row8, @NonNull MaterialButton settingsButton) {
+      @NonNull GridOverlayView gridOverlay, @NonNull ImageView posterizedPreview,
+      @NonNull MaterialButton presetButton, @NonNull Guideline row1, @NonNull Guideline row2,
+      @NonNull Guideline row3, @NonNull Guideline row4, @NonNull Guideline row5,
+      @NonNull Guideline row6, @NonNull Guideline row7, @NonNull Guideline row8,
+      @NonNull MaterialButton settingsButton) {
     this.rootView = rootView;
     this.captureButton = captureButton;
     this.closeButton = closeButton;
@@ -114,7 +110,6 @@ public final class ActivityGridCameraBinding implements ViewBinding {
     this.flipButton = flipButton;
     this.gridCameraRoot = gridCameraRoot;
     this.gridOverlay = gridOverlay;
-    this.performanceText = performanceText;
     this.posterizedPreview = posterizedPreview;
     this.presetButton = presetButton;
     this.row1 = row1;
@@ -217,12 +212,6 @@ public final class ActivityGridCameraBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.performanceText;
-      MaterialTextView performanceText = ViewBindings.findChildViewById(rootView, id);
-      if (performanceText == null) {
-        break missingId;
-      }
-
       id = R.id.posterizedPreview;
       ImageView posterizedPreview = ViewBindings.findChildViewById(rootView, id);
       if (posterizedPreview == null) {
@@ -291,8 +280,8 @@ public final class ActivityGridCameraBinding implements ViewBinding {
 
       return new ActivityGridCameraBinding((ConstraintLayout) rootView, captureButton, closeButton,
           col1, col2, col3, col4, col5, flashButton, flipButton, gridCameraRoot, gridOverlay,
-          performanceText, posterizedPreview, presetButton, row1, row2, row3, row4, row5, row6,
-          row7, row8, settingsButton);
+          posterizedPreview, presetButton, row1, row2, row3, row4, row5, row6, row7, row8,
+          settingsButton);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

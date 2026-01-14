@@ -233,7 +233,7 @@ class GrinAssetStore(private val context: Context) {
     }
 
     private fun assignBinsToChannels(histogram: IntArray): ChannelAssignment {
-        // Assign palette bins to channel IDs using a stable frequency-first sort.
+        // Keep channel IDs aligned with palette indices while ordering channels by frequency.
         val bins = histogram.indices.map { index ->
             PaletteBin(
                 index = index,
@@ -247,8 +247,8 @@ class GrinAssetStore(private val context: Context) {
 
         val channelMap = IntArray(histogram.size)
         val channelOrder = mutableListOf<Int>()
-        sortedBins.forEachIndexed { position, bin ->
-            val channelId = position.coerceIn(0, 15)
+        sortedBins.forEach { bin ->
+            val channelId = bin.index.coerceIn(0, 15)
             channelMap[bin.index] = channelId
             channelOrder.add(channelId)
         }

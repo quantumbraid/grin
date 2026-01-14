@@ -1,5 +1,6 @@
 R_DEF: Internal format may change without notice
 local
+color grin_button_backing
 color grin_error
 color grin_primary
 color grin_primary_dark
@@ -74,7 +75,6 @@ id loadButton
 id mainToolbar
 id metadataText
 id pauseButton
-id performanceText
 id playButton
 id posterizedPreview
 id presetButton

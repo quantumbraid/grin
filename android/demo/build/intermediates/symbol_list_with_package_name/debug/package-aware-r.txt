@@ -1414,6 +1414,7 @@ color error_color_material_dark
 color error_color_material_light
 color foreground_material_dark
 color foreground_material_light
+color grin_button_backing
 color grin_error
 color grin_primary
 color grin_primary_dark
@@ -3498,7 +3499,6 @@ id pathRelative
 id pauseButton
 id peekHeight
 id percent
-id performanceText
 id pin
 id playButton
 id pooling_container_listener_holder_tag

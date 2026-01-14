@@ -28,8 +28,8 @@
         "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_gallery.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-40:/layout_dialog_camera_settings.xml.flat",
-        "source": "io.grin.demo-main-42:/layout/dialog_camera_settings.xml"
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_dialog_camera_settings.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\dialog_camera_settings.xml"
     },
     {
         "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_activity_editor.xml.flat",

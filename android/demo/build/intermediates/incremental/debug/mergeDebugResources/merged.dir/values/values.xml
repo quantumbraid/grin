@@ -695,6 +695,7 @@
     <color name="error_color_material_light">#ff5722</color>
     <color name="foreground_material_dark">@android:color/white</color>
     <color name="foreground_material_light">@android:color/black</color>
+    <color name="grin_button_backing">#B3666666</color>
     <color name="grin_error">#F44336</color>
     <color name="grin_primary">#4CAF50</color>
     <color name="grin_primary_dark">#388E3C</color>

@@ -1413,6 +1413,7 @@ int color error_color_material_dark 0x7f050059
 int color error_color_material_light 0x7f05005a
 int color foreground_material_dark 0x7f05005b
 int color foreground_material_light 0x7f05005c
+int color grin_button_backing 0x7f05031c
 int color grin_error 0x7f05005d
 int color grin_primary 0x7f05005e
 int color grin_primary_dark 0x7f05005f
@@ -3497,7 +3498,6 @@ int id pathRelative 0x7f080189
 int id pauseButton 0x7f08018a
 int id peekHeight 0x7f08018b
 int id percent 0x7f08018c
-int id performanceText 0x7f08018d
 int id pin 0x7f08018e
 int id playButton 0x7f08018f
 int id pooling_container_listener_holder_tag 0x7f080190
