@@ -52,6 +52,18 @@ data class PosterizationPerformanceConfig(
     val fallbackPaletteSize: Int
 )
 
+// Holds user-tunable color adjustments for the camera pipeline.
+class CameraColorAdjustments(
+    contrast: Float,
+    saturation: Float,
+    brightness: Float
+) {
+    // Volatile fields keep analyzer reads in sync with UI slider updates.
+    @Volatile var contrast: Float = contrast
+    @Volatile var saturation: Float = saturation
+    @Volatile var brightness: Float = brightness
+}
+
 enum class PaletteMode {
     CLASSIC,
     HSV_PRESET
@@ -64,6 +76,7 @@ class PosterizedCameraAnalyzer(
     private val palette: PosterizedPalette,
     private val performanceConfig: PosterizationPerformanceConfig,
     private val paletteMode: PaletteMode,
+    private val colorAdjustments: CameraColorAdjustments,
     private val onFrame: (PosterizedFrame) -> Unit
 ) : ImageAnalysis.Analyzer {
     private val whiteColor = Color.rgb(0xFF, 0xFF, 0xFF)
@@ -172,7 +185,7 @@ class PosterizedCameraAnalyzer(
                         Color.blue(representative),
                         hsv
                     )
-                    val adjustedHsv = adjustHsvAdaptive(hsv)
+                    val adjustedHsv = adjustHsvAdaptive(hsv, colorAdjustments)
                     val paletteIndex = findNearestPresetIndexByHsv(
                         adjustedHsv,
                         paletteHsv,
@@ -242,7 +255,7 @@ class PosterizedCameraAnalyzer(
             for (row in 0 until gridRows) {
                 for (col in 0 until gridCols) {
                     val index = row * gridCols + col
-                    val adjusted = adjustColor(rawColors[index], blackPoint, whitePoint)
+                    val adjusted = adjustColor(rawColors[index], blackPoint, whitePoint, colorAdjustments)
                     val paletteIndex = findNearestPaletteIndex(adjusted, palette.colors)
                     val paletteColor = palette.colors[paletteIndex]
                     if (paletteColor != whiteColor) {
@@ -390,7 +403,12 @@ class PosterizedCameraAnalyzer(
         return histogram.size - 1
     }
 
-    private fun adjustColor(rgb: Int, blackPoint: Int, whitePoint: Int): Int {
+    private fun adjustColor(
+        rgb: Int,
+        blackPoint: Int,
+        whitePoint: Int,
+        adjustments: CameraColorAdjustments
+    ): Int {
         val red = Color.red(rgb)
         val green = Color.green(rgb)
         val blue = Color.blue(rgb)
@@ -399,7 +417,8 @@ class PosterizedCameraAnalyzer(
         val normalizedGreen = ((green - blackPoint) / range.toFloat()).coerceIn(0f, 1f)
         val normalizedBlue = ((blue - blackPoint) / range.toFloat()).coerceIn(0f, 1f)
 
-        val contrast = 1.18f
+        // Apply user-tunable contrast before HSV adjustments.
+        val contrast = 1.18f * adjustments.contrast
         val contrastedRed = ((normalizedRed - 0.5f) * contrast + 0.5f).coerceIn(0f, 1f)
         val contrastedGreen = ((normalizedGreen - 0.5f) * contrast + 0.5f).coerceIn(0f, 1f)
         val contrastedBlue = ((normalizedBlue - 0.5f) * contrast + 0.5f).coerceIn(0f, 1f)
@@ -411,12 +430,13 @@ class PosterizedCameraAnalyzer(
             (contrastedBlue * 255f).roundToInt(),
             hsv
         )
-        hsv[1] = (hsv[1] * 1.35f).coerceIn(0f, 1f)
-        hsv[2] = (hsv[2] * 1.08f).coerceIn(0f, 1f)
+        // Apply user-tunable saturation/brightness before palette mapping.
+        hsv[1] = (hsv[1] * 1.35f * adjustments.saturation).coerceIn(0f, 1f)
+        hsv[2] = (hsv[2] * 1.08f * adjustments.brightness).coerceIn(0f, 1f)
         return Color.HSVToColor(hsv)
     }
 
-    private fun adjustHsvAdaptive(hsv: FloatArray): FloatArray {
+    private fun adjustHsvAdaptive(hsv: FloatArray, adjustments: CameraColorAdjustments): FloatArray {
         val value = hsv[2]
         val saturation = hsv[1]
         val saturationBoost = when {
@@ -431,8 +451,10 @@ class PosterizedCameraAnalyzer(
         }
         val adjusted = FloatArray(3)
         adjusted[0] = hsv[0]
-        adjusted[1] = (saturation * saturationBoost).coerceIn(0f, 1f)
-        adjusted[2] = (value * valueBoost).coerceIn(0f, 1f)
+        // Apply user-tunable adjustments while preserving the adaptive boost.
+        adjusted[1] = (saturation * saturationBoost * adjustments.saturation).coerceIn(0f, 1f)
+        val boostedValue = (value * valueBoost * adjustments.brightness).coerceIn(0f, 1f)
+        adjusted[2] = ((boostedValue - 0.5f) * adjustments.contrast + 0.5f).coerceIn(0f, 1f)
         return adjusted
     }
 
