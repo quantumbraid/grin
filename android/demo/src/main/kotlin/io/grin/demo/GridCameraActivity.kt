@@ -161,12 +161,6 @@ class GridCameraActivity : AppCompatActivity() {
                     frame.paletteIndices,
                     frame.paletteLabels
                 )
-                binding.performanceText.text = getString(
-                    R.string.camera_performance_format,
-                    frame.gridCols,
-                    frame.gridRows,
-                    frame.paletteSize
-                )
                 // Cache the latest frame for capture review.
                 latestFrame = frame
             }

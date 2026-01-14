@@ -145,19 +145,6 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.8889" />
 
-    <!-- Performance readout stays tucked in the top-left corner. -->
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/performanceText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#99000000"
-        android:padding="8dp"
-        android:text="@string/camera_performance_default"
-        android:textColor="@android:color/white"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_margin="12dp" />
-
     <!-- Flash button (row 1, column 2). -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/flashButton"
@@ -165,21 +152,36 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/flash_off"
+        app:backgroundTint="@color/grin_button_backing"
         app:layout_constraintBottom_toTopOf="@id/row1"
         app:layout_constraintEnd_toStartOf="@id/col2"
         app:layout_constraintStart_toStartOf="@id/col1"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Settings button (row 1, column 5). -->
+    <!-- Close button centered on row 1. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/closeButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/close"
+        app:backgroundTint="@color/grin_button_backing"
+        app:layout_constraintBottom_toTopOf="@id/row1"
+        app:layout_constraintEnd_toStartOf="@id/col4"
+        app:layout_constraintStart_toStartOf="@id/col2"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Settings button (row 1, right column). -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/settingsButton"
         style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/camera_settings"
+        app:backgroundTint="@color/grin_button_backing"
         app:layout_constraintBottom_toTopOf="@id/row1"
-        app:layout_constraintEnd_toStartOf="@id/col5"
-        app:layout_constraintStart_toStartOf="@id/col4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/col5"
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Mode button (row 8, column 2). -->
@@ -189,6 +191,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/preset_classic"
+        app:backgroundTint="@color/grin_button_backing"
         app:layout_constraintBottom_toTopOf="@id/row8"
         app:layout_constraintEnd_toStartOf="@id/col2"
         app:layout_constraintStart_toStartOf="@id/col1"
@@ -201,6 +204,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/flip_camera"
+        app:backgroundTint="@color/grin_button_backing"
         app:layout_constraintBottom_toTopOf="@id/row8"
         app:layout_constraintEnd_toStartOf="@id/col5"
         app:layout_constraintStart_toStartOf="@id/col4"
@@ -212,19 +216,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/capture"
+        app:backgroundTint="@color/grin_button_backing"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/col4"
         app:layout_constraintStart_toStartOf="@id/col2"
         app:layout_constraintTop_toTopOf="@id/row8" />
-
-    <!-- Close button stays accessible in the top-right corner. -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/closeButton"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/close"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_margin="12dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>
