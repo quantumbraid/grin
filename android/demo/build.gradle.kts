@@ -88,6 +88,7 @@ dependencies {
     // Lifecycle for demo
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("androidx.documentfile:documentfile:1.0.1")
 
     // CameraX for grid camera preview
     implementation("androidx.camera:camera-core:1.3.2")

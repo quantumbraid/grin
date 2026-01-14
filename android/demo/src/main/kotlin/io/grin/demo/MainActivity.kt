@@ -23,13 +23,16 @@
  */
 package io.grin.demo
 
+import android.Manifest
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.android.material.slider.Slider
 import io.grin.demo.databinding.ActivityMainBinding
 import io.grin.lib.GrinFile
@@ -48,11 +51,20 @@ class MainActivity : AppCompatActivity() {
                 loadUri(uri)
             }
         }
+    private val storagePermissionRequest =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+            val denied = result.filterValues { !it }.keys
+            if (denied.isNotEmpty()) {
+                Toast.makeText(this, getString(R.string.storage_permission_denied), Toast.LENGTH_SHORT).show()
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        ensureStoragePermissions()
 
         binding.loadButton.setOnClickListener {
             filePicker.launch(arrayOf("application/octet-stream"))
@@ -120,5 +132,23 @@ class MainActivity : AppCompatActivity() {
         val rules = getString(R.string.rule_count_format, header.ruleCount)
         val tickRate = getString(R.string.tick_rate_format, header.tickMicros.toInt())
         return listOf(dimensions, rules, tickRate).joinToString(separator = "\n")
+    }
+
+    private fun ensureStoragePermissions() {
+        val permissions = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+        } else {
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }
+        val toRequest = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+        if (toRequest.isNotEmpty()) {
+            storagePermissionRequest.launch(toRequest.toTypedArray())
+        }
     }
 }

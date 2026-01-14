@@ -27,6 +27,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.net.Uri
 import android.util.Log
 import io.grin.lib.BaseOpcodes
 import io.grin.lib.GrinFile
@@ -35,6 +36,7 @@ import io.grin.lib.GrinHeader
 import io.grin.lib.GrinPixel
 import io.grin.lib.GrinRule
 import java.io.File
+import java.io.OutputStream
 import java.util.UUID
 import kotlin.math.roundToInt
 
@@ -182,6 +184,27 @@ class GrinAssetStore(private val context: Context) {
         return output
     }
 
+    fun exportPngToUri(bitmap: Bitmap, uri: Uri): Boolean {
+        return context.contentResolver.openOutputStream(uri)?.use { output ->
+            writeBitmap(bitmap, output)
+            true
+        } ?: false
+    }
+
+    fun exportGifToUri(frames: List<Bitmap>, delayMs: Int, uri: Uri): Boolean {
+        return context.contentResolver.openOutputStream(uri)?.use { output ->
+            GifEncoder().encode(frames, delayMs, output)
+            true
+        } ?: false
+    }
+
+    fun exportGrinToUri(grinFile: GrinFile, uri: Uri): Boolean {
+        return context.contentResolver.openOutputStream(uri)?.use { output ->
+            output.write(grinFile.toBytes())
+            true
+        } ?: false
+    }
+
     fun exportGrinAndGrim(
         metadata: GrinAssetMetadata,
         grinFile: GrinFile,
@@ -228,8 +251,12 @@ class GrinAssetStore(private val context: Context) {
     private fun writeBitmap(bitmap: Bitmap, path: String) {
         // Write an ARGB_8888 bitmap as a PNG file.
         File(path).outputStream().use { output ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+            writeBitmap(bitmap, output)
         }
+    }
+
+    private fun writeBitmap(bitmap: Bitmap, output: OutputStream) {
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
     }
 
     private fun assignBinsToChannels(histogram: IntArray): ChannelAssignment {

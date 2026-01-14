@@ -34,6 +34,12 @@ import kotlin.math.max
 // Encodes a list of ARGB_8888 frames into a looping GIF.
 class GifEncoder {
     fun encode(frames: List<Bitmap>, delayMs: Int, output: File) {
+        output.outputStream().use { stream ->
+            encode(frames, delayMs, stream)
+        }
+    }
+
+    fun encode(frames: List<Bitmap>, delayMs: Int, output: OutputStream) {
         require(frames.isNotEmpty()) { "GIF export requires at least one frame" }
         val width = frames.first().width
         val height = frames.first().height
@@ -48,21 +54,19 @@ class GifEncoder {
         val colorDepth = max(2, ceil(log2(paletteSize.toDouble())).toInt())
         val globalColorTable = buildColorTable(palette.colors, paletteSize)
 
-        output.outputStream().use { stream ->
-            writeHeader(stream)
-            writeLogicalScreenDescriptor(stream, width, height, colorDepth)
-            stream.write(globalColorTable)
-            writeLoopExtension(stream)
+        writeHeader(output)
+        writeLogicalScreenDescriptor(output, width, height, colorDepth)
+        output.write(globalColorTable)
+        writeLoopExtension(output)
 
-            frames.forEach { frame ->
-                val pixels = mapPixelsToPalette(frame, palette)
-                writeGraphicsControlExtension(stream, delayMs)
-                writeImageDescriptor(stream, width, height)
-                GifLzwEncoder(width, height, pixels, colorDepth).encode(stream)
-            }
-
-            stream.write(0x3B) // GIF trailer.
+        frames.forEach { frame ->
+            val pixels = mapPixelsToPalette(frame, palette)
+            writeGraphicsControlExtension(output, delayMs)
+            writeImageDescriptor(output, width, height)
+            GifLzwEncoder(width, height, pixels, colorDepth).encode(output)
         }
+
+        output.write(0x3B) // GIF trailer.
     }
 
     private fun buildPalette(bitmap: Bitmap): PaletteResult {

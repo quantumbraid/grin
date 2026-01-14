@@ -92,11 +92,13 @@
     <string name="editor_missing_asset">Unable to load selected capture.</string>
     <string name="editor_applied">Edits applied.</string>
     <string name="export_complete">Export complete.</string>
+    <string name="export_failed">Export failed.</string>
     
     <!-- Errors -->
     <string name="error_invalid_file">Invalid GRIN file</string>
     <string name="error_file_not_found">File not found</string>
     <string name="error_loading">Error loading file</string>
     <string name="camera_permission_denied">Camera permission denied.</string>
+    <string name="storage_permission_denied">Storage permission denied.</string>
     <string name="camera_start_failed">Unable to start camera preview.</string>
 </resources>

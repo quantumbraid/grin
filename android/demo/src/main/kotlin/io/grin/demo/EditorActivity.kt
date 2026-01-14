@@ -23,11 +23,15 @@
  */
 package io.grin.demo
 
+import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.documentfile.provider.DocumentFile
 import com.google.android.material.slider.Slider
 import io.grin.demo.databinding.ActivityEditorBinding
 import io.grin.lib.GrinFile
@@ -45,6 +49,81 @@ class EditorActivity : AppCompatActivity() {
     private var originalSettings: List<ChannelSetting> = emptyList()
     private var selectedChannelId = 0
     private var isUpdatingSliders = false
+    private var pendingPng: Bitmap? = null
+    private var pendingGifFrames: List<Bitmap>? = null
+    private var pendingGifDelayMs: Int = 0
+    private var pendingGrinFile: GrinFile? = null
+    private var pendingGrinBaseName: String? = null
+
+    private val createPngDocument =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri ->
+            val bitmap = pendingPng
+            pendingPng = null
+            if (uri == null || bitmap == null) {
+                return@registerForActivityResult
+            }
+            val saved = store.exportPngToUri(bitmap, uri)
+            Toast.makeText(
+                this,
+                getString(if (saved) R.string.export_complete else R.string.export_failed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+    private val createGifDocument =
+        registerForActivityResult(ActivityResultContracts.CreateDocument("image/gif")) { uri ->
+            val frames = pendingGifFrames
+            val delayMs = pendingGifDelayMs
+            pendingGifFrames = null
+            pendingGifDelayMs = 0
+            if (uri == null || frames == null) {
+                return@registerForActivityResult
+            }
+            val saved = store.exportGifToUri(frames, delayMs, uri)
+            Toast.makeText(
+                this,
+                getString(if (saved) R.string.export_complete else R.string.export_failed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+    private val exportFolderPicker =
+        registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            val grinFile = pendingGrinFile
+            val baseName = pendingGrinBaseName
+            pendingGrinFile = null
+            pendingGrinBaseName = null
+            if (uri == null || grinFile == null || baseName == null) {
+                return@registerForActivityResult
+            }
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            contentResolver.takePersistableUriPermission(uri, flags)
+            val folder = DocumentFile.fromTreeUri(this, uri)
+            if (folder == null) {
+                Toast.makeText(this, getString(R.string.export_failed), Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+            val grinDoc = folder.createFile("application/octet-stream", "$baseName.grin")
+            val grimDoc = folder.createFile("application/octet-stream", "$baseName.grim")
+            if (grinDoc == null || grimDoc == null) {
+                Toast.makeText(this, getString(R.string.export_failed), Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+            val grinSaved = store.exportGrinToUri(grinFile, grinDoc.uri)
+            val grimSaved = store.exportGrinToUri(grinFile, grimDoc.uri)
+            if (grinSaved && grimSaved) {
+                metadata.tickMicros = grinFile.header.tickMicros
+                metadata.ruleCount = grinFile.header.ruleCount
+                metadata.lastEditedAt = System.currentTimeMillis()
+                metadata.channelSettings = currentSettings.map { it.copy() }
+                store.saveMetadata(metadata)
+            }
+            Toast.makeText(
+                this,
+                getString(if (grinSaved && grimSaved) R.string.export_complete else R.string.export_failed),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -185,8 +264,8 @@ class EditorActivity : AppCompatActivity() {
         // Export a PNG snapshot of the current GRIN preview.
         val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
         val snapshot = playbackRenderer.renderSnapshot(updatedFile, tick = 0L)
-        store.exportPng(snapshot, "${metadata.id}_snapshot.png")
-        Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
+        pendingPng = snapshot
+        createPngDocument.launch("${metadata.id}_snapshot.png")
     }
 
     private fun exportGif() {
@@ -196,14 +275,16 @@ class EditorActivity : AppCompatActivity() {
         val tickStep = 1L
         val frames = playbackRenderer.renderFrames(updatedFile, frameCount, tickStep)
         val delayMs = (updatedFile.header.tickMicros / 1000L).toInt().coerceAtLeast(50)
-        store.exportGif("${metadata.id}_loop.gif", frames, delayMs)
-        Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
+        pendingGifFrames = frames
+        pendingGifDelayMs = delayMs
+        createGifDocument.launch("${metadata.id}_loop.gif")
     }
 
     private fun exportGrin() {
         // Export the updated GRIN payload with current header settings.
         val updatedFile = store.buildUpdatedGrinFile(metadata, grinFile, currentSettings)
-        store.exportGrinAndGrim(metadata, updatedFile, currentSettings, "${metadata.id}_updated")
-        Toast.makeText(this, getString(R.string.export_complete), Toast.LENGTH_SHORT).show()
+        pendingGrinFile = updatedFile
+        pendingGrinBaseName = "${metadata.id}_updated"
+        exportFolderPicker.launch(null)
     }
 }
