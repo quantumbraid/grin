@@ -12,6 +12,10 @@
         "source": "io.grin.demo-main-42:/layout/activity_grid_camera.xml"
     },
     {
+        "merged": "io.grin.demo-mergeDebugResources-39:/layout/dialog_camera_settings.xml",
+        "source": "io.grin.demo-main-42:/layout/dialog_camera_settings.xml"
+    },
+    {
         "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-mergeDebugResources-39:\\layout\\item_gallery_asset.xml",
         "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\item_gallery_asset.xml"
     },

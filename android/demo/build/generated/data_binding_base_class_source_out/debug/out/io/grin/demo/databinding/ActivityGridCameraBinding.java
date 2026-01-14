@@ -4,11 +4,11 @@ package io.grin.demo.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.Guideline;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.google.android.material.button.MaterialButton;
@@ -21,10 +21,7 @@ import java.lang.String;
 
 public final class ActivityGridCameraBinding implements ViewBinding {
   @NonNull
-  private final FrameLayout rootView;
-
-  @NonNull
-  public final LinearLayout bottomControls;
+  private final ConstraintLayout rootView;
 
   @NonNull
   public final MaterialButton captureButton;
@@ -33,13 +30,28 @@ public final class ActivityGridCameraBinding implements ViewBinding {
   public final MaterialButton closeButton;
 
   @NonNull
+  public final Guideline col1;
+
+  @NonNull
+  public final Guideline col2;
+
+  @NonNull
+  public final Guideline col3;
+
+  @NonNull
+  public final Guideline col4;
+
+  @NonNull
+  public final Guideline col5;
+
+  @NonNull
   public final MaterialButton flashButton;
 
   @NonNull
   public final MaterialButton flipButton;
 
   @NonNull
-  public final FrameLayout gridCameraRoot;
+  public final ConstraintLayout gridCameraRoot;
 
   @NonNull
   public final GridOverlayView gridOverlay;
@@ -54,19 +66,50 @@ public final class ActivityGridCameraBinding implements ViewBinding {
   public final MaterialButton presetButton;
 
   @NonNull
-  public final LinearLayout topControls;
+  public final Guideline row1;
 
-  private ActivityGridCameraBinding(@NonNull FrameLayout rootView,
-      @NonNull LinearLayout bottomControls, @NonNull MaterialButton captureButton,
-      @NonNull MaterialButton closeButton, @NonNull MaterialButton flashButton,
-      @NonNull MaterialButton flipButton, @NonNull FrameLayout gridCameraRoot,
+  @NonNull
+  public final Guideline row2;
+
+  @NonNull
+  public final Guideline row3;
+
+  @NonNull
+  public final Guideline row4;
+
+  @NonNull
+  public final Guideline row5;
+
+  @NonNull
+  public final Guideline row6;
+
+  @NonNull
+  public final Guideline row7;
+
+  @NonNull
+  public final Guideline row8;
+
+  @NonNull
+  public final MaterialButton settingsButton;
+
+  private ActivityGridCameraBinding(@NonNull ConstraintLayout rootView,
+      @NonNull MaterialButton captureButton, @NonNull MaterialButton closeButton,
+      @NonNull Guideline col1, @NonNull Guideline col2, @NonNull Guideline col3,
+      @NonNull Guideline col4, @NonNull Guideline col5, @NonNull MaterialButton flashButton,
+      @NonNull MaterialButton flipButton, @NonNull ConstraintLayout gridCameraRoot,
       @NonNull GridOverlayView gridOverlay, @NonNull MaterialTextView performanceText,
       @NonNull ImageView posterizedPreview, @NonNull MaterialButton presetButton,
-      @NonNull LinearLayout topControls) {
+      @NonNull Guideline row1, @NonNull Guideline row2, @NonNull Guideline row3,
+      @NonNull Guideline row4, @NonNull Guideline row5, @NonNull Guideline row6,
+      @NonNull Guideline row7, @NonNull Guideline row8, @NonNull MaterialButton settingsButton) {
     this.rootView = rootView;
-    this.bottomControls = bottomControls;
     this.captureButton = captureButton;
     this.closeButton = closeButton;
+    this.col1 = col1;
+    this.col2 = col2;
+    this.col3 = col3;
+    this.col4 = col4;
+    this.col5 = col5;
     this.flashButton = flashButton;
     this.flipButton = flipButton;
     this.gridCameraRoot = gridCameraRoot;
@@ -74,12 +117,20 @@ public final class ActivityGridCameraBinding implements ViewBinding {
     this.performanceText = performanceText;
     this.posterizedPreview = posterizedPreview;
     this.presetButton = presetButton;
-    this.topControls = topControls;
+    this.row1 = row1;
+    this.row2 = row2;
+    this.row3 = row3;
+    this.row4 = row4;
+    this.row5 = row5;
+    this.row6 = row6;
+    this.row7 = row7;
+    this.row8 = row8;
+    this.settingsButton = settingsButton;
   }
 
   @Override
   @NonNull
-  public FrameLayout getRoot() {
+  public ConstraintLayout getRoot() {
     return rootView;
   }
 
@@ -104,12 +155,6 @@ public final class ActivityGridCameraBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
-      id = R.id.bottomControls;
-      LinearLayout bottomControls = ViewBindings.findChildViewById(rootView, id);
-      if (bottomControls == null) {
-        break missingId;
-      }
-
       id = R.id.captureButton;
       MaterialButton captureButton = ViewBindings.findChildViewById(rootView, id);
       if (captureButton == null) {
@@ -119,6 +164,36 @@ public final class ActivityGridCameraBinding implements ViewBinding {
       id = R.id.closeButton;
       MaterialButton closeButton = ViewBindings.findChildViewById(rootView, id);
       if (closeButton == null) {
+        break missingId;
+      }
+
+      id = R.id.col1;
+      Guideline col1 = ViewBindings.findChildViewById(rootView, id);
+      if (col1 == null) {
+        break missingId;
+      }
+
+      id = R.id.col2;
+      Guideline col2 = ViewBindings.findChildViewById(rootView, id);
+      if (col2 == null) {
+        break missingId;
+      }
+
+      id = R.id.col3;
+      Guideline col3 = ViewBindings.findChildViewById(rootView, id);
+      if (col3 == null) {
+        break missingId;
+      }
+
+      id = R.id.col4;
+      Guideline col4 = ViewBindings.findChildViewById(rootView, id);
+      if (col4 == null) {
+        break missingId;
+      }
+
+      id = R.id.col5;
+      Guideline col5 = ViewBindings.findChildViewById(rootView, id);
+      if (col5 == null) {
         break missingId;
       }
 
@@ -134,7 +209,7 @@ public final class ActivityGridCameraBinding implements ViewBinding {
         break missingId;
       }
 
-      FrameLayout gridCameraRoot = (FrameLayout) rootView;
+      ConstraintLayout gridCameraRoot = (ConstraintLayout) rootView;
 
       id = R.id.gridOverlay;
       GridOverlayView gridOverlay = ViewBindings.findChildViewById(rootView, id);
@@ -160,15 +235,64 @@ public final class ActivityGridCameraBinding implements ViewBinding {
         break missingId;
       }
 
-      id = R.id.topControls;
-      LinearLayout topControls = ViewBindings.findChildViewById(rootView, id);
-      if (topControls == null) {
+      id = R.id.row1;
+      Guideline row1 = ViewBindings.findChildViewById(rootView, id);
+      if (row1 == null) {
         break missingId;
       }
 
-      return new ActivityGridCameraBinding((FrameLayout) rootView, bottomControls, captureButton,
-          closeButton, flashButton, flipButton, gridCameraRoot, gridOverlay, performanceText,
-          posterizedPreview, presetButton, topControls);
+      id = R.id.row2;
+      Guideline row2 = ViewBindings.findChildViewById(rootView, id);
+      if (row2 == null) {
+        break missingId;
+      }
+
+      id = R.id.row3;
+      Guideline row3 = ViewBindings.findChildViewById(rootView, id);
+      if (row3 == null) {
+        break missingId;
+      }
+
+      id = R.id.row4;
+      Guideline row4 = ViewBindings.findChildViewById(rootView, id);
+      if (row4 == null) {
+        break missingId;
+      }
+
+      id = R.id.row5;
+      Guideline row5 = ViewBindings.findChildViewById(rootView, id);
+      if (row5 == null) {
+        break missingId;
+      }
+
+      id = R.id.row6;
+      Guideline row6 = ViewBindings.findChildViewById(rootView, id);
+      if (row6 == null) {
+        break missingId;
+      }
+
+      id = R.id.row7;
+      Guideline row7 = ViewBindings.findChildViewById(rootView, id);
+      if (row7 == null) {
+        break missingId;
+      }
+
+      id = R.id.row8;
+      Guideline row8 = ViewBindings.findChildViewById(rootView, id);
+      if (row8 == null) {
+        break missingId;
+      }
+
+      id = R.id.settingsButton;
+      MaterialButton settingsButton = ViewBindings.findChildViewById(rootView, id);
+      if (settingsButton == null) {
+        break missingId;
+      }
+
+      return new ActivityGridCameraBinding((ConstraintLayout) rootView, captureButton, closeButton,
+          col1, col2, col3, col4, col5, flashButton, flipButton, gridCameraRoot, gridOverlay,
+          performanceText, posterizedPreview, presetButton, row1, row2, row3, row4, row5, row6,
+          row7, row8, settingsButton);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));
