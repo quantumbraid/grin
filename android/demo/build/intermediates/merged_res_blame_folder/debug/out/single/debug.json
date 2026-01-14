@@ -1,38 +1,46 @@
 [
     {
-        "merged": "io.grin.demo-merged_res-40:/layout_activity_grid_camera.xml.flat",
-        "source": "io.grin.demo-main-42:/layout/activity_grid_camera.xml"
-    },
-    {
         "merged": "io.grin.demo-merged_res-40:/layout_activity_main.xml.flat",
         "source": "io.grin.demo-main-42:/layout/activity_main.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-40:/layout_activity_capture_review.xml.flat",
-        "source": "io.grin.demo-main-42:/layout/activity_capture_review.xml"
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_item_gallery_asset.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\item_gallery_asset.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-40:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "io.grin.demo-main-42:/mipmap-anydpi-v26/ic_launcher_round.xml"
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_activity_grid_camera.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_grid_camera.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-40:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "io.grin.demo-main-42:/mipmap-anydpi-v26/ic_launcher.xml"
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_activity_capture_review.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_capture_review.xml"
+    },
+    {
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_main.xml"
     },
     {
         "merged": "io.grin.demo-merged_res-40:/layout_activity_editor.xml.flat",
         "source": "io.grin.demo-main-42:/layout/activity_editor.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-40:/layout_item_gallery_asset.xml.flat",
-        "source": "io.grin.demo-main-42:/layout/item_gallery_asset.xml"
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_activity_gallery.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_gallery.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-40:/layout_activity_gallery.xml.flat",
-        "source": "io.grin.demo-main-42:/layout/activity_gallery.xml"
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_activity_editor.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_editor.xml"
     },
     {
-        "merged": "io.grin.demo-merged_res-40:/drawable_ic_launcher_foreground.xml.flat",
-        "source": "io.grin.demo-main-42:/drawable/ic_launcher_foreground.xml"
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\drawable\\ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\mipmap-anydpi-v26\\ic_launcher.xml"
     }
 ]

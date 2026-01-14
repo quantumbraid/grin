@@ -4,17 +4,7 @@
             "outputFile": "io.grin.demo-mergeReleaseResources-38:/values-v16/values-v16.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\fourm\\.gradle\\caches\\transforms-3\\97ca3984b5495582a64ef5b4ae7df1f1\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
-                    "from": {
-                        "startLines": "2",
-                        "startColumns": "4",
-                        "startOffsets": "55",
-                        "endColumns": "65",
-                        "endOffsets": "116"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\fourm\\.gradle\\caches\\transforms-3\\4115a4400f4368e957ed47a980881135\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
+                    "source": "C:\\Users\\fourm\\.gradle\\caches\\8.13\\transforms\\c3b07d91ee8a35c79176f7460ee66d1b\\transformed\\appcompat-1.6.1\\res\\values-v16\\values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -30,6 +20,16 @@
                         "endLines": "6",
                         "endColumns": "12",
                         "endOffsets": "289"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\fourm\\.gradle\\caches\\8.13\\transforms\\2411ef3125d7958ed610a163038310b5\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "65",
+                        "endOffsets": "116"
                     }
                 }
             ]
