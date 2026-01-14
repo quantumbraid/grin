@@ -23,72 +23,100 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/gridCameraRoot"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/previewToolbar"
+    <ImageView
+        android:id="@+id/posterizedPreview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:title="@string/grid_camera_title" />
+        android:layout_height="match_parent"
+        android:background="@android:color/white"
+        android:scaleType="centerCrop" />
 
-    <com.google.android.material.card.MaterialCardView
+    <io.grin.demo.GridOverlayView
+        android:id="@+id/gridOverlay"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        android:layout_weight="1"
-        app:cardCornerRadius="16dp"
-        app:cardUseCompatPadding="true">
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <ImageView
-                android:id="@+id/posterizedPreview"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@android:color/black"
-                android:scaleType="fitCenter" />
-
-            <io.grin.demo.GridOverlayView
-                android:id="@+id/gridOverlay"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </FrameLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/performanceText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/camera_performance_default" />
+        android:layout_height="match_parent" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/topControls"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:background="#99C0C0C0"
         android:gravity="center_horizontal"
-        android:orientation="horizontal">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/captureButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/capture" />
+        android:layout_gravity="top|center_horizontal"
+        android:padding="16dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/closeButton"
             style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:text="@string/close" />
     </LinearLayout>
-</LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomControls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:background="#99C0C0C0"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/performanceText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/camera_performance_default" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/flashButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/flash_off" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/flipButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/flip_camera" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/captureButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/capture" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/presetButton"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/preset_classic" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

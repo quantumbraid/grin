@@ -3198,6 +3198,7 @@ int id beginning 0x7f08005e
 int id bestChoice 0x7f08005f
 int id blocking 0x7f080060
 int id bottom 0x7f080061
+int id bottomControls 0x7f080229
 int id bounce 0x7f080062
 int id bounceBoth 0x7f080063
 int id bounceEnd 0x7f080064
@@ -3315,7 +3316,9 @@ int id fitStart 0x7f0800d3
 int id fitToContents 0x7f0800d4
 int id fitXY 0x7f0800d5
 int id fixed 0x7f0800d6
+int id flashButton 0x7f080227
 int id flip 0x7f0800d7
+int id flipButton 0x7f080228
 int id floating 0x7f0800d8
 int id forever 0x7f0800d9
 int id fragment_container_view_tag 0x7f0800da
@@ -3495,9 +3498,9 @@ int id pooling_container_listener_holder_tag 0x7f080187
 int id position 0x7f080188
 int id postLayout 0x7f080189
 int id posterizedPreview 0x7f08018a
+int id presetButton 0x7f08022b
 int id pressed 0x7f08018b
 int id previewImage 0x7f08018c
-int id previewToolbar 0x7f08018d
 int id progress_circular 0x7f08018e
 int id progress_horizontal 0x7f08018f
 int id radio 0x7f080190
@@ -3616,6 +3619,7 @@ int id titleDividerNoCustom 0x7f080200
 int id title_template 0x7f080201
 int id toggle 0x7f080202
 int id top 0x7f080203
+int id topControls 0x7f08022a
 int id topPanel 0x7f080204
 int id touch_outside 0x7f080205
 int id transitionToEnd 0x7f080206
@@ -3903,6 +3907,7 @@ int string camera_performance_default 0x7f0f002e
 int string camera_performance_format 0x7f0f002f
 int string camera_permission_denied 0x7f0f0030
 int string camera_start_failed 0x7f0f0031
+int string camera_unavailable 0x7f0f00d9
 int string capture 0x7f0f0032
 int string capture_metadata_default 0x7f0f0033
 int string capture_metadata_format 0x7f0f0034
@@ -3936,6 +3941,10 @@ int string exposed_dropdown_menu_content_description 0x7f0f004f
 int string fab_transformation_scrim_behavior 0x7f0f0050
 int string fab_transformation_sheet_behavior 0x7f0f0051
 int string file_info_title 0x7f0f0052
+int string flash_off 0x7f0f00da
+int string flash_on 0x7f0f00db
+int string flash_unavailable 0x7f0f00dc
+int string flip_camera 0x7f0f00dd
 int string gallery_asset_metadata 0x7f0f0053
 int string gallery_asset_metadata_default 0x7f0f0054
 int string gallery_empty_state 0x7f0f0055
@@ -4057,6 +4066,8 @@ int string path_password_eye_mask_visible 0x7f0f00c8
 int string path_password_strike_through 0x7f0f00c9
 int string pause 0x7f0f00ca
 int string play 0x7f0f00cb
+int string preset_classic 0x7f0f00de
+int string preset_hsv 0x7f0f00df
 int string retake 0x7f0f00cc
 int string revert 0x7f0f00cd
 int string rule_count_format 0x7f0f00ce

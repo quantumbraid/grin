@@ -74,186 +74,187 @@
 58-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:40:9-54
 59        android:supportsRtl="true"
 59-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:41:9-35
-60        android:theme="@style/Theme.GrinDemo" >
-60-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:42:9-46
-61        <provider
-62            android:name="io.grin.lib.GrinContentProvider"
-62-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:45:13-59
-63            android:authorities="io.grin.demo.grin"
-63-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:46:13-56
-64            android:exported="false"
-64-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:47:13-37
-65            android:grantUriPermissions="true" />
-65-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:48:13-47
-66
-67        <activity
-67-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:50:9-69:20
-68            android:name="io.grin.demo.MainActivity"
-68-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:51:13-41
-69            android:exported="true"
-69-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:52:13-36
-70            android:label="@string/app_name"
-70-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:53:13-45
-71            android:theme="@style/Theme.GrinDemo" >
-71-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:54:13-50
-72            <intent-filter>
-72-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:55:13-58:29
-73                <action android:name="android.intent.action.MAIN" />
-73-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:56:17-69
-73-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:56:25-66
-74
-75                <category android:name="android.intent.category.LAUNCHER" />
-75-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:57:17-77
-75-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:57:27-74
-76            </intent-filter>
-77
-78            <!-- Handle .grin and .grn file opens -->
-79            <intent-filter>
-79-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:61:13-68:29
-80                <action android:name="android.intent.action.VIEW" />
-80-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:62:17-69
-80-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:62:25-66
-81
-82                <category android:name="android.intent.category.DEFAULT" />
-82-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:63:17-76
-82-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:63:27-73
-83                <category android:name="android.intent.category.BROWSABLE" />
-83-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:64:17-78
-83-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:64:27-75
-84
-85                <data android:mimeType="application/octet-stream" />
-85-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:65:17-69
-85-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:65:23-66
-86                <data android:pathPattern=".*\\.grin" />
+60        android:testOnly="true"
+61        android:theme="@style/Theme.GrinDemo" >
+61-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:42:9-46
+62        <provider
+63            android:name="io.grin.lib.GrinContentProvider"
+63-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:45:13-59
+64            android:authorities="io.grin.demo.grin"
+64-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:46:13-56
+65            android:exported="false"
+65-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:47:13-37
+66            android:grantUriPermissions="true" />
+66-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:48:13-47
+67
+68        <activity
+68-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:50:9-69:20
+69            android:name="io.grin.demo.MainActivity"
+69-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:51:13-41
+70            android:exported="true"
+70-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:52:13-36
+71            android:label="@string/app_name"
+71-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:53:13-45
+72            android:theme="@style/Theme.GrinDemo" >
+72-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:54:13-50
+73            <intent-filter>
+73-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:55:13-58:29
+74                <action android:name="android.intent.action.MAIN" />
+74-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:56:17-69
+74-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:56:25-66
+75
+76                <category android:name="android.intent.category.LAUNCHER" />
+76-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:57:17-77
+76-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:57:27-74
+77            </intent-filter>
+78
+79            <!-- Handle .grin and .grn file opens -->
+80            <intent-filter>
+80-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:61:13-68:29
+81                <action android:name="android.intent.action.VIEW" />
+81-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:62:17-69
+81-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:62:25-66
+82
+83                <category android:name="android.intent.category.DEFAULT" />
+83-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:63:17-76
+83-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:63:27-73
+84                <category android:name="android.intent.category.BROWSABLE" />
+84-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:64:17-78
+84-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:64:27-75
+85
+86                <data android:mimeType="application/octet-stream" />
 86-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:65:17-69
-86-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:66:23-54
-87                <data android:pathPattern=".*\\.grn" />
+86-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:65:23-66
+87                <data android:pathPattern=".*\\.grin" />
 87-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:65:17-69
 87-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:66:23-54
-88            </intent-filter>
-89        </activity>
-90        <activity
-90-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:71:9-75:53
-91            android:name="io.grin.demo.GridCameraActivity"
-91-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:72:13-47
-92            android:exported="false"
-92-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:73:13-37
-93            android:label="@string/grid_camera_title"
-93-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:74:13-54
-94            android:theme="@style/Theme.GrinDemo" />
-94-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:75:13-50
-95        <activity
-95-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:77:9-81:53
-96            android:name="io.grin.demo.CaptureReviewActivity"
-96-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:78:13-50
-97            android:exported="false"
-97-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:79:13-37
-98            android:label="@string/capture_review_title"
-98-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:80:13-57
-99            android:theme="@style/Theme.GrinDemo" />
-99-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:81:13-50
-100        <activity
-100-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:83:9-87:53
-101            android:name="io.grin.demo.GalleryActivity"
-101-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:84:13-44
-102            android:exported="false"
-102-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:85:13-37
-103            android:label="@string/gallery_title"
-103-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:86:13-50
-104            android:theme="@style/Theme.GrinDemo" />
-104-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:87:13-50
-105        <activity
-105-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:89:9-93:53
-106            android:name="io.grin.demo.EditorActivity"
-106-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:90:13-43
-107            android:exported="false"
-107-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:91:13-37
-108            android:label="@string/editor_title"
-108-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:92:13-49
-109            android:theme="@style/Theme.GrinDemo" />
-109-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:93:13-50
-110
-111        <service
-111-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:24:9-33:19
-112            android:name="androidx.camera.core.impl.MetadataHolderService"
-112-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:25:13-75
-113            android:enabled="false"
-113-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:26:13-36
-114            android:exported="false" >
-114-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:27:13-37
-115            <meta-data
-115-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:30:13-32:89
-116                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
-116-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:31:17-103
-117                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
-117-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:32:17-86
-118        </service>
-119
-120        <provider
-120-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
-121            android:name="androidx.startup.InitializationProvider"
-121-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:25:13-67
-122            android:authorities="io.grin.demo.androidx-startup"
-122-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:26:13-68
-123            android:exported="false" >
-123-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:27:13-37
-124            <meta-data
-124-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
-125                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-125-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:30:17-75
-126                android:value="androidx.startup" />
-126-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:31:17-49
-127            <meta-data
-127-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\fourm\.gradle\caches\8.13\transforms\b08585342f1797909671f365a39d5f7b\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
-128                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-128-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\fourm\.gradle\caches\8.13\transforms\b08585342f1797909671f365a39d5f7b\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
-129                android:value="androidx.startup" />
-129-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\fourm\.gradle\caches\8.13\transforms\b08585342f1797909671f365a39d5f7b\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
-130            <meta-data
-130-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
-131                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-131-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
-132                android:value="androidx.startup" />
-132-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
-133        </provider>
-134
-135        <receiver
-135-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
-136            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-136-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
-137            android:directBootAware="false"
-137-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
-138            android:enabled="true"
-138-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
-139            android:exported="true"
-139-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
-140            android:permission="android.permission.DUMP" >
-140-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
-141            <intent-filter>
-141-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
-142                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-142-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
-142-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
-143            </intent-filter>
-144            <intent-filter>
-144-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
-145                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-145-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
-145-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
-146            </intent-filter>
-147            <intent-filter>
-147-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
-148                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-148-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
-148-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
-149            </intent-filter>
-150            <intent-filter>
-150-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
-151                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-151-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
-151-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
-152            </intent-filter>
-153        </receiver>
-154    </application>
-155
-156</manifest>
+88                <data android:pathPattern=".*\\.grn" />
+88-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:65:17-69
+88-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:66:23-54
+89            </intent-filter>
+90        </activity>
+91        <activity
+91-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:71:9-75:53
+92            android:name="io.grin.demo.GridCameraActivity"
+92-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:72:13-47
+93            android:exported="false"
+93-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:73:13-37
+94            android:label="@string/grid_camera_title"
+94-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:74:13-54
+95            android:theme="@style/Theme.GrinDemo" />
+95-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:75:13-50
+96        <activity
+96-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:77:9-81:53
+97            android:name="io.grin.demo.CaptureReviewActivity"
+97-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:78:13-50
+98            android:exported="false"
+98-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:79:13-37
+99            android:label="@string/capture_review_title"
+99-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:80:13-57
+100            android:theme="@style/Theme.GrinDemo" />
+100-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:81:13-50
+101        <activity
+101-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:83:9-87:53
+102            android:name="io.grin.demo.GalleryActivity"
+102-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:84:13-44
+103            android:exported="false"
+103-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:85:13-37
+104            android:label="@string/gallery_title"
+104-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:86:13-50
+105            android:theme="@style/Theme.GrinDemo" />
+105-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:87:13-50
+106        <activity
+106-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:89:9-93:53
+107            android:name="io.grin.demo.EditorActivity"
+107-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:90:13-43
+108            android:exported="false"
+108-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:91:13-37
+109            android:label="@string/editor_title"
+109-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:92:13-49
+110            android:theme="@style/Theme.GrinDemo" />
+110-->D:\sorted coding\grin\grin\android\demo\src\main\AndroidManifest.xml:93:13-50
+111
+112        <service
+112-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:24:9-33:19
+113            android:name="androidx.camera.core.impl.MetadataHolderService"
+113-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:25:13-75
+114            android:enabled="false"
+114-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:26:13-36
+115            android:exported="false" >
+115-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:27:13-37
+116            <meta-data
+116-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:30:13-32:89
+117                android:name="androidx.camera.core.impl.MetadataHolderService.DEFAULT_CONFIG_PROVIDER"
+117-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:31:17-103
+118                android:value="androidx.camera.camera2.Camera2Config$DefaultProvider" />
+118-->[androidx.camera:camera-camera2:1.3.2] C:\Users\fourm\.gradle\caches\8.13\transforms\1c8de9b0303e52e9a188b313d95e6fa1\transformed\camera-camera2-1.3.2\AndroidManifest.xml:32:17-86
+119        </service>
+120
+121        <provider
+121-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:24:9-32:20
+122            android:name="androidx.startup.InitializationProvider"
+122-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:25:13-67
+123            android:authorities="io.grin.demo.androidx-startup"
+123-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:26:13-68
+124            android:exported="false" >
+124-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:27:13-37
+125            <meta-data
+125-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:29:13-31:52
+126                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+126-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:30:17-75
+127                android:value="androidx.startup" />
+127-->[androidx.emoji2:emoji2:1.2.0] C:\Users\fourm\.gradle\caches\8.13\transforms\c3c8167062a67a46e8dd16c35eb682a1\transformed\emoji2-1.2.0\AndroidManifest.xml:31:17-49
+128            <meta-data
+128-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\fourm\.gradle\caches\8.13\transforms\b08585342f1797909671f365a39d5f7b\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
+129                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+129-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\fourm\.gradle\caches\8.13\transforms\b08585342f1797909671f365a39d5f7b\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
+130                android:value="androidx.startup" />
+130-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\fourm\.gradle\caches\8.13\transforms\b08585342f1797909671f365a39d5f7b\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
+131            <meta-data
+131-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
+132                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+132-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+133                android:value="androidx.startup" />
+133-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
+134        </provider>
+135
+136        <receiver
+136-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
+137            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+137-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
+138            android:directBootAware="false"
+138-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
+139            android:enabled="true"
+139-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
+140            android:exported="true"
+140-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
+141            android:permission="android.permission.DUMP" >
+141-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
+142            <intent-filter>
+142-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
+143                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+143-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
+143-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
+144            </intent-filter>
+145            <intent-filter>
+145-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
+146                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+146-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
+146-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
+147            </intent-filter>
+148            <intent-filter>
+148-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
+149                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+149-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
+149-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
+150            </intent-filter>
+151            <intent-filter>
+151-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
+152                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+152-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
+152-->[androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\fourm\.gradle\caches\8.13\transforms\79b41170b17e533fde0f6e880eb4fc1a\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:25-92
+153            </intent-filter>
+154        </receiver>
+155    </application>
+156
+157</manifest>

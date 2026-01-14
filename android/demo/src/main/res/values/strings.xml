@@ -49,6 +49,14 @@
     <string name="camera_performance_format">Grid: %1$d × %2$d · Palette: %3$d</string>
     <string name="close">Close</string>
     <string name="capture">Capture</string>
+
+    <string name="flash_off">Flash Off</string>
+    <string name="flash_on">Flash On</string>
+    <string name="flip_camera">Flip Camera</string>
+    <string name="preset_classic">Preset: Classic</string>
+    <string name="preset_hsv">Preset: HSV</string>
+    <string name="flash_unavailable">Flash not available on this camera.</string>
+    <string name="camera_unavailable">Requested camera not available.</string>
     <string name="capture_review_title">Capture Review</string>
     <string name="capture_metadata_default">Grid: -- × -- · Bins: --</string>
     <string name="capture_metadata_format">Grid: %1$d × %2$d · Bins: %3$d</string>

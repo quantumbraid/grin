@@ -1,7 +1,7 @@
 [
     {
-        "merged": "io.grin.demo-merged_res-40:/layout_activity_main.xml.flat",
-        "source": "io.grin.demo-main-42:/layout/activity_main.xml"
+        "merged": "io.grin.demo-merged_res-40:/layout_activity_grid_camera.xml.flat",
+        "source": "io.grin.demo-main-42:/layout/activity_grid_camera.xml"
     },
     {
         "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_item_gallery_asset.xml.flat",
@@ -22,10 +22,6 @@
     {
         "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_activity_main.xml.flat",
         "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_main.xml"
-    },
-    {
-        "merged": "io.grin.demo-merged_res-40:/layout_activity_editor.xml.flat",
-        "source": "io.grin.demo-main-42:/layout/activity_editor.xml"
     },
     {
         "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-merged_res-40:\\layout_activity_gallery.xml.flat",

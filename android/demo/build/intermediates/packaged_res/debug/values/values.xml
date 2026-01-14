@@ -34,6 +34,7 @@
     <string name="camera_performance_format">Grid: %1$d × %2$d · Palette: %3$d</string>
     <string name="camera_permission_denied">Camera permission denied.</string>
     <string name="camera_start_failed">Unable to start camera preview.</string>
+    <string name="camera_unavailable">Requested camera not available.</string>
     <string name="capture">Capture</string>
     <string name="capture_metadata_default">Grid: -- × -- · Bins: --</string>
     <string name="capture_metadata_format">Grid: %1$d × %2$d · Bins: %3$d</string>
@@ -58,6 +59,10 @@
     <string name="export_grin">Export GRIN</string>
     <string name="export_png">Export PNG</string>
     <string name="file_info_title">File Information</string>
+    <string name="flash_off">Flash Off</string>
+    <string name="flash_on">Flash On</string>
+    <string name="flash_unavailable">Flash not available on this camera.</string>
+    <string name="flip_camera">Flip Camera</string>
     <string name="gallery_asset_metadata">%1$d × %2$d · Bins: %3$d</string>
     <string name="gallery_asset_metadata_default">-- × -- · Bins: --</string>
     <string name="gallery_empty_state">No captures yet. Use the grid camera to add assets.</string>
@@ -71,6 +76,8 @@
     <string name="open_gallery">Open Gallery</string>
     <string name="pause">Pause</string>
     <string name="play">Play</string>
+    <string name="preset_classic">Preset: Classic</string>
+    <string name="preset_hsv">Preset: HSV</string>
     <string name="retake">Retake</string>
     <string name="revert">Revert</string>
     <string name="rule_count_format">Rules: %1$d</string>

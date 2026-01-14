@@ -31,6 +31,7 @@ id acceptButton
 id applyButton
 id assetMetadata
 id backButton
+id bottomControls
 id cameraButton
 id captureButton
 id captureMetadata
@@ -49,6 +50,8 @@ id emptyState
 id exportGifButton
 id exportGrinButton
 id exportPngButton
+id flashButton
+id flipButton
 id frequencyLabel
 id frequencySeek
 id galleryButton
@@ -68,8 +71,8 @@ id pauseButton
 id performanceText
 id playButton
 id posterizedPreview
+id presetButton
 id previewImage
-id previewToolbar
 id retakeButton
 id revertButton
 id root
@@ -78,6 +81,7 @@ id samplesTitle
 id seekBar
 id stopButton
 id thumbnail
+id topControls
 id transparencyLabel
 id transparencySeek
 layout activity_capture_review
@@ -96,6 +100,7 @@ string camera_performance_default
 string camera_performance_format
 string camera_permission_denied
 string camera_start_failed
+string camera_unavailable
 string capture
 string capture_metadata_default
 string capture_metadata_format
@@ -120,6 +125,10 @@ string export_gif
 string export_grin
 string export_png
 string file_info_title
+string flash_off
+string flash_on
+string flash_unavailable
+string flip_camera
 string gallery_asset_metadata
 string gallery_asset_metadata_default
 string gallery_empty_state
@@ -133,6 +142,8 @@ string open_editor
 string open_gallery
 string pause
 string play
+string preset_classic
+string preset_hsv
 string retake
 string revert
 string rule_count_format

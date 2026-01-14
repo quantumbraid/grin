@@ -30,6 +30,8 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraInfoUnavailableException
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -43,6 +45,11 @@ class GridCameraActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGridCameraBinding
     private lateinit var cameraExecutor: ExecutorService
     private var latestFrame: PosterizedFrame? = null
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var activeCamera: Camera? = null
+    private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
+    private var torchEnabled: Boolean = false
+    private var useHsvPreset: Boolean = false
 
     private val permissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -75,6 +82,15 @@ class GridCameraActivity : AppCompatActivity() {
                 Toast.makeText(this, getString(R.string.capture_no_frame), Toast.LENGTH_SHORT).show()
             }
         }
+        binding.presetButton.setOnClickListener {
+            useHsvPreset = !useHsvPreset
+            updatePresetButton()
+            cameraProvider?.let { provider -> bindAnalysisUseCase(provider) }
+        }
+        binding.flashButton.setOnClickListener { toggleFlash() }
+        binding.flipButton.setOnClickListener { toggleCamera() }
+
+        updatePresetButton()
 
         if (hasCameraPermission()) {
             startCamera()
@@ -99,6 +115,7 @@ class GridCameraActivity : AppCompatActivity() {
         cameraProviderFuture.addListener(
             {
                 val cameraProvider = cameraProviderFuture.get()
+                this.cameraProvider = cameraProvider
                 bindAnalysisUseCase(cameraProvider)
             },
             ContextCompat.getMainExecutor(this)
@@ -113,12 +130,13 @@ class GridCameraActivity : AppCompatActivity() {
             fallbackFps = 24,
             slowdownThresholdMs = 42,
             fallbackGridScale = 0.75f,
-            fallbackPaletteSize = 12
+            fallbackPaletteSize = palette.colors.size
         )
         val analyzer = PosterizedCameraAnalyzer(
-            baseGridCols = 48,
-            baseGridRows = 64,
+            baseGridCols = 96,
+            baseGridRows = 128,
             palette = palette,
+            paletteMode = if (useHsvPreset) PaletteMode.HSV_PRESET else PaletteMode.CLASSIC,
             performanceConfig = performanceConfig
         ) { frame ->
             runOnUiThread {
@@ -142,15 +160,72 @@ class GridCameraActivity : AppCompatActivity() {
         }
 
         val analysis = ImageAnalysis.Builder()
+            .setTargetRotation(binding.posterizedPreview.display.rotation)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
             .also { it.setAnalyzer(cameraExecutor, analyzer) }
 
-        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+        val cameraSelector = CameraSelector.Builder()
+            .requireLensFacing(lensFacing)
+            .build()
         try {
-            cameraProvider.bindToLifecycle(this, cameraSelector, analysis)
+            activeCamera = cameraProvider.bindToLifecycle(this, cameraSelector, analysis)
+            updateFlashButtonState()
         } catch (exception: Exception) {
             Toast.makeText(this, getString(R.string.camera_start_failed), Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun updatePresetButton() {
+        binding.presetButton.text = getString(
+            if (useHsvPreset) R.string.preset_hsv else R.string.preset_classic
+        )
+    }
+
+
+    private fun toggleCamera() {
+        val provider = cameraProvider ?: return
+        val nextFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+            CameraSelector.LENS_FACING_FRONT
+        } else {
+            CameraSelector.LENS_FACING_BACK
+        }
+        val selector = CameraSelector.Builder()
+            .requireLensFacing(nextFacing)
+            .build()
+        val hasCamera = try {
+            provider.hasCamera(selector)
+        } catch (exception: CameraInfoUnavailableException) {
+            false
+        }
+        if (!hasCamera) {
+            Toast.makeText(this, getString(R.string.camera_unavailable), Toast.LENGTH_SHORT).show()
+            return
+        }
+        lensFacing = nextFacing
+        torchEnabled = false
+        bindAnalysisUseCase(provider)
+    }
+
+    private fun toggleFlash() {
+        val camera = activeCamera
+        if (camera == null || !camera.cameraInfo.hasFlashUnit()) {
+            torchEnabled = false
+            updateFlashButtonState()
+            Toast.makeText(this, getString(R.string.flash_unavailable), Toast.LENGTH_SHORT).show()
+            return
+        }
+        torchEnabled = !torchEnabled
+        camera.cameraControl.enableTorch(torchEnabled)
+        updateFlashButtonState()
+    }
+
+    private fun updateFlashButtonState() {
+        val hasFlash = activeCamera?.cameraInfo?.hasFlashUnit() == true
+        if (!hasFlash) {
+            torchEnabled = false
+        }
+        binding.flashButton.isEnabled = hasFlash
+        binding.flashButton.text = getString(if (torchEnabled) R.string.flash_on else R.string.flash_off)
     }
 }

@@ -1007,13 +1007,25 @@
 
 ### 13.1 Version Tagging
 - [x] Define semantic versioning scheme
-- [x] Tag initial release (v0.1.0)
+- [ ] Tag initial release (v0.1.0)
+  - Fix path: confirm the release commit and version in `CHANGELOG.md`.
+  - Fix path: build release artifacts for Android/web/tools and run smoke tests.
+  - Fix path: create and push annotated git tag `v0.1.0`.
 - [x] Create CHANGELOG.md with release notes
 
 ### *** 13.2 Package Publishing
-- [x] Publish Android library to Maven Central / JitPack
-- [x] Publish JavaScript library to npm
-- [x] Create GitHub Releases with artifacts
+- [ ] Publish Android library to Maven Central / JitPack
+  - Fix path: verify `android/lib/build.gradle.kts` publishing config, coordinates, and signing.
+  - Fix path: publish to a staging repo (Sonatype or JitPack) and verify artifacts/metadata.
+  - Fix path: close/release the staging repo and update release notes.
+- [ ] Publish JavaScript library to npm
+  - Fix path: build the `web` bundle to `web/dist` and run tests.
+  - Fix path: verify `web/package.json` metadata (name, version, files, exports).
+  - Fix path: publish to npm and confirm availability.
+- [ ] Create GitHub Releases with artifacts
+  - Fix path: assemble release artifacts (AAR, npm tarball, CLI bundle).
+  - Fix path: create the GitHub release for tag `v0.1.0` and attach artifacts.
+  - Fix path: verify release notes link to `CHANGELOG.md`.
 
 ### 13.3 Compatibility Matrix
 - [x] Document Android API level compatibility

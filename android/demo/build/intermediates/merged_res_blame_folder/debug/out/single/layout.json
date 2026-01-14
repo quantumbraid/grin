@@ -8,20 +8,12 @@
         "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_capture_review.xml"
     },
     {
-        "merged": "io.grin.demo-mergeDebugResources-39:/layout/activity_editor.xml",
-        "source": "io.grin.demo-main-42:/layout/activity_editor.xml"
-    },
-    {
-        "merged": "io.grin.demo-mergeDebugResources-39:/layout/activity_main.xml",
-        "source": "io.grin.demo-main-42:/layout/activity_main.xml"
+        "merged": "io.grin.demo-mergeDebugResources-39:/layout/activity_grid_camera.xml",
+        "source": "io.grin.demo-main-42:/layout/activity_grid_camera.xml"
     },
     {
         "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-mergeDebugResources-39:\\layout\\item_gallery_asset.xml",
         "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\item_gallery_asset.xml"
-    },
-    {
-        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-mergeDebugResources-39:\\layout\\activity_gallery.xml",
-        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_gallery.xml"
     },
     {
         "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-mergeDebugResources-39:\\layout\\activity_editor.xml",
@@ -30,5 +22,9 @@
     {
         "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-mergeDebugResources-39:\\layout\\activity_main.xml",
         "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-mergeDebugResources-39:\\layout\\activity_gallery.xml",
+        "source": "C:\\Users\\fourm\\.gradle\\daemon\\8.13\\io.grin.demo-main-42:\\layout\\activity_gallery.xml"
     }
 ]

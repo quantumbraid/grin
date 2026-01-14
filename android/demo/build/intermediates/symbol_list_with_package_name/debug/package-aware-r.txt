@@ -3199,6 +3199,7 @@ id beginning
 id bestChoice
 id blocking
 id bottom
+id bottomControls
 id bounce
 id bounceBoth
 id bounceEnd
@@ -3316,7 +3317,9 @@ id fitStart
 id fitToContents
 id fitXY
 id fixed
+id flashButton
 id flip
+id flipButton
 id floating
 id forever
 id fragment_container_view_tag
@@ -3496,9 +3499,9 @@ id pooling_container_listener_holder_tag
 id position
 id postLayout
 id posterizedPreview
+id presetButton
 id pressed
 id previewImage
-id previewToolbar
 id progress_circular
 id progress_horizontal
 id radio
@@ -3617,6 +3620,7 @@ id titleDividerNoCustom
 id title_template
 id toggle
 id top
+id topControls
 id topPanel
 id touch_outside
 id transitionToEnd
@@ -3904,6 +3908,7 @@ string camera_performance_default
 string camera_performance_format
 string camera_permission_denied
 string camera_start_failed
+string camera_unavailable
 string capture
 string capture_metadata_default
 string capture_metadata_format
@@ -3937,6 +3942,10 @@ string exposed_dropdown_menu_content_description
 string fab_transformation_scrim_behavior
 string fab_transformation_sheet_behavior
 string file_info_title
+string flash_off
+string flash_on
+string flash_unavailable
+string flip_camera
 string gallery_asset_metadata
 string gallery_asset_metadata_default
 string gallery_empty_state
@@ -4058,6 +4067,8 @@ string path_password_eye_mask_visible
 string path_password_strike_through
 string pause
 string play
+string preset_classic
+string preset_hsv
 string retake
 string revert
 string rule_count_format
