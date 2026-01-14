@@ -1,0 +1,45 @@
+io.grin.demo-lifecycle-viewmodel-savedstate-2.7.0-0 C:\Users\fourm\.gradle\caches\8.13\transforms\03525e62818405c9d36ddd601ef86413\transformed\lifecycle-viewmodel-savedstate-2.7.0\res
+io.grin.demo-customview-poolingcontainer-1.0.0-1 C:\Users\fourm\.gradle\caches\8.13\transforms\0a26e12171559937673aefc7d1a36160\transformed\customview-poolingcontainer-1.0.0\res
+io.grin.demo-annotation-experimental-1.3.0-2 C:\Users\fourm\.gradle\caches\8.13\transforms\0f4782fed33548e89db1566bad13bbab\transformed\annotation-experimental-1.3.0\res
+io.grin.demo-appcompat-resources-1.6.1-3 C:\Users\fourm\.gradle\caches\8.13\transforms\13f97639e08e6c9763a6911e2f29fc89\transformed\appcompat-resources-1.6.1\res
+io.grin.demo-camera-core-1.3.2-4 C:\Users\fourm\.gradle\caches\8.13\transforms\15ceff3ddbe35324aa2e4bdef262fdeb\transformed\camera-core-1.3.2\res
+io.grin.demo-lifecycle-process-2.7.0-5 C:\Users\fourm\.gradle\caches\8.13\transforms\194dfae9de3687cf78806913c6bf25ec\transformed\lifecycle-process-2.7.0\res
+io.grin.demo-viewpager2-1.1.0-beta02-6 C:\Users\fourm\.gradle\caches\8.13\transforms\1cd2c0377f98d060d37fc47ad25fdd15\transformed\viewpager2-1.1.0-beta02\res
+io.grin.demo-camera-lifecycle-1.3.2-7 C:\Users\fourm\.gradle\caches\8.13\transforms\2e22d943b74cfae76009bace15460964\transformed\camera-lifecycle-1.3.2\res
+io.grin.demo-lifecycle-runtime-2.7.0-8 C:\Users\fourm\.gradle\caches\8.13\transforms\2fdf2fb8ceafe15fe9a599f6ad5a0de6\transformed\lifecycle-runtime-2.7.0\res
+io.grin.demo-core-1.12.0-9 C:\Users\fourm\.gradle\caches\8.13\transforms\30aa6db08848a766c7d538ef45e05bfc\transformed\core-1.12.0\res
+io.grin.demo-savedstate-ktx-1.2.1-10 C:\Users\fourm\.gradle\caches\8.13\transforms\345831dc2ece48d7825fa8592fe0d8de\transformed\savedstate-ktx-1.2.1\res
+io.grin.demo-lifecycle-livedata-core-2.7.0-11 C:\Users\fourm\.gradle\caches\8.13\transforms\43d999bd7fa380c09b9d1f90e9749a13\transformed\lifecycle-livedata-core-2.7.0\res
+io.grin.demo-activity-1.8.2-12 C:\Users\fourm\.gradle\caches\8.13\transforms\4c29742232857501877d2b010d152cad\transformed\activity-1.8.2\res
+io.grin.demo-coordinatorlayout-1.1.0-13 C:\Users\fourm\.gradle\caches\8.13\transforms\51920f35e6211798a4bc7bced543f0d5\transformed\coordinatorlayout-1.1.0\res
+io.grin.demo-profileinstaller-1.3.0-14 C:\Users\fourm\.gradle\caches\8.13\transforms\52b0fa585218509f259c6344fe5b25ee\transformed\profileinstaller-1.3.0\res
+io.grin.demo-appcompat-1.6.1-15 C:\Users\fourm\.gradle\caches\8.13\transforms\5a35c41360f0fcca50a5056ed83b15bb\transformed\appcompat-1.6.1\res
+io.grin.demo-lifecycle-viewmodel-ktx-2.7.0-16 C:\Users\fourm\.gradle\caches\8.13\transforms\687f901193be3cfcbbc5ab526c5c35b3\transformed\lifecycle-viewmodel-ktx-2.7.0\res
+io.grin.demo-constraintlayout-2.1.4-17 C:\Users\fourm\.gradle\caches\8.13\transforms\68a7d26b3096339bac983b9287e726ad\transformed\constraintlayout-2.1.4\res
+io.grin.demo-camera-camera2-1.3.2-18 C:\Users\fourm\.gradle\caches\8.13\transforms\6e163d9030600bd09db98288caa516d9\transformed\camera-camera2-1.3.2\res
+io.grin.demo-savedstate-1.2.1-19 C:\Users\fourm\.gradle\caches\8.13\transforms\8181bebe415473ec7f8639146bea3115\transformed\savedstate-1.2.1\res
+io.grin.demo-activity-ktx-1.8.2-20 C:\Users\fourm\.gradle\caches\8.13\transforms\8fa1006add94782a951f0fb981fa38d7\transformed\activity-ktx-1.8.2\res
+io.grin.demo-material-1.11.0-21 C:\Users\fourm\.gradle\caches\8.13\transforms\955b9c4f70dc6a6052b14b5fef14dabd\transformed\material-1.11.0\res
+io.grin.demo-lifecycle-livedata-core-ktx-2.7.0-22 C:\Users\fourm\.gradle\caches\8.13\transforms\a8ec8ea85967d569b8b1e43e9a66f3cd\transformed\lifecycle-livedata-core-ktx-2.7.0\res
+io.grin.demo-cardview-1.0.0-23 C:\Users\fourm\.gradle\caches\8.13\transforms\b6ac5d0c9f81e9e7e18d42856eb291ed\transformed\cardview-1.0.0\res
+io.grin.demo-core-ktx-1.12.0-24 C:\Users\fourm\.gradle\caches\8.13\transforms\bbdbf8f94c35f2b310565606c95bf5b4\transformed\core-ktx-1.12.0\res
+io.grin.demo-emoji2-1.2.0-25 C:\Users\fourm\.gradle\caches\8.13\transforms\bbdd917a04e385609a9a101c18c9382d\transformed\emoji2-1.2.0\res
+io.grin.demo-drawerlayout-1.1.1-26 C:\Users\fourm\.gradle\caches\8.13\transforms\c34f6ab9d97f8bc5a74836dee336357a\transformed\drawerlayout-1.1.1\res
+io.grin.demo-core-runtime-2.2.0-27 C:\Users\fourm\.gradle\caches\8.13\transforms\c3e669991c125f316945945b0f1e13b0\transformed\core-runtime-2.2.0\res
+io.grin.demo-startup-runtime-1.1.1-28 C:\Users\fourm\.gradle\caches\8.13\transforms\cd5ebc5fdf07e058e53f307eee668d60\transformed\startup-runtime-1.1.1\res
+io.grin.demo-lifecycle-runtime-ktx-2.7.0-29 C:\Users\fourm\.gradle\caches\8.13\transforms\d420c9a8732c43b675a8e049cc81346b\transformed\lifecycle-runtime-ktx-2.7.0\res
+io.grin.demo-fragment-1.3.6-30 C:\Users\fourm\.gradle\caches\8.13\transforms\d7f52ddf6b2656e3d06712e06bad8c94\transformed\fragment-1.3.6\res
+io.grin.demo-lifecycle-viewmodel-2.7.0-31 C:\Users\fourm\.gradle\caches\8.13\transforms\dc34471290d89515d294472be0f7bb2d\transformed\lifecycle-viewmodel-2.7.0\res
+io.grin.demo-emoji2-views-helper-1.2.0-32 C:\Users\fourm\.gradle\caches\8.13\transforms\e01a2d9056110ecc4bdce170eaecf901\transformed\emoji2-views-helper-1.2.0\res
+io.grin.demo-transition-1.2.0-33 C:\Users\fourm\.gradle\caches\8.13\transforms\e6cb6ba66f71c81c7f65a953d44c761f\transformed\transition-1.2.0\res
+io.grin.demo-lifecycle-livedata-2.7.0-34 C:\Users\fourm\.gradle\caches\8.13\transforms\f2165fb78bc021d79f5a80a0ccdd09ba\transformed\lifecycle-livedata-2.7.0\res
+io.grin.demo-recyclerview-1.3.2-35 C:\Users\fourm\.gradle\caches\8.13\transforms\fb872448dcd2773c7a85c49dcbb389c4\transformed\recyclerview-1.3.2\res
+io.grin.demo-pngs-36 D:\sorted coding\grin\grin\android\demo\build\generated\res\pngs\debug
+io.grin.demo-resValues-37 D:\sorted coding\grin\grin\android\demo\build\generated\res\resValues\debug
+io.grin.demo-updated_navigation_xml-38 D:\sorted coding\grin\grin\android\demo\build\generated\updated_navigation_xml\debug
+io.grin.demo-packageDebugResources-39 D:\sorted coding\grin\grin\android\demo\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+io.grin.demo-packageDebugResources-40 D:\sorted coding\grin\grin\android\demo\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+io.grin.demo-debug-41 D:\sorted coding\grin\grin\android\demo\build\intermediates\merged_res\debug\mergeDebugResources
+io.grin.demo-debug-42 D:\sorted coding\grin\grin\android\demo\src\debug\res
+io.grin.demo-main-43 D:\sorted coding\grin\grin\android\demo\src\main\res
+io.grin.demo-debug-44 D:\sorted coding\grin\grin\android\lib\build\intermediates\packaged_res\debug\packageDebugResources
