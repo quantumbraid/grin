@@ -23,9 +23,28 @@
  */
 package io.grin.demo
 
-// Helper for converting channel indices to hexadecimal labels and back.
+import java.util.Locale
+
+// Helper for converting channel indices to palette labels and back.
 object ChannelLabels {
-    val labels: List<String> = (0..15).map { index -> index.toString(16).uppercase() }
+    val labels: List<String> = listOf(
+        "Orange",
+        "Red",
+        "Light Red",
+        "Pink",
+        "Purple",
+        "Blue",
+        "Light Blue",
+        "Green",
+        "Light Green",
+        "Yellow",
+        "Off White",
+        "White",
+        "Grey",
+        "Black",
+        "Golden Brown",
+        "Dark Brown"
+    )
 
     fun labelFor(channelId: Int): String {
         // Clamp to 0-15 so UI labels remain valid.
@@ -33,8 +52,8 @@ object ChannelLabels {
     }
 
     fun indexOf(label: String): Int {
-        // Normalize input to uppercase hex for consistent lookups.
-        val normalized = label.trim().uppercase()
-        return labels.indexOf(normalized).coerceAtLeast(0)
+        // Normalize input for consistent lookups.
+        val normalized = label.trim().lowercase(Locale.US)
+        return labels.indexOfFirst { it.lowercase(Locale.US) == normalized }.coerceAtLeast(0)
     }
 }

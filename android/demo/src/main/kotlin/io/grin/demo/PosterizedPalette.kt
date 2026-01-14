@@ -37,7 +37,7 @@ data class PosterizedPalette(
     }
 
     companion object {
-        // Returns the default 16-color palette with hex channel labels.
+        // Returns the default 16-color palette with color labels.
         fun defaultPalette(): PosterizedPalette {
             val paletteColors = intArrayOf(
                 Color.rgb(0xFF, 0x80, 0x00),
@@ -57,8 +57,7 @@ data class PosterizedPalette(
                 Color.rgb(0xCC, 0xCC, 0x00),
                 Color.rgb(0x66, 0x66, 0x00)
             )
-            val labels = (0..15).map { index -> index.toString(16).uppercase() }
-            return PosterizedPalette(paletteColors, labels)
+            return PosterizedPalette(paletteColors, ChannelLabels.labels)
         }
     }
 }

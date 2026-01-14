@@ -26,7 +26,9 @@ package io.grin.demo
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -125,6 +127,7 @@ class GridCameraActivity : AppCompatActivity() {
     private fun bindAnalysisUseCase(cameraProvider: ProcessCameraProvider) {
         cameraProvider.unbindAll()
         val palette = PosterizedPalette.defaultPalette()
+        val (baseGridCols, baseGridRows) = computeBaseGridDimensions()
         val performanceConfig = PosterizationPerformanceConfig(
             targetFps = 30,
             fallbackFps = 24,
@@ -133,8 +136,8 @@ class GridCameraActivity : AppCompatActivity() {
             fallbackPaletteSize = palette.colors.size
         )
         val analyzer = PosterizedCameraAnalyzer(
-            baseGridCols = 96,
-            baseGridRows = 128,
+            baseGridCols = baseGridCols,
+            baseGridRows = baseGridRows,
             palette = palette,
             paletteMode = if (useHsvPreset) PaletteMode.HSV_PRESET else PaletteMode.CLASSIC,
             performanceConfig = performanceConfig
@@ -174,6 +177,21 @@ class GridCameraActivity : AppCompatActivity() {
         } catch (exception: Exception) {
             Toast.makeText(this, getString(R.string.camera_start_failed), Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun computeBaseGridDimensions(): Pair<Int, Int> {
+        val (width, height) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = windowManager.currentWindowMetrics.bounds
+            bounds.width() to bounds.height()
+        } else {
+            val metrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(metrics)
+            metrics.widthPixels to metrics.heightPixels
+        }
+        val cols = (width / 10).coerceAtLeast(1)
+        val rows = (height / 10).coerceAtLeast(1)
+        return cols to rows
     }
 
     private fun updatePresetButton() {
