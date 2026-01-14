@@ -66,6 +66,7 @@ grin/
 │   │               │   ├── activity_gallery.xml
 │   │               │   ├── activity_grid_camera.xml
 │   │               │   ├── activity_main.xml
+│   │               │   ├── dialog_camera_settings.xml
 │   │               │   └── item_gallery_asset.xml
 │   │               ├── mipmap-anydpi-v26
 │   │               │   ├── ic_launcher.xml
@@ -25562,6 +25563,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
+import java.util.Arrays
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -25586,14 +25588,34 @@ data class PosterizationPerformanceConfig(
     val fallbackPaletteSize: Int
 )
 
+// Holds user-tunable color adjustments for the camera pipeline.
+class CameraColorAdjustments(
+    contrast: Float,
+    saturation: Float,
+    brightness: Float
+) {
+    // Volatile fields keep analyzer reads in sync with UI slider updates.
+    @Volatile var contrast: Float = contrast
+    @Volatile var saturation: Float = saturation
+    @Volatile var brightness: Float = brightness
+}
+
+enum class PaletteMode {
+    CLASSIC,
+    HSV_PRESET
+}
+
 // Analyzer that converts camera frames into posterized, grid-aligned bitmaps.
 class PosterizedCameraAnalyzer(
     private val baseGridCols: Int,
     private val baseGridRows: Int,
     private val palette: PosterizedPalette,
     private val performanceConfig: PosterizationPerformanceConfig,
+    private val paletteMode: PaletteMode,
+    private val colorAdjustments: CameraColorAdjustments,
     private val onFrame: (PosterizedFrame) -> Unit
 ) : ImageAnalysis.Analyzer {
+    private val whiteColor = Color.rgb(0xFF, 0xFF, 0xFF)
     private var lastFrameTimestampNs: Long = 0L
     private var useFallbackSettings: Boolean = false
 
@@ -25629,7 +25651,13 @@ class PosterizedCameraAnalyzer(
             palette
         }
 
-        val frame = buildPosterizedFrame(image, effectiveGridCols, effectiveGridRows, effectivePalette)
+        val frame = buildPosterizedFrame(
+            image,
+            effectiveGridCols,
+            effectiveGridRows,
+            effectivePalette,
+            image.imageInfo.rotationDegrees
+        )
         val elapsedMs = System.currentTimeMillis() - startTimeMs
         useFallbackSettings = elapsedMs > performanceConfig.slowdownThresholdMs
         onFrame(frame)
@@ -25640,23 +25668,138 @@ class PosterizedCameraAnalyzer(
         image: ImageProxy,
         gridCols: Int,
         gridRows: Int,
-        palette: PosterizedPalette
+        palette: PosterizedPalette,
+        rotationDegrees: Int
     ): PosterizedFrame {
-        val crop = computeCenterCrop(image.width, image.height, gridCols, gridRows)
+        val normalizedRotation = ((rotationDegrees % 360) + 360) % 360
+        val adjustedRotation = (normalizedRotation + 180) % 360
+        val rotatedWidth = if (adjustedRotation == 90 || adjustedRotation == 270) {
+            image.height
+        } else {
+            image.width
+        }
+        val rotatedHeight = if (adjustedRotation == 90 || adjustedRotation == 270) {
+            image.width
+        } else {
+            image.height
+        }
+        val crop = computeCenterCrop(rotatedWidth, rotatedHeight, gridCols, gridRows)
         val bitmap = Bitmap.createBitmap(gridCols, gridRows, Bitmap.Config.ARGB_8888)
-        val paletteIndices = IntArray(gridCols * gridRows)
+        bitmap.eraseColor(whiteColor)
+        val pixelCount = gridCols * gridRows
+        var paletteIndices = IntArray(pixelCount)
         // Track per-bin counts for channel assignment and gallery metadata.
         val histogram = IntArray(palette.colors.size)
 
-        for (row in 0 until gridRows) {
-            val sourceY = crop.top + ((row + 0.5f) * crop.height / gridRows).roundToInt()
-            for (col in 0 until gridCols) {
-                val sourceX = crop.left + ((col + 0.5f) * crop.width / gridCols).roundToInt()
-                val rgb = readRgbFromYuv(image, sourceX, sourceY)
-                val paletteIndex = findNearestPaletteIndex(rgb, palette.colors)
-                bitmap.setPixel(col, row, palette.colors[paletteIndex])
-                paletteIndices[row * gridCols + col] = paletteIndex
-                histogram[paletteIndex] += 1
+        if (paletteMode == PaletteMode.HSV_PRESET) {
+            val paletteHsv = Array(palette.colors.size) { FloatArray(3) }
+            for (index in palette.colors.indices) {
+                val color = palette.colors[index]
+                Color.RGBToHSV(
+                    Color.red(color),
+                    Color.green(color),
+                    Color.blue(color),
+                    paletteHsv[index]
+                )
+            }
+
+            for (row in 0 until gridRows) {
+                for (col in 0 until gridCols) {
+                    val representative = sampleMedianColor(
+                        image,
+                        crop,
+                        gridCols,
+                        gridRows,
+                        row,
+                        col,
+                        adjustedRotation
+                    )
+                    val hsv = FloatArray(3)
+                    Color.RGBToHSV(
+                        Color.red(representative),
+                        Color.green(representative),
+                        Color.blue(representative),
+                        hsv
+                    )
+                    val adjustedHsv = adjustHsvAdaptive(hsv, colorAdjustments)
+                    val paletteIndex = findNearestPresetIndexByHsv(
+                        adjustedHsv,
+                        paletteHsv,
+                        isSkinTone(adjustedHsv)
+                    )
+                    paletteIndices[row * gridCols + col] = paletteIndex
+                }
+            }
+
+            paletteIndices = stabilizePaletteIndices(
+                paletteIndices,
+                gridCols,
+                gridRows,
+                palette.colors.size
+            )
+
+            for (row in 0 until gridRows) {
+                for (col in 0 until gridCols) {
+                    val index = row * gridCols + col
+                    val paletteIndex = paletteIndices[index]
+                    val paletteColor = palette.colors[paletteIndex]
+                    if (paletteColor != whiteColor) {
+                        bitmap.setPixel(col, row, paletteColor)
+                    }
+                    histogram[paletteIndex] += 1
+                }
+            }
+        } else {
+            val rawColors = IntArray(pixelCount)
+            val lumaHistogram = IntArray(256)
+
+            for (row in 0 until gridRows) {
+                val rotatedY = crop.top + ((row + 0.5f) * crop.height / gridRows).roundToInt()
+                for (col in 0 until gridCols) {
+                    val rotatedX = crop.left + ((col + 0.5f) * crop.width / gridCols).roundToInt()
+                    val sourceX: Int
+                    val sourceY: Int
+                    when (adjustedRotation) {
+                        90 -> {
+                            sourceX = image.width - 1 - rotatedY
+                            sourceY = rotatedX
+                        }
+                        180 -> {
+                            sourceX = image.width - 1 - rotatedX
+                            sourceY = image.height - 1 - rotatedY
+                        }
+                        270 -> {
+                            sourceX = rotatedY
+                            sourceY = image.height - 1 - rotatedX
+                        }
+                        else -> {
+                            sourceX = rotatedX
+                            sourceY = rotatedY
+                        }
+                    }
+                    val rgb = readRgbFromYuv(image, sourceX, sourceY)
+                    val index = row * gridCols + col
+                    rawColors[index] = rgb
+                    val luma = computeLuma(rgb)
+                    lumaHistogram[luma] += 1
+                }
+            }
+
+            val blackPoint = percentileFromHistogram(lumaHistogram, pixelCount, 0.02)
+            val whitePoint = percentileFromHistogram(lumaHistogram, pixelCount, 0.98)
+
+            for (row in 0 until gridRows) {
+                for (col in 0 until gridCols) {
+                    val index = row * gridCols + col
+                    val adjusted = adjustColor(rawColors[index], blackPoint, whitePoint, colorAdjustments)
+                    val paletteIndex = findNearestPaletteIndex(adjusted, palette.colors)
+                    val paletteColor = palette.colors[paletteIndex]
+                    if (paletteColor != whiteColor) {
+                        bitmap.setPixel(col, row, paletteColor)
+                    }
+                    paletteIndices[index] = paletteIndex
+                    histogram[paletteIndex] += 1
+                }
             }
         }
 
@@ -25691,6 +25834,61 @@ class PosterizedCameraAnalyzer(
         }
     }
 
+    private fun sampleMedianColor(
+        image: ImageProxy,
+        crop: CropRect,
+        gridCols: Int,
+        gridRows: Int,
+        row: Int,
+        col: Int,
+        rotation: Int
+    ): Int {
+        val samplesPerSide = 3
+        val sampleCount = samplesPerSide * samplesPerSide
+        val reds = IntArray(sampleCount)
+        val greens = IntArray(sampleCount)
+        val blues = IntArray(sampleCount)
+        var sampleIndex = 0
+        for (sampleRow in 0 until samplesPerSide) {
+            val rotatedY = crop.top +
+                ((row + (sampleRow + 0.5f) / samplesPerSide) * crop.height / gridRows).roundToInt()
+            for (sampleCol in 0 until samplesPerSide) {
+                val rotatedX = crop.left +
+                    ((col + (sampleCol + 0.5f) / samplesPerSide) * crop.width / gridCols).roundToInt()
+                val sourceX: Int
+                val sourceY: Int
+                when (rotation) {
+                    90 -> {
+                        sourceX = image.width - 1 - rotatedY
+                        sourceY = rotatedX
+                    }
+                    180 -> {
+                        sourceX = image.width - 1 - rotatedX
+                        sourceY = image.height - 1 - rotatedY
+                    }
+                    270 -> {
+                        sourceX = rotatedY
+                        sourceY = image.height - 1 - rotatedX
+                    }
+                    else -> {
+                        sourceX = rotatedX
+                        sourceY = rotatedY
+                    }
+                }
+                val rgb = readRgbFromYuv(image, sourceX, sourceY)
+                reds[sampleIndex] = Color.red(rgb)
+                greens[sampleIndex] = Color.green(rgb)
+                blues[sampleIndex] = Color.blue(rgb)
+                sampleIndex += 1
+            }
+        }
+        Arrays.sort(reds)
+        Arrays.sort(greens)
+        Arrays.sort(blues)
+        val mid = sampleCount / 2
+        return Color.rgb(reds[mid], greens[mid], blues[mid])
+    }
+
     private fun readRgbFromYuv(image: ImageProxy, x: Int, y: Int): Int {
         // Convert a single YUV_420_888 pixel to RGB using the standard formula.
         val yPlane = image.planes[0]
@@ -25718,29 +25916,218 @@ class PosterizedCameraAnalyzer(
         return value.coerceIn(0, 255)
     }
 
-    private fun findNearestPaletteIndex(rgb: Int, palette: IntArray): Int {
-        // Find the palette entry with the smallest Euclidean distance in RGB space.
+    private fun computeLuma(rgb: Int): Int {
         val red = Color.red(rgb)
         val green = Color.green(rgb)
         val blue = Color.blue(rgb)
+        val luma = (0.2126f * red + 0.7152f * green + 0.0722f * blue).roundToInt()
+        return luma.coerceIn(0, 255)
+    }
+
+    private fun percentileFromHistogram(histogram: IntArray, total: Int, percentile: Double): Int {
+        if (total <= 0) {
+            return 0
+        }
+        val target = (total * percentile).roundToInt().coerceIn(0, total)
+        var cumulative = 0
+        for (value in histogram.indices) {
+            cumulative += histogram[value]
+            if (cumulative >= target) {
+                return value
+            }
+        }
+        return histogram.size - 1
+    }
+
+    private fun adjustColor(
+        rgb: Int,
+        blackPoint: Int,
+        whitePoint: Int,
+        adjustments: CameraColorAdjustments
+    ): Int {
+        val red = Color.red(rgb)
+        val green = Color.green(rgb)
+        val blue = Color.blue(rgb)
+        val range = (whitePoint - blackPoint).coerceAtLeast(1)
+        val normalizedRed = ((red - blackPoint) / range.toFloat()).coerceIn(0f, 1f)
+        val normalizedGreen = ((green - blackPoint) / range.toFloat()).coerceIn(0f, 1f)
+        val normalizedBlue = ((blue - blackPoint) / range.toFloat()).coerceIn(0f, 1f)
+
+        // Apply user-tunable contrast before HSV adjustments.
+        val contrast = 1.18f * adjustments.contrast
+        val contrastedRed = ((normalizedRed - 0.5f) * contrast + 0.5f).coerceIn(0f, 1f)
+        val contrastedGreen = ((normalizedGreen - 0.5f) * contrast + 0.5f).coerceIn(0f, 1f)
+        val contrastedBlue = ((normalizedBlue - 0.5f) * contrast + 0.5f).coerceIn(0f, 1f)
+
+        val hsv = FloatArray(3)
+        Color.RGBToHSV(
+            (contrastedRed * 255f).roundToInt(),
+            (contrastedGreen * 255f).roundToInt(),
+            (contrastedBlue * 255f).roundToInt(),
+            hsv
+        )
+        // Apply user-tunable saturation/brightness before palette mapping.
+        hsv[1] = (hsv[1] * 1.35f * adjustments.saturation).coerceIn(0f, 1f)
+        hsv[2] = (hsv[2] * 1.08f * adjustments.brightness).coerceIn(0f, 1f)
+        return Color.HSVToColor(hsv)
+    }
+
+    private fun adjustHsvAdaptive(hsv: FloatArray, adjustments: CameraColorAdjustments): FloatArray {
+        val value = hsv[2]
+        val saturation = hsv[1]
+        val saturationBoost = when {
+            value < 0.35f -> 1.25f
+            value < 0.6f -> 1.12f
+            else -> 1.0f
+        }
+        val valueBoost = when {
+            value < 0.35f -> 1.18f
+            value < 0.6f -> 1.06f
+            else -> 1.0f
+        }
+        val adjusted = FloatArray(3)
+        adjusted[0] = hsv[0]
+        // Apply user-tunable adjustments while preserving the adaptive boost.
+        adjusted[1] = (saturation * saturationBoost * adjustments.saturation).coerceIn(0f, 1f)
+        val boostedValue = (value * valueBoost * adjustments.brightness).coerceIn(0f, 1f)
+        adjusted[2] = ((boostedValue - 0.5f) * adjustments.contrast + 0.5f).coerceIn(0f, 1f)
+        return adjusted
+    }
+
+    private fun isSkinTone(hsv: FloatArray): Boolean {
+        val hue = hsv[0]
+        val saturation = hsv[1]
+        val value = hsv[2]
+        return hue >= 10f && hue <= 45f &&
+            saturation >= 0.18f && saturation <= 0.6f &&
+            value >= 0.35f && value <= 0.95f
+    }
+
+    private fun findNearestPresetIndexByHsv(
+        hsv: FloatArray,
+        paletteHsv: Array<FloatArray>,
+        skinBias: Boolean
+    ): Int {
+        val hue = hsv[0]
+        val saturation = hsv[1]
+        val value = hsv[2]
+        val neutral = saturation < 0.15f || value < 0.12f || value > 0.92f
+        val hueWeight = if (neutral) {
+            0.1f
+        } else {
+            0.6f + 1.4f * saturation
+        }
+        val saturationWeight = if (neutral) 1.4f else 1.0f
+        val valueWeight = if (neutral) 1.2f else 1.0f
         var bestIndex = 0
-        var bestDistance = Double.MAX_VALUE
-        for (index in palette.indices) {
-            val paletteColor = palette[index]
-            val distance = colorDistance(
-                red,
-                green,
-                blue,
-                Color.red(paletteColor),
-                Color.green(paletteColor),
-                Color.blue(paletteColor)
-            )
+        var bestDistance = Float.MAX_VALUE
+        for (index in paletteHsv.indices) {
+            val target = paletteHsv[index]
+            val hueDelta = hueDistance(hue, target[0]) / 180f
+            val saturationDelta = saturation - target[1]
+            val valueDelta = value - target[2]
+            var distance =
+                hueDelta * hueDelta * hueWeight +
+                    saturationDelta * saturationDelta * saturationWeight +
+                    valueDelta * valueDelta * valueWeight
+            if (skinBias && index == PALETTE_LIGHT_RED) {
+                distance *= 0.7f
+            }
             if (distance < bestDistance) {
                 bestDistance = distance
                 bestIndex = index
             }
         }
         return bestIndex
+    }
+
+    private fun stabilizePaletteIndices(
+        indices: IntArray,
+        gridCols: Int,
+        gridRows: Int,
+        paletteSize: Int
+    ): IntArray {
+        val output = indices.copyOf()
+        val counts = IntArray(paletteSize)
+        for (row in 0 until gridRows) {
+            for (col in 0 until gridCols) {
+                counts.fill(0)
+                val index = row * gridCols + col
+                for (dy in -1..1) {
+                    val neighborRow = row + dy
+                    if (neighborRow < 0 || neighborRow >= gridRows) continue
+                    for (dx in -1..1) {
+                        if (dx == 0 && dy == 0) continue
+                        val neighborCol = col + dx
+                        if (neighborCol < 0 || neighborCol >= gridCols) continue
+                        val neighborIndex = neighborRow * gridCols + neighborCol
+                        counts[indices[neighborIndex]] += 1
+                    }
+                }
+                val current = indices[index]
+                var majority = current
+                var majorityCount = counts[current]
+                for (paletteIndex in 0 until paletteSize) {
+                    if (counts[paletteIndex] > majorityCount) {
+                        majorityCount = counts[paletteIndex]
+                        majority = paletteIndex
+                    }
+                }
+                if (majority != current && majorityCount >= 4 && counts[current] <= 1) {
+                    output[index] = majority
+                }
+            }
+        }
+        return output
+    }
+
+    private fun hueDistance(a: Float, b: Float): Float {
+        val delta = kotlin.math.abs(a - b)
+        return kotlin.math.min(delta, 360f - delta)
+    }
+
+    private fun findNearestPaletteIndex(rgb: Int, palette: IntArray): Int {
+        // Find the palette entry with the smallest Euclidean distance in RGB space.
+        val red = Color.red(rgb)
+        val green = Color.green(rgb)
+        val blue = Color.blue(rgb)
+        val inputSaturation = colorSaturation(red, green, blue)
+        var bestIndex = 0
+        var bestDistance = Double.MAX_VALUE
+        for (index in palette.indices) {
+            val paletteColor = palette[index]
+            val paletteRed = Color.red(paletteColor)
+            val paletteGreen = Color.green(paletteColor)
+            val paletteBlue = Color.blue(paletteColor)
+            val paletteSaturation = colorSaturation(paletteRed, paletteGreen, paletteBlue)
+            val saturationPenalty = if (inputSaturation > 0.04) {
+                (1.0 - paletteSaturation) * 120.0 * inputSaturation
+            } else {
+                0.0
+            }
+            val distance = colorDistance(
+                red,
+                green,
+                blue,
+                paletteRed,
+                paletteGreen,
+                paletteBlue
+            ) + saturationPenalty
+            if (distance < bestDistance) {
+                bestDistance = distance
+                bestIndex = index
+            }
+        }
+        return bestIndex
+    }
+
+    private fun colorSaturation(red: Int, green: Int, blue: Int): Double {
+        val maxChannel = maxOf(red, green, blue).toDouble()
+        val minChannel = minOf(red, green, blue).toDouble()
+        if (maxChannel <= 0.0) {
+            return 0.0
+        }
+        return (maxChannel - minChannel) / maxChannel
     }
 
     private fun colorDistance(
@@ -25759,6 +26146,25 @@ class PosterizedCameraAnalyzer(
 
     // Stores crop origin and dimensions for the grid-aligned sampling area.
     private data class CropRect(val left: Int, val top: Int, val width: Int, val height: Int)
+
+    private companion object {
+        const val PALETTE_ORANGE = 0
+        const val PALETTE_RED = 1
+        const val PALETTE_LIGHT_RED = 2
+        const val PALETTE_PINK = 3
+        const val PALETTE_PURPLE = 4
+        const val PALETTE_BLUE = 5
+        const val PALETTE_LIGHT_BLUE = 6
+        const val PALETTE_GREEN = 7
+        const val PALETTE_LIGHT_GREEN = 8
+        const val PALETTE_YELLOW = 9
+        const val PALETTE_OFF_WHITE = 10
+        const val PALETTE_WHITE = 11
+        const val PALETTE_GREY = 12
+        const val PALETTE_BLACK = 13
+        const val PALETTE_GOLDEN_BROWN = 14
+        const val PALETTE_DARK_BROWN = 15
+    }
 }
 
 ---
@@ -25791,14 +26197,20 @@ package io.grin.demo
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraInfoUnavailableException
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.slider.Slider
 import io.grin.demo.databinding.ActivityGridCameraBinding
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -25808,6 +26220,17 @@ class GridCameraActivity : AppCompatActivity() {
     private lateinit var binding: ActivityGridCameraBinding
     private lateinit var cameraExecutor: ExecutorService
     private var latestFrame: PosterizedFrame? = null
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var activeCamera: Camera? = null
+    private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
+    private var torchEnabled: Boolean = false
+    private var useHsvPreset: Boolean = false
+    // Keep shared color adjustments that are updated by the settings sliders.
+    private val colorAdjustments = CameraColorAdjustments(
+        contrast = 1.0f,
+        saturation = 1.0f,
+        brightness = 1.0f
+    )
 
     private val permissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -25840,6 +26263,16 @@ class GridCameraActivity : AppCompatActivity() {
                 Toast.makeText(this, getString(R.string.capture_no_frame), Toast.LENGTH_SHORT).show()
             }
         }
+        binding.presetButton.setOnClickListener {
+            useHsvPreset = !useHsvPreset
+            updatePresetButton()
+            cameraProvider?.let { provider -> bindAnalysisUseCase(provider) }
+        }
+        binding.flashButton.setOnClickListener { toggleFlash() }
+        binding.flipButton.setOnClickListener { toggleCamera() }
+        binding.settingsButton.setOnClickListener { showSettingsDialog() }
+
+        updatePresetButton()
 
         if (hasCameraPermission()) {
             startCamera()
@@ -25864,6 +26297,7 @@ class GridCameraActivity : AppCompatActivity() {
         cameraProviderFuture.addListener(
             {
                 val cameraProvider = cameraProviderFuture.get()
+                this.cameraProvider = cameraProvider
                 bindAnalysisUseCase(cameraProvider)
             },
             ContextCompat.getMainExecutor(this)
@@ -25873,17 +26307,20 @@ class GridCameraActivity : AppCompatActivity() {
     private fun bindAnalysisUseCase(cameraProvider: ProcessCameraProvider) {
         cameraProvider.unbindAll()
         val palette = PosterizedPalette.defaultPalette()
+        val (baseGridCols, baseGridRows) = computeBaseGridDimensions()
         val performanceConfig = PosterizationPerformanceConfig(
             targetFps = 30,
             fallbackFps = 24,
             slowdownThresholdMs = 42,
             fallbackGridScale = 0.75f,
-            fallbackPaletteSize = 12
+            fallbackPaletteSize = palette.colors.size
         )
         val analyzer = PosterizedCameraAnalyzer(
-            baseGridCols = 48,
-            baseGridRows = 64,
+            baseGridCols = baseGridCols,
+            baseGridRows = baseGridRows,
             palette = palette,
+            paletteMode = if (useHsvPreset) PaletteMode.HSV_PRESET else PaletteMode.CLASSIC,
+            colorAdjustments = colorAdjustments,
             performanceConfig = performanceConfig
         ) { frame ->
             runOnUiThread {
@@ -25907,16 +26344,120 @@ class GridCameraActivity : AppCompatActivity() {
         }
 
         val analysis = ImageAnalysis.Builder()
+            .setTargetRotation(binding.posterizedPreview.display.rotation)
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .build()
             .also { it.setAnalyzer(cameraExecutor, analyzer) }
 
-        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+        val cameraSelector = CameraSelector.Builder()
+            .requireLensFacing(lensFacing)
+            .build()
         try {
-            cameraProvider.bindToLifecycle(this, cameraSelector, analysis)
+            activeCamera = cameraProvider.bindToLifecycle(this, cameraSelector, analysis)
+            updateFlashButtonState()
         } catch (exception: Exception) {
             Toast.makeText(this, getString(R.string.camera_start_failed), Toast.LENGTH_LONG).show()
         }
+    }
+
+    private fun computeBaseGridDimensions(): Pair<Int, Int> {
+        val (width, height) = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = windowManager.currentWindowMetrics.bounds
+            bounds.width() to bounds.height()
+        } else {
+            val metrics = DisplayMetrics()
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getRealMetrics(metrics)
+            metrics.widthPixels to metrics.heightPixels
+        }
+        val cols = (width / 10).coerceAtLeast(1)
+        val rows = (height / 10).coerceAtLeast(1)
+        return cols to rows
+    }
+
+    private fun updatePresetButton() {
+        binding.presetButton.text = getString(
+            if (useHsvPreset) R.string.preset_hsv else R.string.preset_classic
+        )
+    }
+
+    private fun showSettingsDialog() {
+        // Inflate the slider UI and bind the current adjustment values.
+        val dialogView = layoutInflater.inflate(R.layout.dialog_camera_settings, null)
+        val contrastSlider = dialogView.findViewById<Slider>(R.id.contrastSlider)
+        val saturationSlider = dialogView.findViewById<Slider>(R.id.saturationSlider)
+        val brightnessSlider = dialogView.findViewById<Slider>(R.id.brightnessSlider)
+
+        contrastSlider.value = colorAdjustments.contrast
+        saturationSlider.value = colorAdjustments.saturation
+        brightnessSlider.value = colorAdjustments.brightness
+
+        // Update the shared adjustments as the sliders move.
+        contrastSlider.addOnChangeListener { _, value, _ ->
+            colorAdjustments.contrast = value
+        }
+        saturationSlider.addOnChangeListener { _, value, _ ->
+            colorAdjustments.saturation = value
+        }
+        brightnessSlider.addOnChangeListener { _, value, _ ->
+            colorAdjustments.brightness = value
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.camera_settings)
+            .setView(dialogView)
+            .setPositiveButton(R.string.close) { dialog, _ ->
+                // Close the settings dialog when the user is done.
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+
+    private fun toggleCamera() {
+        val provider = cameraProvider ?: return
+        val nextFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+            CameraSelector.LENS_FACING_FRONT
+        } else {
+            CameraSelector.LENS_FACING_BACK
+        }
+        val selector = CameraSelector.Builder()
+            .requireLensFacing(nextFacing)
+            .build()
+        val hasCamera = try {
+            provider.hasCamera(selector)
+        } catch (exception: CameraInfoUnavailableException) {
+            false
+        }
+        if (!hasCamera) {
+            Toast.makeText(this, getString(R.string.camera_unavailable), Toast.LENGTH_SHORT).show()
+            return
+        }
+        lensFacing = nextFacing
+        torchEnabled = false
+        bindAnalysisUseCase(provider)
+    }
+
+    private fun toggleFlash() {
+        val camera = activeCamera
+        if (camera == null || !camera.cameraInfo.hasFlashUnit()) {
+            torchEnabled = false
+            updateFlashButtonState()
+            Toast.makeText(this, getString(R.string.flash_unavailable), Toast.LENGTH_SHORT).show()
+            return
+        }
+        torchEnabled = !torchEnabled
+        camera.cameraControl.enableTorch(torchEnabled)
+        updateFlashButtonState()
+    }
+
+    private fun updateFlashButtonState() {
+        val hasFlash = activeCamera?.cameraInfo?.hasFlashUnit() == true
+        if (!hasFlash) {
+            torchEnabled = false
+        }
+        binding.flashButton.isEnabled = hasFlash
+        binding.flashButton.text = getString(if (torchEnabled) R.string.flash_on else R.string.flash_off)
     }
 }
 
@@ -27714,66 +28255,292 @@ FILE: android/demo/src/main/res/layout/activity_grid_camera.xml
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/gridCameraRoot"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/previewTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/grid_camera_title"
-        android:textStyle="bold" />
-
-    <FrameLayout
-        android:layout_width="match_parent"
+    <!-- Camera preview occupies the full background. -->
+    <ImageView
+        android:id="@+id/posterizedPreview"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_weight="1">
+        android:background="@android:color/white"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView
-            android:id="@+id/posterizedPreview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@android:color/black"
-            android:scaleType="fitCenter" />
+    <!-- Grid overlay sits above the preview. -->
+    <io.grin.demo.GridOverlayView
+        android:id="@+id/gridOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <io.grin.demo.GridOverlayView
-            android:id="@+id/gridOverlay"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-    </FrameLayout>
+    <!-- 6-column guidelines for control placement. -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.1667" />
 
-    <TextView
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.3333" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.6667" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.8333" />
+
+    <!-- 9-row guidelines for control placement. -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.1111" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.2222" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.3333" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.4444" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5556" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.6667" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.7778" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.8889" />
+
+    <!-- Performance readout stays tucked in the top-left corner. -->
+    <com.google.android.material.textview.MaterialTextView
         android:id="@+id/performanceText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#99000000"
+        android:padding="8dp"
+        android:text="@string/camera_performance_default"
+        android:textColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="12dp" />
+
+    <!-- Flash button (row 1, column 2). -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/flashButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/flash_off"
+        app:layout_constraintBottom_toTopOf="@id/row1"
+        app:layout_constraintEnd_toStartOf="@id/col2"
+        app:layout_constraintStart_toStartOf="@id/col1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Settings button (row 1, column 5). -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/settingsButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/camera_settings"
+        app:layout_constraintBottom_toTopOf="@id/row1"
+        app:layout_constraintEnd_toStartOf="@id/col5"
+        app:layout_constraintStart_toStartOf="@id/col4"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Mode button (row 8, column 2). -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/presetButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/preset_classic"
+        app:layout_constraintBottom_toTopOf="@id/row8"
+        app:layout_constraintEnd_toStartOf="@id/col2"
+        app:layout_constraintStart_toStartOf="@id/col1"
+        app:layout_constraintTop_toTopOf="@id/row7" />
+
+    <!-- Flip camera button (row 8, column 5). -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/flipButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/flip_camera"
+        app:layout_constraintBottom_toTopOf="@id/row8"
+        app:layout_constraintEnd_toStartOf="@id/col5"
+        app:layout_constraintStart_toStartOf="@id/col4"
+        app:layout_constraintTop_toTopOf="@id/row7" />
+
+    <!-- Capture button spans row 9, columns 3-4. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/captureButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/capture"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/col4"
+        app:layout_constraintStart_toStartOf="@id/col2"
+        app:layout_constraintTop_toTopOf="@id/row8" />
+
+    <!-- Close button stays accessible in the top-right corner. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/closeButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="12dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+---
+FILE: android/demo/src/main/res/layout/dialog_camera_settings.xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <!-- Contrast control slider. -->
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/camera_contrast" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/contrastSlider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/camera_performance_default" />
+        android:valueFrom="0.6"
+        android:valueTo="1.6"
+        android:value="1.0"
+        android:stepSize="0.05"
+        android:layout_marginBottom="16dp" />
 
-    <LinearLayout
+    <!-- Saturation control slider. -->
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/camera_saturation" />
+
+    <com.google.android.material.slider.Slider
+        android:id="@+id/saturationSlider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:gravity="center_horizontal"
-        android:orientation="horizontal">
+        android:valueFrom="0.6"
+        android:valueTo="1.6"
+        android:value="1.0"
+        android:stepSize="0.05"
+        android:layout_marginBottom="16dp" />
 
-        <Button
-            android:id="@+id/captureButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/capture" />
+    <!-- Brightness control slider. -->
+    <com.google.android.material.textview.MaterialTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/camera_brightness" />
 
-        <Button
-            android:id="@+id/closeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="@string/close" />
-    </LinearLayout>
+    <com.google.android.material.slider.Slider
+        android:id="@+id/brightnessSlider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:valueFrom="0.6"
+        android:valueTo="1.6"
+        android:value="1.0"
+        android:stepSize="0.05" />
 </LinearLayout>
 
 ---
@@ -28336,6 +29103,18 @@ FILE: android/demo/src/main/res/values/strings.xml
     <string name="camera_performance_format">Grid: %1$d × %2$d · Palette: %3$d</string>
     <string name="close">Close</string>
     <string name="capture">Capture</string>
+
+    <string name="flash_off">Flash Off</string>
+    <string name="flash_on">Flash On</string>
+    <string name="flip_camera">Flip Camera</string>
+    <string name="camera_settings">Settings</string>
+    <string name="camera_contrast">Contrast</string>
+    <string name="camera_saturation">Saturation</string>
+    <string name="camera_brightness">Brightness</string>
+    <string name="preset_classic">Preset: Classic</string>
+    <string name="preset_hsv">Preset: HSV</string>
+    <string name="flash_unavailable">Flash not available on this camera.</string>
+    <string name="camera_unavailable">Requested camera not available.</string>
     <string name="capture_review_title">Capture Review</string>
     <string name="capture_metadata_default">Grid: -- × -- · Bins: --</string>
     <string name="capture_metadata_format">Grid: %1$d × %2$d · Bins: %3$d</string>
@@ -28589,6 +29368,7 @@ FILE: docs/android-grid-camera-ux.md
 1. **Camera Preview**
    - Live posterized preview with grid overlay.
    - Primary actions: capture, toggle grid, palette view, settings.
+   - Settings opens a popup window with contrast, saturation, and brightness sliders that apply before posterization.
 2. **Capture Review**
    - Frozen posterized frame with channel mapping summary.
    - Actions: accept (save GRIM/GRIN), retake, open editor.
@@ -28653,7 +29433,7 @@ FILE: docs/android-grid-camera-ux.md
 - Use CPU posterization with nearest-palette matching; keep frames capped by analysis FPS.
 
 ### Channel Mapping Rules
-- Assign bins to channels 0-9/A-F using stable sort by frequency, then luminance.
+- Assign bins to channels 0-9/A-F using a stable sort by frequency.
 - Keep a deterministic mapping table in `channelMap` to guarantee replayability.
 - Provide editor overrides that reassign channels without re-running posterization.
 
@@ -28670,7 +29450,14 @@ FILE: docs/android-grid-camera-ux.md
 
 ### PNG Snapshot
 - Export an ARGB_8888 bitmap with alpha preserved from the posterized preview.
+  - Implementation detail: snapshot renders the updated GRIN file at tick 0 using the playback engine.
 
 ### GIF Loop
 - Render 12-15 frames from GRIN playback at fixed tick intervals.
 - Package as a looping GIF with consistent palette ordering.
+  - Implementation detail: loop renders 12 frames at a 1-tick step using the current header tick rate.
+
+### Export Validation + Storage
+- Store exports in the app-scoped `grin_gallery/exports` directory with deterministic filenames.
+- Validate PNG snapshots by decoding and confirming dimensions and key pixels.
+- Validate GIF loops by decoding the header and ensuring frame dimensions match the source.

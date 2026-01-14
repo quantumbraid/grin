@@ -23,100 +23,208 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/gridCameraRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Camera preview occupies the full background. -->
     <ImageView
         android:id="@+id/posterizedPreview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:background="@android:color/white"
-        android:scaleType="centerCrop" />
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Grid overlay sits above the preview. -->
     <io.grin.demo.GridOverlayView
         android:id="@+id/gridOverlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:id="@+id/topControls"
+    <!-- 6-column guidelines for control placement. -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#99C0C0C0"
-        android:gravity="center_horizontal"
-        android:layout_gravity="top|center_horizontal"
-        android:padding="16dp">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/closeButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/close" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/bottomControls"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:background="#99C0C0C0"
-        android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:padding="16dp">
+        app:layout_constraintGuide_percent="0.1667" />
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/performanceText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/camera_performance_default" />
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.3333" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center_horizontal"
-            android:orientation="horizontal">
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/flashButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/flash_off" />
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.6667" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/flipButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="@string/flip_camera" />
-        </LinearLayout>
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/col5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.8333" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center_horizontal"
-            android:orientation="horizontal">
+    <!-- 9-row guidelines for control placement. -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.1111" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/captureButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/capture" />
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.2222" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/presetButton"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:text="@string/preset_classic" />
-        </LinearLayout>
-    </LinearLayout>
-</FrameLayout>
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.3333" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.4444" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5556" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row6"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.6667" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.7778" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/row8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.8889" />
+
+    <!-- Performance readout stays tucked in the top-left corner. -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/performanceText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="#99000000"
+        android:padding="8dp"
+        android:text="@string/camera_performance_default"
+        android:textColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="12dp" />
+
+    <!-- Flash button (row 1, column 2). -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/flashButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/flash_off"
+        app:layout_constraintBottom_toTopOf="@id/row1"
+        app:layout_constraintEnd_toStartOf="@id/col2"
+        app:layout_constraintStart_toStartOf="@id/col1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Settings button (row 1, column 5). -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/settingsButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/camera_settings"
+        app:layout_constraintBottom_toTopOf="@id/row1"
+        app:layout_constraintEnd_toStartOf="@id/col5"
+        app:layout_constraintStart_toStartOf="@id/col4"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Mode button (row 8, column 2). -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/presetButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/preset_classic"
+        app:layout_constraintBottom_toTopOf="@id/row8"
+        app:layout_constraintEnd_toStartOf="@id/col2"
+        app:layout_constraintStart_toStartOf="@id/col1"
+        app:layout_constraintTop_toTopOf="@id/row7" />
+
+    <!-- Flip camera button (row 8, column 5). -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/flipButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/flip_camera"
+        app:layout_constraintBottom_toTopOf="@id/row8"
+        app:layout_constraintEnd_toStartOf="@id/col5"
+        app:layout_constraintStart_toStartOf="@id/col4"
+        app:layout_constraintTop_toTopOf="@id/row7" />
+
+    <!-- Capture button spans row 9, columns 3-4. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/captureButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/capture"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/col4"
+        app:layout_constraintStart_toStartOf="@id/col2"
+        app:layout_constraintTop_toTopOf="@id/row8" />
+
+    <!-- Close button stays accessible in the top-right corner. -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/closeButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="12dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>

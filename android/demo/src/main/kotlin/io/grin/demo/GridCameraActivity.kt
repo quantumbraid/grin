@@ -38,6 +38,8 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.slider.Slider
 import io.grin.demo.databinding.ActivityGridCameraBinding
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -52,6 +54,12 @@ class GridCameraActivity : AppCompatActivity() {
     private var lensFacing: Int = CameraSelector.LENS_FACING_BACK
     private var torchEnabled: Boolean = false
     private var useHsvPreset: Boolean = false
+    // Keep shared color adjustments that are updated by the settings sliders.
+    private val colorAdjustments = CameraColorAdjustments(
+        contrast = 1.0f,
+        saturation = 1.0f,
+        brightness = 1.0f
+    )
 
     private val permissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -91,6 +99,7 @@ class GridCameraActivity : AppCompatActivity() {
         }
         binding.flashButton.setOnClickListener { toggleFlash() }
         binding.flipButton.setOnClickListener { toggleCamera() }
+        binding.settingsButton.setOnClickListener { showSettingsDialog() }
 
         updatePresetButton()
 
@@ -140,6 +149,7 @@ class GridCameraActivity : AppCompatActivity() {
             baseGridRows = baseGridRows,
             palette = palette,
             paletteMode = if (useHsvPreset) PaletteMode.HSV_PRESET else PaletteMode.CLASSIC,
+            colorAdjustments = colorAdjustments,
             performanceConfig = performanceConfig
         ) { frame ->
             runOnUiThread {
@@ -198,6 +208,38 @@ class GridCameraActivity : AppCompatActivity() {
         binding.presetButton.text = getString(
             if (useHsvPreset) R.string.preset_hsv else R.string.preset_classic
         )
+    }
+
+    private fun showSettingsDialog() {
+        // Inflate the slider UI and bind the current adjustment values.
+        val dialogView = layoutInflater.inflate(R.layout.dialog_camera_settings, null)
+        val contrastSlider = dialogView.findViewById<Slider>(R.id.contrastSlider)
+        val saturationSlider = dialogView.findViewById<Slider>(R.id.saturationSlider)
+        val brightnessSlider = dialogView.findViewById<Slider>(R.id.brightnessSlider)
+
+        contrastSlider.value = colorAdjustments.contrast
+        saturationSlider.value = colorAdjustments.saturation
+        brightnessSlider.value = colorAdjustments.brightness
+
+        // Update the shared adjustments as the sliders move.
+        contrastSlider.addOnChangeListener { _, value, _ ->
+            colorAdjustments.contrast = value
+        }
+        saturationSlider.addOnChangeListener { _, value, _ ->
+            colorAdjustments.saturation = value
+        }
+        brightnessSlider.addOnChangeListener { _, value, _ ->
+            colorAdjustments.brightness = value
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.camera_settings)
+            .setView(dialogView)
+            .setPositiveButton(R.string.close) { dialog, _ ->
+                // Close the settings dialog when the user is done.
+                dialog.dismiss()
+            }
+            .show()
     }
 
 

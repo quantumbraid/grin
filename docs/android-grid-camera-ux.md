@@ -6,6 +6,7 @@
 1. **Camera Preview**
    - Live posterized preview with grid overlay.
    - Primary actions: capture, toggle grid, palette view, settings.
+   - Settings opens a popup window with contrast, saturation, and brightness sliders that apply before posterization.
 2. **Capture Review**
    - Frozen posterized frame with channel mapping summary.
    - Actions: accept (save GRIM/GRIN), retake, open editor.
