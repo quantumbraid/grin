@@ -5,7 +5,7 @@
 - [x] Add keyboard shortcuts for playback, frame stepping, and group filtering
 - [x] Add a validation summary panel (header warnings, rule count, invalid pixels)
 - [x] Align the demo UI with Material 3 components in `android/demo/`
-- [ ] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
+- [x] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
 - [ ] Add file-open flow with recent files and error recovery
 - [ ] Add in-app metadata viewer (header fields, rules summary, group counts)
 - [ ] Standardize iconography, labels, and terminology across web/android/docs

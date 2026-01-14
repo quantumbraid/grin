@@ -189,6 +189,7 @@ h1 {
   margin: 0;
 }
 
+/* Playback control bar styles. */
 .controls {
   display: flex;
   flex-wrap: wrap;
@@ -196,7 +197,8 @@ h1 {
   margin: 16px 0;
 }
 
-button {
+/* Button styling for playback actions. */
+.button {
   border: none;
   background: var(--accent);
   color: white;
@@ -206,7 +208,23 @@ button {
   cursor: pointer;
 }
 
-button:focus-visible,
+.button-primary {
+  background: var(--accent);
+}
+
+.button-danger {
+  background: var(--accent-dark);
+}
+
+.playback-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: center;
+}
+
+/* Scrubber metadata labels for current tick. */
+.button:focus-visible,
 .file-button:focus-visible,
 .drop:focus-visible,
 .samples li:focus-visible {
@@ -214,12 +232,43 @@ button:focus-visible,
   outline-offset: 3px;
 }
 
-button:nth-child(2) {
-  background: var(--teal);
+.playback-grid .slider {
+  grid-column: 1 / -1;
 }
 
-button:nth-child(3) {
-  background: var(--accent-dark);
+.tick-readout {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  margin-left: 8px;
+  color: rgba(17, 17, 17, 0.7);
+}
+
+/* Playback speed and loop toggle layout. */
+.field,
+.toggle {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.field select {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.toggle {
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+}
+
+.toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--teal);
 }
 
 .slider {
