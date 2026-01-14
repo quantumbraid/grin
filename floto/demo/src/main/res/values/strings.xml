@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<resources>
+    <string name="app_name">GRIN Camera</string>
+    <string name="description">Graphic Readdressable Indexed Nodes - Camera</string>
+
+    <!-- Grid camera -->
+    <string name="capture">Capture</string>
+    <string name="open_gallery">Gallery</string>
+    <string name="flash_off">Flash Off</string>
+    <string name="flash_on">Flash On</string>
+    <string name="flip_camera">Flip Camera</string>
+    <string name="camera_settings">Settings</string>
+    <string name="camera_contrast">Contrast</string>
+    <string name="camera_saturation">Saturation</string>
+    <string name="camera_brightness">Brightness</string>
+    <string name="storage_location">Storage location</string>
+    <string name="storage_select">Select storage location</string>
+    <string name="storage_selected">Storage selected</string>
+    <string name="storage_selected_format">Storage: %1$s</string>
+    <string name="export_png">Save PNG alongside GRIN</string>
+    <string name="preset_classic">Preset: Classic</string>
+    <string name="preset_hsv">Preset: HSV</string>
+    <string name="close">Close</string>
+    <string name="flash_unavailable">Flash not available on this camera.</string>
+    <string name="camera_unavailable">Requested camera not available.</string>
+    <string name="capture_no_frame">No frame available to capture.</string>
+    <string name="capture_saved">Saved GRIN capture.</string>
+    <string name="capture_failed">Unable to save capture.</string>
+    <string name="gallery_title">Gallery</string>
+    <string name="gallery_empty_state">No captures yet. Use the camera to add a GRIN.</string>
+    <string name="gallery_thumbnail">GRIN thumbnail</string>
+    <string name="gallery_asset_metadata_default">-- x -- bins: --</string>
+    <string name="gallery_asset_metadata">%1$d x %2$d bins: %3$d</string>
+    <string name="edit">Edit</string>
+    <string name="cancel">Cancel</string>
+    <string name="select_two_images">Select two GRIN images.</string>
+    <string name="diff_viewer_title">Diff Viewer</string>
+    <string name="diff_missing_asset">Unable to load selections.</string>
+    <string name="diff_size_mismatch">Selections must match dimensions.</string>
+    <string name="diff_saved_format">Saved diff: %1$s</string>
+    <string name="grin_viewer_title">GRIN Viewer</string>
+    <string name="viewer_missing_asset">Unable to load capture.</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+    <string name="back">Back</string>
+
+    <!-- Errors -->
+    <string name="camera_permission_denied">Camera permission denied.</string>
+    <string name="camera_start_failed">Unable to start camera preview.</string>
+</resources>
