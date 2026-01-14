@@ -1,11 +1,48 @@
-android/.gradle/8.5/checksums/checksums.lock
-android/.gradle/8.5/checksums/checksums.lock
-android/.gradle/8.5/checksums/md5-checksums.bin
-android/.gradle/8.5/checksums/sha1-checksums.bin
-android/.gradle/buildOutputCleanup/buildOutputCleanup.lock
-android/.gradle/buildOutputCleanup/outputFiles.bin
-android/.gradle/nb-cache/trust/DDD22BB399200D035192FAD68E968B3FF3EF8A703EAAD7B27A84C83195CE53A9
-android/.gradle/8.13/checksums/checksums.lock
-android/.gradle/8.13/checksums/checksums.lock
-android/.gradle/8.13/checksums/md5-checksums.bin
-android/.gradle/8.13/checksums/checksums.lock
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+dist/
+build/
+coverage/
+.vite/
+.turbo/
+.cache/
+
+# Android/Gradle
+android/.gradle/
+android/**/build/
+android/local.properties
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Editors
+*.swp
+*.swo

@@ -17,6 +17,7 @@ grin/
 │   └── workspace.xml
 ├── .vscode
 │   └── settings.json
+├── .gitignore
 ├── ARCHITECTURE.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
@@ -2635,6 +2636,56 @@ Report security issues privately to the maintainers.
 - Reference the specification for format questions
 
 Thank you for contributing to GRIN!
+
+#####/.gitignore#####
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+dist/
+build/
+coverage/
+.vite/
+.turbo/
+.cache/
+
+# Android/Gradle
+android/.gradle/
+android/**/build/
+android/local.properties
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Editors
+*.swp
+*.swo
 
 #####/Makefile#####
 .PHONY: help web-install web-build web-test web-lint web-typecheck android-build android-test clean
