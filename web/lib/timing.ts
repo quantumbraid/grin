@@ -47,6 +47,10 @@ export const TimingInterpreter = {
   },
 
   evaluate(timing: number, tick: number): number {
+    if (timing === 0) {
+      // Timing 0 is reserved for one-shot activation on the first tick only.
+      return tick === 0 ? 1 : 0;
+    }
     const period = this.getPeriod(timing);
     const phaseOffset = this.getPhaseOffset(timing) / 4;
     const position = ((tick / period) + phaseOffset) % 1;

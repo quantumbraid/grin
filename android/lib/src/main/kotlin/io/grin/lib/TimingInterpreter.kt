@@ -54,6 +54,10 @@ object TimingInterpreter {
     }
 
     fun evaluate(timing: Int, tick: Long): Double {
+        if (timing == 0) {
+            // Timing 0 is reserved for one-shot activation on the first tick only.
+            return if (tick == 0L) 1.0 else 0.0
+        }
         val period = getPeriod(timing).toDouble()
         val phaseOffset = getPhaseOffset(timing) / 4.0
         val phase = (tick / period) + phaseOffset

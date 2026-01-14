@@ -7960,6 +7960,10 @@ object TimingInterpreter {
     }
 
     fun evaluate(timing: Int, tick: Long): Double {
+        if (timing == 0) {
+            // Timing 0 is reserved for one-shot activation on the first tick only.
+            return if (tick == 0L) 1.0 else 0.0
+        }
         val period = getPeriod(timing).toDouble()
         val phaseOffset = getPhaseOffset(timing) / 4.0
         val phase = (tick / period) + phaseOffset
@@ -9372,6 +9376,21 @@ phaseOffset = ((timing >> 6) & 0x03) / 4
 position = ((tick / period) + phaseOffset) % 1
 ```
 
+## Channel Timing Independence
+
+Timing is evaluated per rule on each global tick. Each rule can target its own
+channel group and carry its own period and phase offset, so different channels
+can remain permanently out of phase without re-synchronizing. This is not a
+file-level loop; playback continues with a shared tick counter, and each rule
+evaluates its own oscillator independently.
+
+## One-Shot Timing
+
+Timing value `0x00` is reserved for one-shot activation. Readers should treat it
+as a single activation on tick 0 and inactive on subsequent ticks. This allows
+authors to apply a one-time color shift by setting timing to zero, while
+non-zero timing values define the repeat cadence for ongoing modulation.
+
 Waveform mapping:
 
 | Value | Waveform | Output |
@@ -9383,7 +9402,7 @@ Waveform mapping:
 
 ## Examples
 
-- `0x00`: period 1, square wave, phase 0.
+- `0x00`: one-shot activation on tick 0.
 - `0x17`: period 8, triangle wave, phase 0.
 - `0x27`: period 8, sine wave, phase 0.
 - `0xE3`: period 4, sawtooth wave, phase 3 (offset 0.75).
@@ -9886,6 +9905,12 @@ Each rule entry is 4 bytes (16 rules × 4 bytes = 64 bytes):
 | 3 | Timing | uint8 | On/off oscillator timing parameter (reader-defined) |
 
 Rules express **declarative schedules**, not programs.
+
+Timing is evaluated per rule on each global tick. Each rule’s timing and phase
+offset is independent, so channels can drift or diverge indefinitely without
+re-synchronizing to a file-level loop. Timing value `0x00` is reserved for
+one-shot activation (active on tick 0, inactive afterward); non-zero timings
+define recurring modulation periods.
 
 ---
 
@@ -12825,13 +12850,13 @@ This directory contains shared fixtures for GRIN tests.
 
 #####/shortlist.Txt#####
 - [ ] Add license headers to all source files
-- [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
-- [ ] Add accessibility coverage (ARIA labels, focus order, contrast checks)
-- [ ] Improve empty, loading, and error states (missing file, validation errors, decode failures)
-- [ ] Add keyboard shortcuts for playback, frame stepping, and group filtering
-- [ ] Add a validation summary panel (header warnings, rule count, invalid pixels)
-- [ ] Align the demo UI with Material 3 components in `android/demo/`
-- [ ] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
+- [x] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
+- [x] Add accessibility coverage (ARIA labels, focus order, contrast checks)
+- [x] Improve empty, loading, and error states (missing file, validation errors, decode failures)
+- [x] Add keyboard shortcuts for playback, frame stepping, and group filtering
+- [x] Add a validation summary panel (header warnings, rule count, invalid pixels)
+- [x] Align the demo UI with Material 3 components in `android/demo/`
+- [x] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
 - [ ] Add file-open flow with recent files and error recovery
 - [ ] Add in-app metadata viewer (header fields, rules summary, group counts)
 - [ ] Standardize iconography, labels, and terminology across web/android/docs
@@ -16044,80 +16069,496 @@ function prefixResult(errors, warnings, result, prefix) {
  * SOFTWARE.
  */
 import {
+  CONTROL_BYTE_MASKS,
+  DisplayBuffer,
   GrinCanvasRenderer,
   GrinLoader,
   GrinPlayer,
   OpcodeRegistry,
-  RAFTickScheduler,
   RuleEngine,
+  validateGrinFile,
 } from "../dist/grin.js";
 
 const canvas = document.getElementById("previewCanvas");
-const playButton = document.getElementById("playButton");
-const pauseButton = document.getElementById("pauseButton");
+const playToggleButton = document.getElementById("playToggleButton");
 const stopButton = document.getElementById("stopButton");
 const seekSlider = document.getElementById("seekSlider");
+const speedSelect = document.getElementById("speedSelect");
+const loopToggle = document.getElementById("loopToggle");
+const currentTickLabel = document.getElementById("currentTickLabel");
+const maxTickLabel = document.getElementById("maxTickLabel");
 const metadata = document.getElementById("metadata");
 const dropZone = document.getElementById("dropZone");
 const fileInput = document.getElementById("fileInput");
+const fileButton = document.querySelector(".file-button");
 const sampleList = document.getElementById("sampleList");
+const statusPanel = document.getElementById("statusPanel");
+const validationPanel = document.getElementById("validationPanel");
+const validationStatus = document.getElementById("validationStatus");
+const validationErrors = document.getElementById("validationErrors");
+const validationWarnings = document.getElementById("validationWarnings");
+const validationInvalidPixels = document.getElementById("validationInvalidPixels");
+const validationRuleCount = document.getElementById("validationRuleCount");
+const validationNotes = document.getElementById("validationNotes");
+const groupFilterStatus = document.getElementById("groupFilterStatus");
 
 const renderer = new GrinCanvasRenderer();
 let player = null;
+let currentFile = null;
+let groupIds = null;
+let activeGroup = null;
+let filteredBuffer = null;
+let scheduler = null;
+let playbackSpeed = 1;
+let loopEnabled = false;
+let isScrubbing = false;
+let resumeAfterScrub = false;
+let maxTick = Number(seekSlider.max || "1000");
 
-const schedulerFactory = (tickMicros) => new RAFTickScheduler(tickMicros);
+// Demo-only scheduler that supports speed changes and tick resets.
+class DemoTickScheduler {
+  constructor(tickMicros) {
+    this.baseTickMicros = Math.max(1, Math.floor(tickMicros));
+    this.tickMicros = this.baseTickMicros;
+    this.tickCallback = null;
+    this.currentTick = 0;
+    this.accumulatorMicros = 0;
+    this.lastTimestamp = 0;
+    this.running = false;
+    this.requestId = null;
+    this.isHidden = false;
+    if (typeof document !== "undefined") {
+      this.isHidden = document.hidden;
+      document.addEventListener("visibilitychange", () => {
+        this.isHidden = document.hidden;
+        if (!this.isHidden) {
+          this.lastTimestamp = 0;
+        }
+      });
+    }
+  }
+
+  // Keep the current tick in sync with UI and scrubbing events.
+  reset(tick = 0) {
+    this.currentTick = Math.max(0, Math.floor(tick));
+    this.accumulatorMicros = 0;
+    this.lastTimestamp = 0;
+  }
+
+  // Adjust playback speed by updating the underlying tick duration.
+  setSpeed(multiplier) {
+    const safeMultiplier = Number.isFinite(multiplier) ? multiplier : 1;
+    const clamped = Math.max(0.1, Math.min(4, safeMultiplier));
+    this.tickMicros = Math.max(1, Math.floor(this.baseTickMicros / clamped));
+  }
+
+  setTickCallback(cb) {
+    this.tickCallback = cb;
+  }
+
+  getCurrentTick() {
+    return this.currentTick;
+  }
+
+  start() {
+    if (this.running) {
+      return;
+    }
+    this.running = true;
+    this.lastTimestamp = 0;
+    this.accumulatorMicros = 0;
+    this.requestId = requestAnimationFrame(this.onFrame);
+  }
+
+  stop() {
+    if (!this.running) {
+      return;
+    }
+    this.running = false;
+    if (this.requestId !== null) {
+      cancelAnimationFrame(this.requestId);
+      this.requestId = null;
+    }
+  }
+
+  onFrame = (timestamp) => {
+    if (!this.running) {
+      return;
+    }
+    if (this.isHidden) {
+      this.requestId = requestAnimationFrame(this.onFrame);
+      return;
+    }
+    if (this.lastTimestamp === 0) {
+      this.lastTimestamp = timestamp;
+    }
+    const deltaMicros = (timestamp - this.lastTimestamp) * 1000;
+    this.lastTimestamp = timestamp;
+    this.accumulatorMicros += deltaMicros;
+
+    while (this.accumulatorMicros >= this.tickMicros) {
+      this.accumulatorMicros -= this.tickMicros;
+      this.currentTick += 1;
+      if (this.tickCallback) {
+        this.tickCallback(this.currentTick);
+      }
+    }
+
+    this.requestId = requestAnimationFrame(this.onFrame);
+  };
+}
+
+// Factory holds the current scheduler instance so the UI can control speed/loop.
+const schedulerFactory = (tickMicros) => {
+  scheduler = new DemoTickScheduler(tickMicros);
+  scheduler.setSpeed(playbackSpeed);
+  return scheduler;
+};
 
 const makePlayer = () =>
   new GrinPlayer(schedulerFactory, new RuleEngine(), OpcodeRegistry.getInstance(), () => {
     if (!player) return;
-    renderer.render(player.getCurrentFrame(), canvas);
+    renderPreview();
+    syncPlaybackUI();
+    handleLoopingPlayback();
   });
 
+setControlsEnabled(false);
+resetValidationSummary();
+updateGroupFilterStatus();
+setMaxTick(maxTick);
+updateTickReadout(0);
+updatePlayToggleState();
+
+function setControlsEnabled(enabled) {
+  [playToggleButton, stopButton, seekSlider, speedSelect, loopToggle].forEach((element) => {
+    element.disabled = !enabled;
+    element.setAttribute("aria-disabled", String(!enabled));
+  });
+}
+
+function setStatus(state, message) {
+  statusPanel.textContent = message;
+  if (state) {
+    statusPanel.setAttribute("data-state", state);
+  } else {
+    statusPanel.removeAttribute("data-state");
+  }
+}
+
+function handleLoadError(error, fallbackMessage) {
+  const detail = error instanceof Error ? error.message : "";
+  setStatus("error", detail ? `${fallbackMessage} (${detail})` : fallbackMessage);
+  metadata.textContent = "Load a file to see metadata.";
+  currentFile = null;
+  groupIds = null;
+  filteredBuffer = null;
+  isScrubbing = false;
+  resumeAfterScrub = false;
+  resetValidationSummary();
+  setActiveGroup(null, false);
+  updatePlayToggleState();
+  setMaxTick(Number(seekSlider.max || "1000"));
+  updateTickReadout(0);
+  setControlsEnabled(false);
+}
+
+function renderPreview() {
+  if (!player) return;
+  const frame = player.getCurrentFrame();
+  if (activeGroup === null || !groupIds) {
+    renderer.render(frame, canvas);
+    return;
+  }
+  if (!filteredBuffer || filteredBuffer.width !== frame.width || filteredBuffer.height !== frame.height) {
+    filteredBuffer = new DisplayBuffer(frame.width, frame.height);
+  }
+  filteredBuffer.rgbaData.set(frame.rgbaData);
+  for (let i = 0; i < groupIds.length; i += 1) {
+    if (groupIds[i] !== activeGroup) {
+      filteredBuffer.rgbaData[i * 4 + 3] = 0;
+    }
+  }
+  renderer.render(filteredBuffer, canvas);
+}
+
+// Keep the tick slider and labels synced with the current player state.
+function syncPlaybackUI() {
+  if (!player || isScrubbing) return;
+  const tick = player.getCurrentTick();
+  seekSlider.value = String(Math.min(tick, maxTick));
+  updateTickReadout(tick);
+}
+
+// Reset playback to the first tick when looping is enabled.
+function handleLoopingPlayback() {
+  if (!player || !loopEnabled) return;
+  if (!player.isPlaying()) return;
+  const tick = player.getCurrentTick();
+  if (tick < maxTick) return;
+  scheduler?.reset(0);
+  player.seek(0);
+  updateTickReadout(0);
+  seekSlider.value = "0";
+}
+
+function updateValidationSummary(grinFile) {
+  const report = validateGrinFile(grinFile);
+  const invalidPixels = grinFile.pixels.reduce((count, pixel) => {
+    return count + ((pixel.c & CONTROL_BYTE_MASKS.RESERVED) !== 0 ? 1 : 0);
+  }, 0);
+
+  validationStatus.textContent = report.ok ? "OK" : "Issues found";
+  validationErrors.textContent = String(report.errors.length);
+  validationWarnings.textContent = String(report.warnings.length);
+  validationInvalidPixels.textContent = String(invalidPixels);
+  validationRuleCount.textContent = String(grinFile.header.ruleCount);
+
+  let state = "ok";
+  if (report.errors.length > 0) {
+    state = "error";
+  } else if (report.warnings.length > 0 || invalidPixels > 0) {
+    state = "warn";
+  }
+  validationPanel.setAttribute("data-state", state);
+
+  const notes = [];
+  if (report.errors.length > 0) {
+    notes.push(`Errors: ${report.errors.slice(0, 2).join(" | ")}`);
+  }
+  if (report.warnings.length > 0) {
+    notes.push(`Warnings: ${report.warnings.slice(0, 2).join(" | ")}`);
+  }
+  if (invalidPixels > 0) {
+    notes.push(`Invalid pixels with reserved bits: ${invalidPixels}`);
+  }
+  if (notes.length === 0) {
+    notes.push("No validation issues detected.");
+  }
+  validationNotes.textContent = notes.join("
+");
+}
+
+function resetValidationSummary() {
+  validationStatus.textContent = "No file loaded";
+  validationErrors.textContent = "0";
+  validationWarnings.textContent = "0";
+  validationInvalidPixels.textContent = "0";
+  validationRuleCount.textContent = "0";
+  validationNotes.textContent = "No validation run yet.";
+  validationPanel.removeAttribute("data-state");
+}
+
+function updateGroupFilterStatus() {
+  if (activeGroup === null) {
+    groupFilterStatus.textContent = "All";
+    return;
+  }
+  groupFilterStatus.textContent = activeGroup.toString(16).toUpperCase();
+}
+
+function setActiveGroup(groupId, shouldRender = true) {
+  activeGroup = Number.isInteger(groupId) ? groupId : null;
+  updateGroupFilterStatus();
+  if (shouldRender) {
+    renderPreview();
+  }
+}
+
+// Update the max tick UI used by the scrubber.
+function setMaxTick(nextMax) {
+  maxTick = Math.max(1, Math.floor(nextMax));
+  seekSlider.max = String(maxTick);
+  maxTickLabel.textContent = String(maxTick);
+}
+
+// Render the current tick text near the scrubber.
+function updateTickReadout(tick) {
+  currentTickLabel.textContent = String(tick);
+}
+
+// Keep the play button label and aria state aligned with playback status.
+function updatePlayToggleState() {
+  const isPlaying = player?.isPlaying() ?? false;
+  playToggleButton.textContent = isPlaying ? "Pause" : "Play";
+  playToggleButton.setAttribute("aria-pressed", String(isPlaying));
+}
+
+function stepTicks(delta) {
+  if (!player) return;
+  const maxTick = Number(seekSlider.max || "1000");
+  const current = player.getCurrentTick();
+  const next = Math.min(maxTick, Math.max(0, current + delta));
+  player.pause();
+  player.seek(next);
+  scheduler?.reset(next);
+  seekSlider.value = String(next);
+  updateTickReadout(next);
+  updatePlayToggleState();
+}
+
+function isInteractiveTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  return (
+    tag === "INPUT" ||
+    tag === "TEXTAREA" ||
+    tag === "SELECT" ||
+    tag === "BUTTON" ||
+    target.isContentEditable
+  );
+}
+
+function handleKeyboardShortcuts(event) {
+  if (event.defaultPrevented || isInteractiveTarget(event.target)) {
+    return;
+  }
+  const key = event.key.toLowerCase();
+  if (key === " ") {
+    event.preventDefault();
+    if (!player) return;
+    togglePlayback();
+    return;
+  }
+  if (key === "arrowright") {
+    event.preventDefault();
+    stepTicks(event.shiftKey ? 10 : 1);
+    return;
+  }
+  if (key === "arrowleft") {
+    event.preventDefault();
+    stepTicks(event.shiftKey ? -10 : -1);
+    return;
+  }
+  if (key === "escape") {
+    event.preventDefault();
+    setActiveGroup(null);
+    return;
+  }
+  if (key.length === 1 && /^[0-9a-f]$/.test(key)) {
+    event.preventDefault();
+    setActiveGroup(parseInt(key, 16));
+  }
+}
+
 async function loadFile(file) {
-  const grinFile = await GrinLoader.fromFile(file);
-  initializePlayer(grinFile);
+  setStatus("loading", "Loading file...");
+  setControlsEnabled(false);
+  try {
+    const grinFile = await GrinLoader.fromFile(file);
+    initializePlayer(grinFile);
+    setStatus("success", "File loaded. Ready to play.");
+  } catch (error) {
+    handleLoadError(error, "Could not load that file. Ensure it is a valid .grin or .grn.");
+  }
 }
 
 async function loadFromUrl(url) {
-  const grinFile = await GrinLoader.fromURL(url);
-  initializePlayer(grinFile);
+  setStatus("loading", "Loading sample...");
+  setControlsEnabled(false);
+  try {
+    const grinFile = await GrinLoader.fromURL(url);
+    initializePlayer(grinFile);
+    setStatus("success", "Sample loaded. Ready to play.");
+  } catch (error) {
+    handleLoadError(error, "Sample failed to load. Check the sample path.");
+  }
 }
 
 function initializePlayer(grinFile) {
   player = makePlayer();
   player.load(grinFile);
+  currentFile = grinFile;
+  isScrubbing = false;
+  resumeAfterScrub = false;
+  groupIds = new Uint8Array(grinFile.pixels.length);
+  grinFile.pixels.forEach((pixel, index) => {
+    groupIds[index] = pixel.c & CONTROL_BYTE_MASKS.GROUP_ID;
+  });
+  filteredBuffer = null;
+  setActiveGroup(null, false);
+  updateValidationSummary(grinFile);
   canvas.width = grinFile.header.width;
   canvas.height = grinFile.header.height;
-  renderer.render(player.getCurrentFrame(), canvas);
+  renderPreview();
   metadata.textContent = [
     `Dimensions: ${grinFile.header.width} × ${grinFile.header.height}`,
     `Rules: ${grinFile.header.ruleCount}`,
     `Tick Rate: ${grinFile.header.tickMicros} µs`,
-  ].join("\n");
+  ].join("
+");
+  // Use rule count as a hint for the scrubber range without shrinking the default.
+  const estimatedMax = Math.max(Number(seekSlider.max || "1000"), grinFile.header.ruleCount || 0);
+  setMaxTick(estimatedMax);
   seekSlider.value = "0";
+  updateTickReadout(0);
+  updatePlayToggleState();
+  setControlsEnabled(true);
 }
 
-playButton.addEventListener("click", () => {
+// Toggle between play/pause states while keeping UI in sync.
+function togglePlayback() {
   if (!player) return;
-  player.play();
-});
+  if (player.isPlaying()) {
+    player.pause();
+  } else {
+    player.play();
+  }
+  updatePlayToggleState();
+}
 
-pauseButton.addEventListener("click", () => {
-  player?.pause();
-});
+playToggleButton.addEventListener("click", togglePlayback);
 
 stopButton.addEventListener("click", () => {
   if (!player) return;
   player.stop();
+  scheduler?.reset(0);
   seekSlider.value = "0";
-  renderer.render(player.getCurrentFrame(), canvas);
+  renderPreview();
+  updateTickReadout(0);
+  updatePlayToggleState();
 });
 
 seekSlider.addEventListener("input", (event) => {
   if (!player) return;
   const value = Number(event.target.value);
+  if (player.isPlaying()) {
+    player.pause();
+    resumeAfterScrub = true;
+    updatePlayToggleState();
+  }
+  isScrubbing = true;
   player.seek(value);
-  renderer.render(player.getCurrentFrame(), canvas);
+  scheduler?.reset(value);
+  updateTickReadout(value);
+});
+
+seekSlider.addEventListener("change", () => {
+  if (!player) return;
+  isScrubbing = false;
+  if (resumeAfterScrub) {
+    player.play();
+    resumeAfterScrub = false;
+  }
+  updatePlayToggleState();
+});
+
+// Keep speed selection tied to scheduler tick duration.
+speedSelect.addEventListener("change", (event) => {
+  if (!(event.target instanceof HTMLSelectElement)) {
+    return;
+  }
+  const value = Number(event.target.value);
+  playbackSpeed = Number.isFinite(value) && value > 0 ? value : 1;
+  scheduler?.setSpeed(playbackSpeed);
+});
+
+// Toggle looping behavior for the scrubber max tick.
+loopToggle.addEventListener("change", (event) => {
+  if (!(event.target instanceof HTMLInputElement)) {
+    return;
+  }
+  loopEnabled = event.target.checked;
 });
 
 dropZone.addEventListener("dragover", (event) => {
@@ -16138,6 +16579,20 @@ dropZone.addEventListener("drop", (event) => {
   }
 });
 
+dropZone.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    fileInput.click();
+  }
+});
+
+fileButton.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    fileInput.click();
+  }
+});
+
 fileInput.addEventListener("change", (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -16145,23 +16600,37 @@ fileInput.addEventListener("change", (event) => {
   }
 });
 
+document.addEventListener("keydown", handleKeyboardShortcuts);
+
 async function loadSamples() {
+  sampleList.setAttribute("aria-busy", "true");
   try {
     const response = await fetch("./samples/samples.json");
     if (!response.ok) {
-      sampleList.innerHTML = "<li>No samples available</li>";
+      sampleList.innerHTML = "<li>No samples available. Check ./samples/samples.json.</li>";
       return;
     }
     const samples = await response.json();
     sampleList.innerHTML = "";
     samples.forEach((sample) => {
       const li = document.createElement("li");
+      li.setAttribute("role", "button");
+      li.setAttribute("tabindex", "0");
+      li.setAttribute("aria-label", `Load sample ${sample.name}`);
       li.textContent = sample.name;
       li.addEventListener("click", () => loadFromUrl(sample.path));
+      li.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          loadFromUrl(sample.path);
+        }
+      });
       sampleList.appendChild(li);
     });
   } catch (error) {
-    sampleList.innerHTML = "<li>No samples available</li>";
+    sampleList.innerHTML = "<li>No samples available. Check the samples folder.</li>";
+  } finally {
+    sampleList.setAttribute("aria-busy", "false");
   }
 }
 
@@ -16218,34 +16687,119 @@ loadSamples();
             see it pulse.
           </p>
         </div>
-        <div class="drop" id="dropZone">
-          <span>Drop a .grin file</span>
-          <label class="file-button">
-            <input id="fileInput" type="file" accept=".grin,.grn" />
+        <div
+          class="drop"
+          id="dropZone"
+          role="button"
+          tabindex="0"
+          aria-label="Drop a GRIN file or choose one"
+          aria-describedby="dropHint"
+        >
+          <span id="dropHint">Drop a .grin file</span>
+          <label class="file-button" for="fileInput" role="button" tabindex="0">
+            <input id="fileInput" type="file" accept=".grin,.grn" aria-label="Choose a GRIN file" />
             Choose file
           </label>
         </div>
       </header>
 
       <section class="stage">
-        <div class="panel">
-          <h2>Playback</h2>
-          <div class="controls">
-            <button id="playButton">Play</button>
-            <button id="pauseButton">Pause</button>
-            <button id="stopButton">Stop</button>
+        <div class="sidebar">
+          <div class="panel">
+            <h2>Playback</h2>
+            <div class="status" id="statusPanel" role="status" aria-live="polite">
+              Drop a file or pick a sample to begin.
+            </div>
+            <div class="controls">
+              <button
+                id="playToggleButton"
+                class="button button-primary"
+                aria-label="Play animation"
+                aria-pressed="false"
+              >
+                Play
+              </button>
+              <button id="stopButton" class="button button-danger" aria-label="Stop animation">
+                Stop
+              </button>
+            </div>
+            <div class="playback-grid">
+              <label class="slider">
+                <span>
+                  Seek
+                  <span class="tick-readout" aria-label="Current tick">
+                    <span id="currentTickLabel">0</span> /
+                    <span id="maxTickLabel">1000</span>
+                  </span>
+                </span>
+                <input
+                  id="seekSlider"
+                  type="range"
+                  min="0"
+                  max="1000"
+                  value="0"
+                  aria-label="Seek animation"
+                />
+              </label>
+              <label class="field">
+                <span>Speed</span>
+                <select id="speedSelect" aria-label="Playback speed">
+                  <option value="0.25">0.25x</option>
+                  <option value="0.5">0.5x</option>
+                  <option value="1" selected>1x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2">2x</option>
+                </select>
+              </label>
+              <label class="toggle" for="loopToggle">
+                <input id="loopToggle" type="checkbox" aria-label="Loop playback" />
+                <span>Loop</span>
+              </label>
+            </div>
+            <div class="shortcuts" aria-label="Keyboard shortcuts">
+              <p>Shortcuts: Space play/pause · Left/Right step (Shift x10) · 0-9/A-F filter · Esc reset</p>
+            </div>
           </div>
-          <label class="slider">
-            <span>Seek</span>
-            <input id="seekSlider" type="range" min="0" max="1000" value="0" />
-          </label>
-          <div class="meta" id="metadata">
-            <p>Load a file to see metadata.</p>
+
+          <div class="panel inspector">
+            <h2>Inspector</h2>
+            <div class="meta" id="metadata" role="status" aria-live="polite">
+              <p>Load a file to see metadata.</p>
+            </div>
+            <div class="validation" id="validationPanel">
+              <div class="validation-row">
+                <span class="label">Validation</span>
+                <span id="validationStatus">No file loaded</span>
+              </div>
+              <div class="validation-grid">
+                <div>
+                  <span class="label">Errors</span>
+                  <span id="validationErrors">0</span>
+                </div>
+                <div>
+                  <span class="label">Warnings</span>
+                  <span id="validationWarnings">0</span>
+                </div>
+                <div>
+                  <span class="label">Invalid Pixels</span>
+                  <span id="validationInvalidPixels">0</span>
+                </div>
+                <div>
+                  <span class="label">Rule Count</span>
+                  <span id="validationRuleCount">0</span>
+                </div>
+              </div>
+              <div class="validation-row">
+                <span class="label">Group Filter</span>
+                <span id="groupFilterStatus">All</span>
+              </div>
+              <div class="validation-notes" id="validationNotes">No validation run yet.</div>
+            </div>
           </div>
         </div>
 
         <div class="screen">
-          <canvas id="previewCanvas"></canvas>
+          <canvas id="previewCanvas" role="img" aria-label="GRIN preview"></canvas>
           <div class="badge">Live RGBA Buffer</div>
         </div>
       </section>
@@ -16255,7 +16809,7 @@ loadSamples();
           <h2>Sample Gallery</h2>
           <p>Quick-start with bundled samples.</p>
         </div>
-        <ul id="sampleList"></ul>
+        <ul id="sampleList" aria-label="Sample gallery"></ul>
       </section>
     </main>
 
@@ -16387,18 +16941,32 @@ h1 {
   color: white;
   cursor: pointer;
   font-weight: 600;
+  position: relative;
 }
 
 .file-button input {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .stage {
   display: grid;
-  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
   gap: 28px;
   align-items: stretch;
   margin-bottom: 48px;
+}
+
+.sidebar {
+  display: grid;
+  gap: 18px;
+  align-content: start;
 }
 
 .panel {
@@ -16409,6 +16977,47 @@ h1 {
   box-shadow: 0 20px 45px rgba(17, 17, 17, 0.08);
 }
 
+.panel h2 {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+}
+
+.status {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(17, 17, 17, 0.05);
+  font-size: 0.9rem;
+  margin: 12px 0 16px;
+  border: 1px solid transparent;
+}
+
+.status[data-state="loading"] {
+  background: rgba(61, 214, 208, 0.16);
+  border-color: rgba(61, 214, 208, 0.4);
+}
+
+.status[data-state="success"] {
+  background: rgba(46, 204, 113, 0.16);
+  border-color: rgba(46, 204, 113, 0.4);
+}
+
+.status[data-state="error"] {
+  background: rgba(255, 107, 107, 0.16);
+  border-color: rgba(255, 107, 107, 0.4);
+}
+
+.shortcuts {
+  margin-top: 16px;
+  font-size: 0.8rem;
+  color: rgba(17, 17, 17, 0.7);
+  line-height: 1.5;
+}
+
+.shortcuts p {
+  margin: 0;
+}
+
+/* Playback control bar styles. */
 .controls {
   display: flex;
   flex-wrap: wrap;
@@ -16416,7 +17025,8 @@ h1 {
   margin: 16px 0;
 }
 
-button {
+/* Button styling for playback actions. */
+.button {
   border: none;
   background: var(--accent);
   color: white;
@@ -16426,12 +17036,67 @@ button {
   cursor: pointer;
 }
 
-button:nth-child(2) {
-  background: var(--teal);
+.button-primary {
+  background: var(--accent);
 }
 
-button:nth-child(3) {
+.button-danger {
   background: var(--accent-dark);
+}
+
+.playback-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: center;
+}
+
+/* Scrubber metadata labels for current tick. */
+.button:focus-visible,
+.file-button:focus-visible,
+.drop:focus-visible,
+.samples li:focus-visible {
+  outline: 3px solid var(--sun);
+  outline-offset: 3px;
+}
+
+.playback-grid .slider {
+  grid-column: 1 / -1;
+}
+
+.tick-readout {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  margin-left: 8px;
+  color: rgba(17, 17, 17, 0.7);
+}
+
+/* Playback speed and loop toggle layout. */
+.field,
+.toggle {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.field select {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.toggle {
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+}
+
+.toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--teal);
 }
 
 .slider {
@@ -16452,6 +17117,61 @@ button:nth-child(3) {
   margin-top: 16px;
   font-size: 0.85rem;
   white-space: pre-line;
+}
+
+.validation {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--border);
+  display: grid;
+  gap: 12px;
+  font-size: 0.85rem;
+}
+
+.validation[data-state="ok"] {
+  border-color: rgba(46, 204, 113, 0.4);
+}
+
+.validation[data-state="warn"] {
+  border-color: rgba(242, 201, 76, 0.5);
+}
+
+.validation[data-state="error"] {
+  border-color: rgba(255, 107, 107, 0.5);
+}
+
+.validation-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.validation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+
+.validation-grid div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.validation-notes {
+  font-size: 0.78rem;
+  color: rgba(17, 17, 17, 0.65);
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.label {
+  font-family: "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.65rem;
 }
 
 .screen {
@@ -16476,7 +17196,7 @@ button:nth-child(3) {
   position: absolute;
   top: 18px;
   right: 18px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.55);
   color: white;
   padding: 6px 12px;
   border-radius: 999px;
@@ -19232,6 +19952,10 @@ export const TimingInterpreter = {
   },
 
   evaluate(timing: number, tick: number): number {
+    if (timing === 0) {
+      // Timing 0 is reserved for one-shot activation on the first tick only.
+      return tick === 0 ? 1 : 0;
+    }
     const period = this.getPeriod(timing);
     const phaseOffset = this.getPhaseOffset(timing) / 4;
     const position = ((tick / period) + phaseOffset) % 1;
@@ -24498,6 +25222,7 @@ const TIMING_TRIANGLE_PERIOD_2 = 0x11;
 const TIMING_SINE_PERIOD_2 = 0x21;
 const TIMING_SAW_PERIOD_2 = 0x31;
 const TIMING_SQUARE_PHASE_2 = 0x41;
+const TIMING_ONE_SHOT = 0x00;
 
 test("TimingInterpreter exposes waveform metadata", () => {
   assert.equal(TimingInterpreter.getPeriod(TIMING_SQUARE_PERIOD_2), 2);
@@ -24517,6 +25242,13 @@ test("TimingInterpreter evaluates square waves on period boundaries", () => {
 test("TimingInterpreter evaluates triangle waves symmetrically", () => {
   const value = TimingInterpreter.evaluate(TIMING_TRIANGLE_PERIOD_2, 1);
   assert.equal(value, 1);
+});
+
+test("TimingInterpreter treats timing 0 as a one-shot activation", () => {
+  // Timing zero should pulse once at the start, then remain inactive.
+  assert.equal(TimingInterpreter.evaluate(TIMING_ONE_SHOT, 0), 1);
+  assert.equal(TimingInterpreter.evaluate(TIMING_ONE_SHOT, 1), 0);
+  assert.equal(TimingInterpreter.evaluate(TIMING_ONE_SHOT, 2), 0);
 });
 
 #####/web/tests/validation-boundaries.test.ts#####
