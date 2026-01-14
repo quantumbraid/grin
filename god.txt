@@ -7960,6 +7960,10 @@ object TimingInterpreter {
     }
 
     fun evaluate(timing: Int, tick: Long): Double {
+        if (timing == 0) {
+            // Timing 0 is reserved for one-shot activation on the first tick only.
+            return if (tick == 0L) 1.0 else 0.0
+        }
         val period = getPeriod(timing).toDouble()
         val phaseOffset = getPhaseOffset(timing) / 4.0
         val phase = (tick / period) + phaseOffset
@@ -9372,6 +9376,21 @@ phaseOffset = ((timing >> 6) & 0x03) / 4
 position = ((tick / period) + phaseOffset) % 1
 ```
 
+## Channel Timing Independence
+
+Timing is evaluated per rule on each global tick. Each rule can target its own
+channel group and carry its own period and phase offset, so different channels
+can remain permanently out of phase without re-synchronizing. This is not a
+file-level loop; playback continues with a shared tick counter, and each rule
+evaluates its own oscillator independently.
+
+## One-Shot Timing
+
+Timing value `0x00` is reserved for one-shot activation. Readers should treat it
+as a single activation on tick 0 and inactive on subsequent ticks. This allows
+authors to apply a one-time color shift by setting timing to zero, while
+non-zero timing values define the repeat cadence for ongoing modulation.
+
 Waveform mapping:
 
 | Value | Waveform | Output |
@@ -9383,7 +9402,7 @@ Waveform mapping:
 
 ## Examples
 
-- `0x00`: period 1, square wave, phase 0.
+- `0x00`: one-shot activation on tick 0.
 - `0x17`: period 8, triangle wave, phase 0.
 - `0x27`: period 8, sine wave, phase 0.
 - `0xE3`: period 4, sawtooth wave, phase 3 (offset 0.75).
@@ -9886,6 +9905,12 @@ Each rule entry is 4 bytes (16 rules × 4 bytes = 64 bytes):
 | 3 | Timing | uint8 | On/off oscillator timing parameter (reader-defined) |
 
 Rules express **declarative schedules**, not programs.
+
+Timing is evaluated per rule on each global tick. Each rule’s timing and phase
+offset is independent, so channels can drift or diverge indefinitely without
+re-synchronizing to a file-level loop. Timing value `0x00` is reserved for
+one-shot activation (active on tick 0, inactive afterward); non-zero timings
+define recurring modulation periods.
 
 ---
 
@@ -19232,6 +19257,10 @@ export const TimingInterpreter = {
   },
 
   evaluate(timing: number, tick: number): number {
+    if (timing === 0) {
+      // Timing 0 is reserved for one-shot activation on the first tick only.
+      return tick === 0 ? 1 : 0;
+    }
     const period = this.getPeriod(timing);
     const phaseOffset = this.getPhaseOffset(timing) / 4;
     const position = ((tick / period) + phaseOffset) % 1;
@@ -24498,6 +24527,7 @@ const TIMING_TRIANGLE_PERIOD_2 = 0x11;
 const TIMING_SINE_PERIOD_2 = 0x21;
 const TIMING_SAW_PERIOD_2 = 0x31;
 const TIMING_SQUARE_PHASE_2 = 0x41;
+const TIMING_ONE_SHOT = 0x00;
 
 test("TimingInterpreter exposes waveform metadata", () => {
   assert.equal(TimingInterpreter.getPeriod(TIMING_SQUARE_PERIOD_2), 2);
@@ -24517,6 +24547,13 @@ test("TimingInterpreter evaluates square waves on period boundaries", () => {
 test("TimingInterpreter evaluates triangle waves symmetrically", () => {
   const value = TimingInterpreter.evaluate(TIMING_TRIANGLE_PERIOD_2, 1);
   assert.equal(value, 1);
+});
+
+test("TimingInterpreter treats timing 0 as a one-shot activation", () => {
+  // Timing zero should pulse once at the start, then remain inactive.
+  assert.equal(TimingInterpreter.evaluate(TIMING_ONE_SHOT, 0), 1);
+  assert.equal(TimingInterpreter.evaluate(TIMING_ONE_SHOT, 1), 0);
+  assert.equal(TimingInterpreter.evaluate(TIMING_ONE_SHOT, 2), 0);
 });
 
 #####/web/tests/validation-boundaries.test.ts#####
