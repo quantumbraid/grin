@@ -28,16 +28,18 @@ import {
   GrinLoader,
   GrinPlayer,
   OpcodeRegistry,
-  RAFTickScheduler,
   RuleEngine,
   validateGrinFile,
 } from "../dist/grin.js";
 
 const canvas = document.getElementById("previewCanvas");
-const playButton = document.getElementById("playButton");
-const pauseButton = document.getElementById("pauseButton");
+const playToggleButton = document.getElementById("playToggleButton");
 const stopButton = document.getElementById("stopButton");
 const seekSlider = document.getElementById("seekSlider");
+const speedSelect = document.getElementById("speedSelect");
+const loopToggle = document.getElementById("loopToggle");
+const currentTickLabel = document.getElementById("currentTickLabel");
+const maxTickLabel = document.getElementById("maxTickLabel");
 const metadata = document.getElementById("metadata");
 const dropZone = document.getElementById("dropZone");
 const fileInput = document.getElementById("fileInput");
@@ -59,21 +61,130 @@ let currentFile = null;
 let groupIds = null;
 let activeGroup = null;
 let filteredBuffer = null;
+let scheduler = null;
+let playbackSpeed = 1;
+let loopEnabled = false;
+let isScrubbing = false;
+let resumeAfterScrub = false;
+let maxTick = Number(seekSlider.max || "1000");
 
-const schedulerFactory = (tickMicros) => new RAFTickScheduler(tickMicros);
+// Demo-only scheduler that supports speed changes and tick resets.
+class DemoTickScheduler {
+  constructor(tickMicros) {
+    this.baseTickMicros = Math.max(1, Math.floor(tickMicros));
+    this.tickMicros = this.baseTickMicros;
+    this.tickCallback = null;
+    this.currentTick = 0;
+    this.accumulatorMicros = 0;
+    this.lastTimestamp = 0;
+    this.running = false;
+    this.requestId = null;
+    this.isHidden = false;
+    if (typeof document !== "undefined") {
+      this.isHidden = document.hidden;
+      document.addEventListener("visibilitychange", () => {
+        this.isHidden = document.hidden;
+        if (!this.isHidden) {
+          this.lastTimestamp = 0;
+        }
+      });
+    }
+  }
+
+  // Keep the current tick in sync with UI and scrubbing events.
+  reset(tick = 0) {
+    this.currentTick = Math.max(0, Math.floor(tick));
+    this.accumulatorMicros = 0;
+    this.lastTimestamp = 0;
+  }
+
+  // Adjust playback speed by updating the underlying tick duration.
+  setSpeed(multiplier) {
+    const safeMultiplier = Number.isFinite(multiplier) ? multiplier : 1;
+    const clamped = Math.max(0.1, Math.min(4, safeMultiplier));
+    this.tickMicros = Math.max(1, Math.floor(this.baseTickMicros / clamped));
+  }
+
+  setTickCallback(cb) {
+    this.tickCallback = cb;
+  }
+
+  getCurrentTick() {
+    return this.currentTick;
+  }
+
+  start() {
+    if (this.running) {
+      return;
+    }
+    this.running = true;
+    this.lastTimestamp = 0;
+    this.accumulatorMicros = 0;
+    this.requestId = requestAnimationFrame(this.onFrame);
+  }
+
+  stop() {
+    if (!this.running) {
+      return;
+    }
+    this.running = false;
+    if (this.requestId !== null) {
+      cancelAnimationFrame(this.requestId);
+      this.requestId = null;
+    }
+  }
+
+  onFrame = (timestamp) => {
+    if (!this.running) {
+      return;
+    }
+    if (this.isHidden) {
+      this.requestId = requestAnimationFrame(this.onFrame);
+      return;
+    }
+    if (this.lastTimestamp === 0) {
+      this.lastTimestamp = timestamp;
+    }
+    const deltaMicros = (timestamp - this.lastTimestamp) * 1000;
+    this.lastTimestamp = timestamp;
+    this.accumulatorMicros += deltaMicros;
+
+    while (this.accumulatorMicros >= this.tickMicros) {
+      this.accumulatorMicros -= this.tickMicros;
+      this.currentTick += 1;
+      if (this.tickCallback) {
+        this.tickCallback(this.currentTick);
+      }
+    }
+
+    this.requestId = requestAnimationFrame(this.onFrame);
+  };
+}
+
+// Factory holds the current scheduler instance so the UI can control speed/loop.
+const schedulerFactory = (tickMicros) => {
+  scheduler = new DemoTickScheduler(tickMicros);
+  scheduler.setSpeed(playbackSpeed);
+  return scheduler;
+};
 
 const makePlayer = () =>
   new GrinPlayer(schedulerFactory, new RuleEngine(), OpcodeRegistry.getInstance(), () => {
     if (!player) return;
     renderPreview();
+    syncPlaybackUI();
+    handleLoopingPlayback();
   });
 
 setControlsEnabled(false);
 resetValidationSummary();
 updateGroupFilterStatus();
+setMaxTick(maxTick);
+updateTickReadout(0);
+updatePlayToggleState();
 
 function setControlsEnabled(enabled) {
-  [playButton, pauseButton, stopButton, seekSlider].forEach((element) => {
+  [playToggleButton, stopButton, seekSlider, speedSelect, loopToggle].forEach((element) => {
     element.disabled = !enabled;
     element.setAttribute("aria-disabled", String(!enabled));
   });
@@ -95,8 +206,13 @@ function handleLoadError(error, fallbackMessage) {
   currentFile = null;
   groupIds = null;
   filteredBuffer = null;
+  isScrubbing = false;
+  resumeAfterScrub = false;
   resetValidationSummary();
   setActiveGroup(null, false);
+  updatePlayToggleState();
+  setMaxTick(Number(seekSlider.max || "1000"));
+  updateTickReadout(0);
   setControlsEnabled(false);
 }
 
@@ -117,6 +233,26 @@ function renderPreview() {
     }
   }
   renderer.render(filteredBuffer, canvas);
+}
+
+// Keep the tick slider and labels synced with the current player state.
+function syncPlaybackUI() {
+  if (!player || isScrubbing) return;
+  const tick = player.getCurrentTick();
+  seekSlider.value = String(Math.min(tick, maxTick));
+  updateTickReadout(tick);
+}
+
+// Reset playback to the first tick when looping is enabled.
+function handleLoopingPlayback() {
+  if (!player || !loopEnabled) return;
+  if (!player.isPlaying()) return;
+  const tick = player.getCurrentTick();
+  if (tick < maxTick) return;
+  scheduler?.reset(0);
+  player.seek(0);
+  updateTickReadout(0);
+  seekSlider.value = "0";
 }
 
 function updateValidationSummary(grinFile) {
@@ -181,6 +317,25 @@ function setActiveGroup(groupId, shouldRender = true) {
   }
 }
 
+// Update the max tick UI used by the scrubber.
+function setMaxTick(nextMax) {
+  maxTick = Math.max(1, Math.floor(nextMax));
+  seekSlider.max = String(maxTick);
+  maxTickLabel.textContent = String(maxTick);
+}
+
+// Render the current tick text near the scrubber.
+function updateTickReadout(tick) {
+  currentTickLabel.textContent = String(tick);
+}
+
+// Keep the play button label and aria state aligned with playback status.
+function updatePlayToggleState() {
+  const isPlaying = player?.isPlaying() ?? false;
+  playToggleButton.textContent = isPlaying ? "Pause" : "Play";
+  playToggleButton.setAttribute("aria-pressed", String(isPlaying));
+}
+
 function stepTicks(delta) {
   if (!player) return;
   const maxTick = Number(seekSlider.max || "1000");
@@ -188,7 +343,10 @@ function stepTicks(delta) {
   const next = Math.min(maxTick, Math.max(0, current + delta));
   player.pause();
   player.seek(next);
+  scheduler?.reset(next);
   seekSlider.value = String(next);
+  updateTickReadout(next);
+  updatePlayToggleState();
 }
 
 function isInteractiveTarget(target) {
@@ -211,11 +369,7 @@ function handleKeyboardShortcuts(event) {
   if (key === " ") {
     event.preventDefault();
     if (!player) return;
-    if (player.isPlaying()) {
-      player.pause();
-    } else {
-      player.play();
-    }
+    togglePlayback();
     return;
   }
   if (key === "arrowright") {
@@ -267,6 +421,8 @@ function initializePlayer(grinFile) {
   player = makePlayer();
   player.load(grinFile);
   currentFile = grinFile;
+  isScrubbing = false;
+  resumeAfterScrub = false;
   groupIds = new Uint8Array(grinFile.pixels.length);
   grinFile.pixels.forEach((pixel, index) => {
     groupIds[index] = pixel.c & CONTROL_BYTE_MASKS.GROUP_ID;
@@ -282,30 +438,78 @@ function initializePlayer(grinFile) {
     `Rules: ${grinFile.header.ruleCount}`,
     `Tick Rate: ${grinFile.header.tickMicros} µs`,
   ].join("\n");
+  // Use rule count as a hint for the scrubber range without shrinking the default.
+  const estimatedMax = Math.max(Number(seekSlider.max || "1000"), grinFile.header.ruleCount || 0);
+  setMaxTick(estimatedMax);
   seekSlider.value = "0";
+  updateTickReadout(0);
+  updatePlayToggleState();
   setControlsEnabled(true);
 }
 
-playButton.addEventListener("click", () => {
+// Toggle between play/pause states while keeping UI in sync.
+function togglePlayback() {
   if (!player) return;
-  player.play();
-});
+  if (player.isPlaying()) {
+    player.pause();
+  } else {
+    player.play();
+  }
+  updatePlayToggleState();
+}
 
-pauseButton.addEventListener("click", () => {
-  player?.pause();
-});
+playToggleButton.addEventListener("click", togglePlayback);
 
 stopButton.addEventListener("click", () => {
   if (!player) return;
   player.stop();
+  scheduler?.reset(0);
   seekSlider.value = "0";
   renderPreview();
+  updateTickReadout(0);
+  updatePlayToggleState();
 });
 
 seekSlider.addEventListener("input", (event) => {
   if (!player) return;
   const value = Number(event.target.value);
+  if (player.isPlaying()) {
+    player.pause();
+    resumeAfterScrub = true;
+    updatePlayToggleState();
+  }
+  isScrubbing = true;
   player.seek(value);
+  scheduler?.reset(value);
+  updateTickReadout(value);
+});
+
+seekSlider.addEventListener("change", () => {
+  if (!player) return;
+  isScrubbing = false;
+  if (resumeAfterScrub) {
+    player.play();
+    resumeAfterScrub = false;
+  }
+  updatePlayToggleState();
+});
+
+// Keep speed selection tied to scheduler tick duration.
+speedSelect.addEventListener("change", (event) => {
+  if (!(event.target instanceof HTMLSelectElement)) {
+    return;
+  }
+  const value = Number(event.target.value);
+  playbackSpeed = Number.isFinite(value) && value > 0 ? value : 1;
+  scheduler?.setSpeed(playbackSpeed);
+});
+
+// Toggle looping behavior for the scrubber max tick.
+loopToggle.addEventListener("change", (event) => {
+  if (!(event.target instanceof HTMLInputElement)) {
+    return;
+  }
+  loopEnabled = event.target.checked;
 });
 
 dropZone.addEventListener("dragover", (event) => {
