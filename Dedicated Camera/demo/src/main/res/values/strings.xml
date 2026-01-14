@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  MIT License
+
+  Copyright (c) 2025 GRIN Project Contributors
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-->
+<resources>
+    <string name="app_name">GRIN Dedicated Camera</string>
+
+    <!-- Grid camera -->
+    <string name="grid_camera_title">Grid Camera Preview</string>
+    <string name="close">Close</string>
+    <string name="capture">Capture</string>
+    <string name="flash_off">Flash Off</string>
+    <string name="flash_on">Flash On</string>
+    <string name="flip_camera">Flip Camera</string>
+    <string name="camera_settings">Settings</string>
+    <string name="camera_contrast">Contrast</string>
+    <string name="camera_saturation">Saturation</string>
+    <string name="camera_brightness">Brightness</string>
+    <string name="preset_classic">Preset: Classic</string>
+    <string name="preset_hsv">Preset: HSV</string>
+    <string name="flash_unavailable">Flash not available on this camera.</string>
+    <string name="camera_unavailable">Requested camera not available.</string>
+
+    <!-- Capture review -->
+    <string name="capture_review_title">Capture Review</string>
+    <string name="capture_metadata_default">Grid: -- × -- · Bins: --</string>
+    <string name="capture_metadata_format">Grid: %1$d × %2$d · Bins: %3$d</string>
+    <string name="retake">Retake</string>
+    <string name="done">Done</string>
+    <string name="capture_no_frame">No frame available to capture.</string>
+
+    <!-- Errors -->
+    <string name="camera_permission_denied">Camera permission denied.</string>
+    <string name="camera_start_failed">Unable to start camera preview.</string>
+</resources>
