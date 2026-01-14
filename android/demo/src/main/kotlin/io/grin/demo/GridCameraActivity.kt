@@ -226,14 +226,40 @@ class GridCameraActivity : AppCompatActivity() {
             colorAdjustments.brightness = value
         }
 
-        MaterialAlertDialogBuilder(this)
+        val settingsDialog = MaterialAlertDialogBuilder(this)
             .setTitle(R.string.camera_settings)
             .setView(dialogView)
             .setPositiveButton(R.string.close) { dialog, _ ->
                 // Close the settings dialog when the user is done.
                 dialog.dismiss()
             }
-            .show()
+            .create()
+
+        var dialogDimAmount = 0.6f
+        settingsDialog.setOnShowListener {
+            dialogDimAmount = settingsDialog.window?.attributes?.dimAmount ?: dialogDimAmount
+        }
+
+        fun setSettingsDialogVisible(visible: Boolean) {
+            val window = settingsDialog.window ?: return
+            window.decorView.alpha = if (visible) 1f else 0f
+            window.setDimAmount(if (visible) dialogDimAmount else 0f)
+        }
+
+        val touchListener = object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {
+                setSettingsDialogVisible(false)
+            }
+
+            override fun onStopTrackingTouch(slider: Slider) {
+                setSettingsDialogVisible(true)
+            }
+        }
+        contrastSlider.addOnSliderTouchListener(touchListener)
+        saturationSlider.addOnSliderTouchListener(touchListener)
+        brightnessSlider.addOnSliderTouchListener(touchListener)
+
+        settingsDialog.show()
     }
 
 
