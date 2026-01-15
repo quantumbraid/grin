@@ -1,11 +1,21 @@
+- [ ] Tag initial release (v0.1.0)
+  - Fix path: confirm the release commit and version in `CHANGELOG.md`.
+  - Fix path: build release artifacts for Android/web/tools and run smoke tests.
+  - Fix path: create and push annotated git tag `v0.1.0`.
+- [ ] Publish Android library to Maven Central / JitPack
+  - Fix path: verify `android/lib/build.gradle.kts` publishing config, coordinates, and signing.
+  - Fix path: publish to a staging repo (Sonatype or JitPack) and verify artifacts/metadata.
+  - Fix path: close/release the staging repo and update release notes.
+- [ ] Publish JavaScript library to npm
+  - Fix path: build the `web` bundle to `web/dist` and run tests.
+  - Fix path: verify `web/package.json` metadata (name, version, files, exports).
+  - Fix path: publish to npm and confirm availability.
+- [ ] Create GitHub Releases with artifacts
+  - Fix path: assemble release artifacts (AAR, npm tarball, CLI bundle).
+  - Fix path: create the GitHub release for tag `v0.1.0` and attach artifacts.
+  - Fix path: verify release notes link to `CHANGELOG.md`.
 - [ ] Add license headers to all source files
-- [x] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
-- [x] Add accessibility coverage (ARIA labels, focus order, contrast checks)
-- [x] Improve empty, loading, and error states (missing file, validation errors, decode failures)
-- [x] Add keyboard shortcuts for playback, frame stepping, and group filtering
-- [x] Add a validation summary panel (header warnings, rule count, invalid pixels)
-- [x] Align the demo UI with Material 3 components in `android/demo/`
-- [x] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
+- [ ] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
 - [ ] Add file-open flow with recent files and error recovery
 - [ ] Add in-app metadata viewer (header fields, rules summary, group counts)
 - [ ] Standardize iconography, labels, and terminology across web/android/docs
