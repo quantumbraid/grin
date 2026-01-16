@@ -18,11 +18,12 @@ hexadecimal RGBA digits.
 **Lock suffix:** `Y` = unlocked, `Z` = locked
 
 Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
-The penultimate character must be a group label (`G`‑`X`), and the final character must be `Y` or `Z`.
+The penultimate character must be a group label (`G`–`X`), and the final character must be `Y` or `Z`.
 Any other suffix is considered corruption and should be resolved by rewriting the suffix with a chosen
 lock state (`Y` or `Z`) for all affected pixels.
 
 Example control channel suffixes: `LY` (group L, unlocked) or `LZ` (group L, locked).
+For example, `ff00eeffjy` targets group `J` (`j`) and keeps the pixel unlocked (`y`); changing the suffix to `z` would lock it.
 
 ## The environment and its intentional limitations
 

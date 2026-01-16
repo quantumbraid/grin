@@ -28,7 +28,7 @@ export const HEADER_MAX_BYTES = 592;
 
 const GROUP_LABEL_SET = new Set(CONTROL_GROUP_LABELS);
 const REPEAT_PATTERN = /^(\d{3}):(min|sec|mil)$/i;
-const ACTION_PATTERN = /^(sety|setz|[+-][0-9a-f]{1,2}(rr|gg|bb|aa))$/i;
+const ACTION_PATTERN = /^(sety|setz|[+-][0-9a-f]{2}(rr|gg|bb|aa))$/i;
 const LANE_PATTERN = /\{(\d{2})\[([^\]|]+)\|([^\]|]+)\|([^\]|]+)\]\}/g;
 
 /**

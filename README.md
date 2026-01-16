@@ -56,6 +56,7 @@ node tools/bin/grin-validate.js samples/minimal.grin
 node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
 node tools/bin/grin-encode.js input.png output.grin
 node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
+node tools/bin/grin-lanes.js lanes.txt --normalize
 ```
 
 ## Web library

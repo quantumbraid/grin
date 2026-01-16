@@ -77,6 +77,8 @@ Authoring/UI control labels (not stored in the file):
   Any other suffix is treated as corruption and should be normalized by rewriting suffixes with a
   chosen lock state (`Y` or `Z`).
 
+Pixels follow `rrggbbaa` plus the control suffix, so `ff00eeffjy` targets group `J` and leaves the pixel unlocked (`y`); switching the suffix to `z` locks it.
+
 Each pixel:
 
 - Belongs to exactly **one of 16 groups**
@@ -188,6 +190,26 @@ Each rule entry is 4 bytes (16 rules × 4 bytes = 64 bytes):
 | 3 | Timing | uint8 | On/off oscillator timing parameter (reader-defined) |
 
 Rules express **declarative schedules**, not programs.
+
+### 7.5 Header Lane Language (Authoring Standard)
+
+Authoring tools may represent rule intent with a lane-based header string. Each lane
+captures a single script segment (target groups, action, repeat cadence), and lanes must
+be numbered sequentially.
+
+```
+{NN[groups|action|xxx:unit]}
+```
+
+- `NN` is the lane number (`00`–`15`) and must appear in order with no gaps.
+- `groups` is a concatenated list of control group labels (`G H J K L M N P Q R S T U V W X`).
+- `action` is one of `sety`, `setz`, `+<hh><CC>`, or `-<hh><CC>` for channel adjustments.
+- `xxx:unit` is the repeat cadence with three digits (`000`–`999`) followed by `min`, `sec`, or `mil`.
+
+The two-digit delta amount follows standard hexadecimal math: `0x03 + 0x0ff = 0x103`, `0x003 + 0x00f = 0x013`, and adding `0xff` to `0x003` produces `0x103` because each position counts 16 values. Overflow carries into the next channel (`+ffRR` applied to `ff0003` becomes `ff0132`), and subtraction borrows from the next channel (`ff0003 - ff` becomes `feff34`). Alpha clamps between `00`/`ff` without wrap.
+
+Headers must be ≤ 592 bytes and contain no more than 16 lanes. Tools should reject lane strings that
+violate these limits or the grammar above so the fixed rules block remains inspectable.
 
 ---
 

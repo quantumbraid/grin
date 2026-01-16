@@ -11,6 +11,7 @@ This folder contains Phase 12 documentation (plus Phase 14 foundations) that com
 - `docs/tutorial-grin-groups.md` - groups and masks tutorial
 - `docs/playback-guide-web.md` - web playback integration guide
 - `docs/playback-guide-android.md` - Android playback integration guide
+- `docs/header-lanes.md` - header lane authoring language and limits
 - `docs/security-model.md` - security model and validation requirements
 - `docs/security-audit-checklist.md` - audit checklist
 - `docs/release-preparation.md` - semantic versioning and release tagging

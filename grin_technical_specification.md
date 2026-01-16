@@ -99,6 +99,28 @@ Control labels used in authoring/UI (not stored in the file):
   Any other suffix is treated as corruption and should be normalized by rewriting suffixes with a
   chosen lock state (`Y` or `Z`).
 
+Pixels follow the same pattern: `rrggbbaa` plus a control suffix. For example, `ff00eeffjy` targets group `J` and leaves the pixel unlocked (`y`); switching the suffix to `z` locks it.
+
+### 3.4 Header Lane Language (Authoring Standard)
+
+Authoring tools use a lane-based header string to describe rule intent in a bounded,
+deterministic format. Each lane represents a scripted segment (target groups + action +
+repeat cadence) and must be numbered sequentially.
+
+```
+{NN[groups|action|xxx:unit]}
+```
+
+- `NN` is the lane number (`00`–`15`) and must be sequential with no gaps.
+- `groups` is a concatenated list of control group labels (`G H J K L M N P Q R S T U V W X`, case-insensitive).
+- `action` is one of `sety` (unlock), `setz` (lock), `+<hh><CC>`, or `-<hh><CC>` for channel deltas.
+- `xxx:unit` is the repeat cadence with three digits (`000`–`999`) and units `min`, `sec`, or `mil`.
+
+The two-digit delta (`hh`) follows standard hexadecimal addition: `0x03 + 0x0ff = 0x103`, `0x003 + 0x00f = 0x013`, and adding `0xff` to `0x003` produces `0x103` because each position spans 16 values. Overflow carries into the next channel (so `+ffRR` applied to `ff0003` becomes `ff0132`), and subtraction borrows from the next channel (`ff0003 - ff` becomes `feff34`). Alpha is different; it clamps between `00`/`ff` without wrap.
+
+Headers must be ≤ 592 bytes and contain no more than 16 lanes. Lanes must be sequential and follow
+the grammar above so that tooling can normalize or reject invalid strings.
+
 ## 4. Validation Rules
 
 Readers MUST reject if any of the following are true:

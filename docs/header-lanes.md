@@ -24,6 +24,8 @@ can be normalized or validated before producing the binary rule block.
   - `xxx` is `000`–`999` (`000` means no repeat)
   - `unit` is `min`, `sec`, or `mil`
 
+The `{aa[bbbbbbbbbbbbbbbb|cccc|ddd:eee]}` sketch clarifies the mapping: `a` is the lane number, `b` holds the concatenated `G`–`X` labels, `c` is the action (`sety`, `setz`, or a two-digit hex delta), `d` is the repeat count (`000` makes the lane a one-time event), and `eee` is the time unit (`min`,`sec`, or `mil`). Every lane number and delta amount consumes exactly two digits so the header stays canonical and, even with 16 fully populated lanes, remains under the 592-byte budget.
+
 ### Action Details
 
 `+`/`-` actions use base-16 counting, not color theory. Examples:
@@ -32,8 +34,14 @@ can be normalized or validated before producing the binary rule block.
 - `-0aGG` decrements green by 0x0A.
 - `+ffAA` raises alpha to max; alpha clamps and does not carry.
 
+Hex math follows standard hexadecimal addition: `0x03 + 0x0ff = 0x103`, `0x003 + 0x00f = 0x013`, and adding `0xff` to `0x003` produces `0x103` because each digit spans 16 values. When RGB deltas overflow a channel, the carry moves to the next channel (`+ffRR` applied to `ff0003` becomes `ff0132`), and subtraction borrows from the next channel (`ff0003 - ff` gives `feff34`). Alpha never carries or borrows; it clamps between `00` and `ff`.
+
 Alpha clamps at `00`/`ff` without wrap. RGB channels carry to the next channel
 when incrementing and borrow from the next channel when decrementing.
+
+### Pixel Control Suffix
+
+Pixels are addressed as `rrggbbaa` plus a control suffix composed of a `G`–`X` group label and a `Y`/`Z` lock marker. For instance, `ff00eeffjy` targets group `J` and keeps the pixel unlocked (`y`). Switching the suffix to `z` would lock the same pixel. Tooling should rewrite any other suffix so the group letter is within `G`–`X` and the lock character is `Y` (unlocked) or `Z` (locked).
 
 ## Examples
 
