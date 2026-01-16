@@ -78,6 +78,67 @@ export const CONTROL_BYTE_MASKS = {
   LOCK: 0x80,
 } as const;
 
+// Control group labels intentionally skip I/O to keep a 16-slot alphabet and avoid ambiguity.
+export const CONTROL_GROUP_LABELS = [
+  "G",
+  "H",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+] as const;
+
+// Control lock suffixes are reserved for the final control channel indicator.
+export const CONTROL_LOCK_LABELS = {
+  UNLOCKED: "Y",
+  LOCKED: "Z",
+} as const;
+
+/**
+ * Format a numeric group ID using the control-label alphabet.
+ * @param groupId - Group index (0-15).
+ * @returns Group label or "?" when out of range.
+ */
+export function formatControlGroupLabel(groupId: number): string {
+  if (!Number.isInteger(groupId)) {
+    return "?";
+  }
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a control-label character into a numeric group ID.
+ * @param label - Single-letter group label.
+ * @returns Group ID or null when the label is not recognized.
+ */
+export function parseControlGroupLabel(label: string): number | null {
+  if (!label) {
+    return null;
+  }
+  const normalized = label.trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized as (typeof CONTROL_GROUP_LABELS)[number]);
+  return index >= 0 ? index : null;
+}
+
+/**
+ * Format the lock suffix for a control channel.
+ * @param locked - Whether the control byte is locked.
+ * @returns "Y" for unlocked or "Z" for locked.
+ */
+export function formatControlLockLabel(locked: boolean): string {
+  return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
 export function getGroupId(controlByte: number): number {
   return controlByte & CONTROL_BYTE_MASKS.GROUP_ID;
 }

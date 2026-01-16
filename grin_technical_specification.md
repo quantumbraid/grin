@@ -90,6 +90,11 @@ Control byte bits:
 - Bits 4-6: Reserved (must be 0)
 - Bit 7: Lock bit (1 = locked)
 
+Control labels used in authoring/UI (not stored in the file):
+
+- Group labels: `G H J K L M N P Q R S T U V W X` (skip `I` and `O`).
+- Lock suffix: `Y` = unlocked, `Z` = locked.
+
 ## 4. Validation Rules
 
 Readers MUST reject if any of the following are true:

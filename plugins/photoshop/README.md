@@ -20,15 +20,15 @@ using the CLI tools described in `docs/creative-suite-foundations.md`.
    - **Lock map layer** named `GRIN_LOCK` (or `GRIN_LOCK_MAP`).
 3. Paint the group map using grayscale values **0-15** so each pixel maps to a GRIN group ID.
 4. Paint the lock map using **0** for unlocked pixels and **255** for locked pixels.
-5. Optionally tag layer names with group IDs and lock hints, e.g. `Hero G3 [L]`.
+5. Optionally tag layer names with group labels and lock hints, e.g. `Hero GL [Z]`.
 
 ## Layer Tagging Conventions
 
 The panel scans layer names for metadata tags to help with preview summaries:
 
-- `G0`–`G15` or `[G0]`–`[G15]` set the group ID.
-- `LOCK` or `[L]` marks a layer as locked.
-- `UNLOCK` or `[U]` clears the lock hint.
+- `GG`–`GX` or `[GG]`–`[GX]` set the group label (`G H J K L M N P Q R S T U V W X`).
+- `LOCK` or `[Z]` marks a layer as locked (`Z` suffix).
+- `UNLOCK` or `[Y]` clears the lock hint (`Y` suffix).
 
 ## Export Pipeline
 

@@ -23,9 +23,9 @@ using the CLI tools described in `docs/creative-suite-foundations.md`.
 
 The panel reads metadata from page item names or notes:
 
-- `G0`–`G15` or `[G0]`–`[G15]` set the group ID.
-- `LOCK` or `[L]` marks a page item as locked.
-- `UNLOCK` or `[U]` clears the lock hint.
+- `GG`–`GX` or `[GG]`–`[GX]` set the group label (`G H J K L M N P Q R S T U V W X`).
+- `LOCK` or `[Z]` marks a page item as locked (`Z` suffix).
+- `UNLOCK` or `[Y]` clears the lock hint (`Y` suffix).
 
 Use tags on layers or objects to preview how many items are annotated. Tagged metadata can be
 used to drive group/lock map creation in your art.

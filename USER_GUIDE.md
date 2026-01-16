@@ -7,12 +7,17 @@ Instead of storing a list of frames, a `.grin` file stores one image plus a smal
 fixed rules block that modulates pixel groups over time. The format is intentionally
 bounded so files are predictable to validate and play back.
 
-## Think in groups (base‑16, not “colors”)
+## Think in groups (control labels, not “colors”)
 
-Each pixel belongs to exactly one group, identified by a 4‑bit value (0‑15). The
-rules in the header target these groups, not colors. It helps to think of the
-scripting layer as base‑16 counting: group IDs are just hexadecimal digits. Groups
-can be any set of pixels and do **not** need to share the same color.
+Each pixel belongs to exactly one group, identified internally by a 4‑bit value
+(0‑15). The rules in the header target these groups, not colors. For authoring,
+GRIN now uses a control label alphabet so the control channel never overlaps
+hexadecimal RGBA digits.
+
+**Control group labels (0‑15):** `G H J K L M N P Q R S T U V W X`  
+**Lock suffix:** `Y` = unlocked, `Z` = locked
+
+Example control channel suffixes: `LY` (group L, unlocked) or `LZ` (group L, locked).
 
 ## The environment and its intentional limitations
 
@@ -33,7 +38,7 @@ predictable across web, Android, and CLI tooling.
 
 - **Header (128 bytes)**: format identity, dimensions, timing, and rules.
 - **Pixel data**: width × height × 5 bytes (RGBA + control byte).
-- **Control byte**: 4 bits for group ID (0‑15) and 1 lock bit.
+- **Control byte**: 4 bits for group ID (0‑15) and 1 lock bit (labeled `Y`/`Z` in authoring).
 
 ## How rules work (the “scripting” layer)
 

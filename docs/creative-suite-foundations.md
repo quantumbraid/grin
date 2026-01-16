@@ -11,8 +11,8 @@ while preserving the original art and enabling instant validation.
 
 **Core UX elements**
 
-- **Group ID palette (0-15):** A compact legend of 16 swatches labeled `G0`–`G15`. Selecting a
-  swatch sets the active group ID for painting or tagging.
+- **Group ID palette (0-15):** A compact legend of 16 swatches labeled `G` through `X`
+  (skipping `I` and `O`). Selecting a swatch sets the active group ID for painting or tagging.
 - **Lock toggle:** A single toggle/button that sets the lock bit for the active paint/selection
   action. When enabled, applied marks set the lock bit; when disabled, they clear it.
 - **Dual-layer workflow (non-destructive):**
@@ -97,22 +97,22 @@ while preserving the original art and enabling instant validation.
 
 | Group | Label | Color (Hex) | Notes |
 |-------|-------|-------------|-------|
-| 0     | G0    | #FF1744     | Default primary group |
-| 1     | G1    | #FF9100     | Warm secondary |
-| 2     | G2    | #FFD600     | Highlight |
-| 3     | G3    | #76FF03     | Bright green |
-| 4     | G4    | #00E5FF     | Cyan |
-| 5     | G5    | #2979FF     | Blue |
-| 6     | G6    | #651FFF     | Indigo |
-| 7     | G7    | #D500F9     | Purple |
-| 8     | G8    | #F50057     | Magenta |
-| 9     | G9    | #FF6D00     | Orange |
-| 10    | G10   | #C6FF00     | Lime |
-| 11    | G11   | #1DE9B6     | Teal |
-| 12    | G12   | #00B0FF     | Light blue |
-| 13    | G13   | #304FFE     | Royal blue |
-| 14    | G14   | #AA00FF     | Violet |
-| 15    | G15   | #F06292     | Pink |
+| 0     | G     | #FF1744     | Default primary group |
+| 1     | H     | #FF9100     | Warm secondary |
+| 2     | J     | #FFD600     | Highlight |
+| 3     | K     | #76FF03     | Bright green |
+| 4     | L     | #00E5FF     | Cyan |
+| 5     | M     | #2979FF     | Blue |
+| 6     | N     | #651FFF     | Indigo |
+| 7     | P     | #D500F9     | Purple |
+| 8     | Q     | #F50057     | Magenta |
+| 9     | R     | #FF6D00     | Orange |
+| 10    | S     | #C6FF00     | Lime |
+| 11    | T     | #1DE9B6     | Teal |
+| 12    | U     | #00B0FF     | Light blue |
+| 13    | V     | #304FFE     | Royal blue |
+| 14    | W     | #AA00FF     | Violet |
+| 15    | X     | #F06292     | Pink |
 
 **Lock overlay:** Use a diagonal hatch pattern (45°) at 30% opacity, with a lock icon in the
 corner of the selection/preview. This remains consistent across Photoshop, Illustrator, and GIMP.

@@ -2884,12 +2884,17 @@ Instead of storing a list of frames, a `.grin` file stores one image plus a smal
 fixed rules block that modulates pixel groups over time. The format is intentionally
 bounded so files are predictable to validate and play back.
 
-## Think in groups (base‑16, not “colors”)
+## Think in groups (control labels, not “colors”)
 
-Each pixel belongs to exactly one group, identified by a 4‑bit value (0‑15). The
-rules in the header target these groups, not colors. It helps to think of the
-scripting layer as base‑16 counting: group IDs are just hexadecimal digits. Groups
-can be any set of pixels and do **not** need to share the same color.
+Each pixel belongs to exactly one group, identified internally by a 4‑bit value
+(0‑15). The rules in the header target these groups, not colors. For authoring,
+GRIN now uses a control label alphabet so the control channel never overlaps
+hexadecimal RGBA digits.
+
+**Control group labels (0‑15):** `G H J K L M N P Q R S T U V W X`  
+**Lock suffix:** `Y` = unlocked, `Z` = locked
+
+Example control channel suffixes: `LY` (group L, unlocked) or `LZ` (group L, locked).
 
 ## The environment and its intentional limitations
 
@@ -2910,7 +2915,7 @@ predictable across web, Android, and CLI tooling.
 
 - **Header (128 bytes)**: format identity, dimensions, timing, and rules.
 - **Pixel data**: width × height × 5 bytes (RGBA + control byte).
-- **Control byte**: 4 bits for group ID (0‑15) and 1 lock bit.
+- **Control byte**: 4 bits for group ID (0‑15) and 1 lock bit (labeled `Y`/`Z` in authoring).
 
 ## How rules work (the “scripting” layer)
 
@@ -8747,8 +8752,8 @@ while preserving the original art and enabling instant validation.
 
 **Core UX elements**
 
-- **Group ID palette (0-15):** A compact legend of 16 swatches labeled `G0`–`G15`. Selecting a
-  swatch sets the active group ID for painting or tagging.
+- **Group ID palette (0-15):** A compact legend of 16 swatches labeled `G` through `X`
+  (skipping `I` and `O`). Selecting a swatch sets the active group ID for painting or tagging.
 - **Lock toggle:** A single toggle/button that sets the lock bit for the active paint/selection
   action. When enabled, applied marks set the lock bit; when disabled, they clear it.
 - **Dual-layer workflow (non-destructive):**
@@ -8833,22 +8838,22 @@ while preserving the original art and enabling instant validation.
 
 | Group | Label | Color (Hex) | Notes |
 |-------|-------|-------------|-------|
-| 0     | G0    | #FF1744     | Default primary group |
-| 1     | G1    | #FF9100     | Warm secondary |
-| 2     | G2    | #FFD600     | Highlight |
-| 3     | G3    | #76FF03     | Bright green |
-| 4     | G4    | #00E5FF     | Cyan |
-| 5     | G5    | #2979FF     | Blue |
-| 6     | G6    | #651FFF     | Indigo |
-| 7     | G7    | #D500F9     | Purple |
-| 8     | G8    | #F50057     | Magenta |
-| 9     | G9    | #FF6D00     | Orange |
-| 10    | G10   | #C6FF00     | Lime |
-| 11    | G11   | #1DE9B6     | Teal |
-| 12    | G12   | #00B0FF     | Light blue |
-| 13    | G13   | #304FFE     | Royal blue |
-| 14    | G14   | #AA00FF     | Violet |
-| 15    | G15   | #F06292     | Pink |
+| 0     | G     | #FF1744     | Default primary group |
+| 1     | H     | #FF9100     | Warm secondary |
+| 2     | J     | #FFD600     | Highlight |
+| 3     | K     | #76FF03     | Bright green |
+| 4     | L     | #00E5FF     | Cyan |
+| 5     | M     | #2979FF     | Blue |
+| 6     | N     | #651FFF     | Indigo |
+| 7     | P     | #D500F9     | Purple |
+| 8     | Q     | #F50057     | Magenta |
+| 9     | R     | #FF6D00     | Orange |
+| 10    | S     | #C6FF00     | Lime |
+| 11    | T     | #1DE9B6     | Teal |
+| 12    | U     | #00B0FF     | Light blue |
+| 13    | V     | #304FFE     | Royal blue |
+| 14    | W     | #AA00FF     | Violet |
+| 15    | X     | #F06292     | Pink |
 
 **Lock overlay:** Use a diagonal hatch pattern (45°) at 30% opacity, with a lock icon in the
 corner of the selection/preview. This remains consistent across Photoshop, Illustrator, and GIMP.
@@ -9539,16 +9544,21 @@ and `samples/minimal.grin`.
 # Tutorial: Understanding GRIN Groups
 
 Groups are the only runtime-addressable unit in GRIN. Each pixel belongs to
-exactly one group (0-15) and can be targeted by rules via a bitmask.
+exactly one group (0-15) and can be targeted by rules via a bitmask. For
+authoring, use the control label alphabet (`G H J K L M N P Q R S T U V W X`)
+so the control channel never overlaps RGBA hex digits.
 
 ## Control Byte Recap
 
 The control byte (C) uses bits 0-3 for the group ID and bit 7 for the lock bit.
+Lock state is labeled with a suffix: `Y` = unlocked, `Z` = locked.
 
 ```text
 bit 7: lock
 bits 0-3: group ID (0-15)
 ```
+
+Control label example: `LY` means group L (ID 4), unlocked.
 
 ## Rule Group Masks
 
@@ -9683,6 +9693,11 @@ Control byte bits:
 - Bits 0-3: Group ID (0-15)
 - Bits 4-6: Reserved (must be 0)
 - Bit 7: Lock bit (1 = locked)
+
+Control labels used in authoring/UI (not stored in the file):
+
+- Group labels: `G H J K L M N P Q R S T U V W X` (skip `I` and `O`).
+- Lock suffix: `Y` = unlocked, `Z` = locked.
 
 ## 4. Validation Rules
 
@@ -9868,6 +9883,11 @@ This represents a deliberate 25% size increase over RGBA, paid once.
 - Bit 7: **Lock bit**
 - Bits 4–6: Reserved (must be zero)
 
+Authoring/UI control labels (not stored in the file):
+
+- Group labels: `G H J K L M N P Q R S T U V W X` (skip `I` and `O`)
+- Lock suffix: `Y` = unlocked, `Z` = locked
+
 Each pixel:
 
 - Belongs to exactly **one of 16 groups**
@@ -9979,12 +9999,6 @@ Each rule entry is 4 bytes (16 rules × 4 bytes = 64 bytes):
 | 3 | Timing | uint8 | On/off oscillator timing parameter (reader-defined) |
 
 Rules express **declarative schedules**, not programs.
-
-Timing is evaluated per rule on each global tick. Each rule’s timing and phase
-offset is independent, so channels can drift or diverge indefinitely without
-re-synchronizing to a file-level loop. Timing value `0x00` is reserved for
-one-shot activation (active on tick 0, inactive afterward); non-zero timings
-define recurring modulation periods.
 
 ---
 
@@ -10173,15 +10187,15 @@ using the CLI tools described in `docs/creative-suite-foundations.md`.
    - **Lock map layer** named `GRIN_LOCK` (or `GRIN_LOCK_MAP`).
 3. Paint the group map using grayscale values **0-15** so each pixel maps to a GRIN group ID.
 4. Paint the lock map using **0** for unlocked pixels and **255** for locked pixels.
-5. Optionally tag layer names with group IDs and lock hints, e.g. `Hero G3 [L]`.
+5. Optionally tag layer names with group labels and lock hints, e.g. `Hero GL [Z]`.
 
 ## Layer Tagging Conventions
 
 The panel scans layer names for metadata tags to help with preview summaries:
 
-- `G0`–`G15` or `[G0]`–`[G15]` set the group ID.
-- `LOCK` or `[L]` marks a layer as locked.
-- `UNLOCK` or `[U]` clears the lock hint.
+- `GG`–`GX` or `[GG]`–`[GX]` set the group label (`G H J K L M N P Q R S T U V W X`).
+- `LOCK` or `[Z]` marks a layer as locked (`Z` suffix).
+- `UNLOCK` or `[Y]` clears the lock hint (`Y` suffix).
 
 ## Export Pipeline
 
@@ -10225,22 +10239,22 @@ node tools/bin/grin-validate.js <name>.grin
         <label class="field">
           <span class="field__label">Active Group</span>
           <select id="groupSelect" class="field__control" aria-label="Active group">
-            <option value="0">Group 0</option>
-            <option value="1">Group 1</option>
-            <option value="2">Group 2</option>
-            <option value="3">Group 3</option>
-            <option value="4">Group 4</option>
-            <option value="5">Group 5</option>
-            <option value="6">Group 6</option>
-            <option value="7">Group 7</option>
-            <option value="8">Group 8</option>
-            <option value="9">Group 9</option>
-            <option value="10">Group 10</option>
-            <option value="11">Group 11</option>
-            <option value="12">Group 12</option>
-            <option value="13">Group 13</option>
-            <option value="14">Group 14</option>
-            <option value="15">Group 15</option>
+            <option value="0">Group G (0)</option>
+            <option value="1">Group H (1)</option>
+            <option value="2">Group J (2)</option>
+            <option value="3">Group K (3)</option>
+            <option value="4">Group L (4)</option>
+            <option value="5">Group M (5)</option>
+            <option value="6">Group N (6)</option>
+            <option value="7">Group P (7)</option>
+            <option value="8">Group Q (8)</option>
+            <option value="9">Group R (9)</option>
+            <option value="10">Group S (10)</option>
+            <option value="11">Group T (11)</option>
+            <option value="12">Group U (12)</option>
+            <option value="13">Group V (13)</option>
+            <option value="14">Group W (14)</option>
+            <option value="15">Group X (15)</option>
           </select>
         </label>
 
@@ -10287,10 +10301,37 @@ const lockToggle = document.getElementById("lockToggle");
 const previewButton = document.getElementById("previewButton");
 const exportButton = document.getElementById("exportButton");
 
-const GROUP_TAG_REGEX = /\\bG(1[0-5]|[0-9])\\b/i;
-const GROUP_BRACKET_REGEX = /\\[G(1[0-5]|[0-9])\\]/i;
-const LOCK_TAG_REGEX = /\\bLOCK\\b|\\[L\\]/i;
-const UNLOCK_TAG_REGEX = /\\bUNLOCK\\b|\\[U\\]/i;
+// Control group labels (G-X, skipping I/O) and lock suffixes (Y/Z).
+const CONTROL_GROUP_LABELS = ["G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X"];
+const CONTROL_GROUP_PATTERN = CONTROL_GROUP_LABELS.join("");
+
+const GROUP_TAG_REGEX = new RegExp(`\\bG([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\b`, "i");
+const GROUP_BRACKET_REGEX = new RegExp(`\\[G([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\]`, "i");
+const LOCK_TAG_REGEX = /\bLOCK\b|\bZ\b|\[Z\]/i;
+const UNLOCK_TAG_REGEX = /\bUNLOCK\b|\bY\b|\[Y\]/i;
+
+/**
+ * Convert a numeric group ID into the G-X label alphabet.
+ * @param {number} groupId - Group ID (0-15).
+ * @returns {string} Group label or "?" when out of range.
+ */
+function formatControlGroupLabel(groupId) {
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a single-letter control label into a numeric group ID.
+ * @param {string} label - Control label.
+ * @returns {number | null} Group ID or null when invalid.
+ */
+function parseControlGroupLabel(label) {
+  if (!label) {
+    return null;
+  }
+  const normalized = String(label).trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized);
+  return index >= 0 ? index : null;
+}
 
 /**
  * Update the status footer with a short message.
@@ -10310,7 +10351,8 @@ function setStatus(message) {
 function describeSelection() {
   const groupId = groupSelect ? Number(groupSelect.value) : 0;
   const lockState = lockToggle ? lockToggle.checked : false;
-  return `Group ${groupId} • ${lockState ? "Locked" : "Unlocked"}`;
+  const groupLabel = formatControlGroupLabel(groupId);
+  return `Group ${groupLabel} (${groupId}) • ${lockState ? "Locked" : "Unlocked"}`;
 }
 
 /**
@@ -10333,6 +10375,23 @@ function normalizeGroupId(groupId, fallback) {
 }
 
 /**
+ * Parse a group token that may be numeric or label-based.
+ * @param {string | null} token - Candidate group token.
+ * @param {number} fallback - Fallback group ID.
+ * @returns {number} Parsed group ID.
+ */
+function parseGroupToken(token, fallback) {
+  if (!token) {
+    return fallback;
+  }
+  if (/^\d+$/.test(token)) {
+    return normalizeGroupId(Number(token), fallback);
+  }
+  const parsed = parseControlGroupLabel(token);
+  return parsed !== null ? parsed : fallback;
+}
+
+/**
  * Parse a layer name into group/lock metadata based on tag conventions.
  * @param {string} layerName - Layer name to inspect.
  * @param {number} fallbackGroup - Fallback group ID.
@@ -10343,7 +10402,7 @@ function parseLayerNameMetadata(layerName, fallbackGroup, fallbackLock) {
   const bracketMatch = layerName.match(GROUP_BRACKET_REGEX);
   const inlineMatch = layerName.match(GROUP_TAG_REGEX);
   const rawGroup = bracketMatch ? bracketMatch[1] : inlineMatch ? inlineMatch[1] : null;
-  const groupId = normalizeGroupId(rawGroup ? Number(rawGroup) : undefined, fallbackGroup);
+  const groupId = parseGroupToken(rawGroup, fallbackGroup);
   const hasLockTag = LOCK_TAG_REGEX.test(layerName);
   const hasUnlockTag = UNLOCK_TAG_REGEX.test(layerName);
   const locked = hasLockTag ? true : hasUnlockTag ? false : fallbackLock;
@@ -10412,7 +10471,7 @@ function captureLayerMetadata(document) {
  * @returns {{baseName: string, rgbaName: string, groupsName: string, lockName: string, rulesName: string, grinName: string}}
  */
 function buildExportNames(documentName) {
-  const baseName = documentName.replace(/\\.[^/.]+$/, "");
+  const baseName = documentName.replace(/\.[^/.]+$/, "");
   return {
     baseName,
     rgbaName: `${baseName}.png`,
@@ -10556,7 +10615,7 @@ async function writeRulesJson(rulesFile, rules) {
  * @returns {string} CLI command.
  */
 function buildEncodeCommand(exportRoot, names) {
-  return `node tools/bin/grin-encode.js \"${exportRoot}/${names.rgbaName}\" \"${exportRoot}/${names.grinName}\" --groups \"${exportRoot}/${names.groupsName}\" --rules \"${exportRoot}/${names.rulesName}\"`;
+  return `node tools/bin/grin-encode.js "${exportRoot}/${names.rgbaName}" "${exportRoot}/${names.grinName}" --groups "${exportRoot}/${names.groupsName}" --rules "${exportRoot}/${names.rulesName}"`;
 }
 
 /**
@@ -10566,7 +10625,7 @@ function buildEncodeCommand(exportRoot, names) {
  * @returns {string} CLI command.
  */
 function buildValidateCommand(exportRoot, names) {
-  return `node tools/bin/grin-validate.js \"${exportRoot}/${names.grinName}\"`;
+  return `node tools/bin/grin-validate.js "${exportRoot}/${names.grinName}"`;
 }
 
 /**
@@ -10612,7 +10671,7 @@ async function handleExport() {
     setStatus("Writing rules sidecar...");
     await writeRulesJson(rulesFile, []);
 
-    const exportRoot = exportFolder.nativePath.replace(/\\\\/g, "/");
+    const exportRoot = exportFolder.nativePath.replace(/\\/g, "/");
     const encodeCommand = buildEncodeCommand(exportRoot, names);
     const validateCommand = buildValidateCommand(exportRoot, names);
 
@@ -10807,9 +10866,9 @@ using the CLI tools described in `docs/creative-suite-foundations.md`.
 
 The panel reads metadata from page item names or notes:
 
-- `G0`–`G15` or `[G0]`–`[G15]` set the group ID.
-- `LOCK` or `[L]` marks a page item as locked.
-- `UNLOCK` or `[U]` clears the lock hint.
+- `GG`–`GX` or `[GG]`–`[GX]` set the group label (`G H J K L M N P Q R S T U V W X`).
+- `LOCK` or `[Z]` marks a page item as locked (`Z` suffix).
+- `UNLOCK` or `[Y]` clears the lock hint (`Y` suffix).
 
 Use tags on layers or objects to preview how many items are annotated. Tagged metadata can be
 used to drive group/lock map creation in your art.
@@ -10859,23 +10918,23 @@ node tools/bin/grin-validate.js <name>.grin
       <section class="panel__section">
         <label for="groupSelect">Default Group</label>
         <select id="groupSelect">
-          <!-- Group IDs are 0-15 per GRIN spec. -->
-          <option value="0">Group 0</option>
-          <option value="1">Group 1</option>
-          <option value="2">Group 2</option>
-          <option value="3">Group 3</option>
-          <option value="4">Group 4</option>
-          <option value="5">Group 5</option>
-          <option value="6">Group 6</option>
-          <option value="7">Group 7</option>
-          <option value="8">Group 8</option>
-          <option value="9">Group 9</option>
-          <option value="10">Group 10</option>
-          <option value="11">Group 11</option>
-          <option value="12">Group 12</option>
-          <option value="13">Group 13</option>
-          <option value="14">Group 14</option>
-          <option value="15">Group 15</option>
+          <!-- Group IDs are 0-15 per GRIN spec, labeled G-X (skipping I/O). -->
+          <option value="0">Group G (0)</option>
+          <option value="1">Group H (1)</option>
+          <option value="2">Group J (2)</option>
+          <option value="3">Group K (3)</option>
+          <option value="4">Group L (4)</option>
+          <option value="5">Group M (5)</option>
+          <option value="6">Group N (6)</option>
+          <option value="7">Group P (7)</option>
+          <option value="8">Group Q (8)</option>
+          <option value="9">Group R (9)</option>
+          <option value="10">Group S (10)</option>
+          <option value="11">Group T (11)</option>
+          <option value="12">Group U (12)</option>
+          <option value="13">Group V (13)</option>
+          <option value="14">Group W (14)</option>
+          <option value="15">Group X (15)</option>
         </select>
       </section>
 
@@ -10921,10 +10980,37 @@ const resolutionInput = document.getElementById("resolutionInput");
 const previewButton = document.getElementById("previewButton");
 const exportButton = document.getElementById("exportButton");
 
-const GROUP_TAG_REGEX = /\\bG(1[0-5]|[0-9])\\b/i;
-const GROUP_BRACKET_REGEX = /\\[G(1[0-5]|[0-9])\\]/i;
-const LOCK_TAG_REGEX = /\\bLOCK\\b|\\[L\\]/i;
-const UNLOCK_TAG_REGEX = /\\bUNLOCK\\b|\\[U\\]/i;
+// Control group labels (G-X, skipping I/O) and lock suffixes (Y/Z).
+const CONTROL_GROUP_LABELS = ["G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X"];
+const CONTROL_GROUP_PATTERN = CONTROL_GROUP_LABELS.join("");
+
+const GROUP_TAG_REGEX = new RegExp(`\\bG([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\b`, "i");
+const GROUP_BRACKET_REGEX = new RegExp(`\\[G([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\]`, "i");
+const LOCK_TAG_REGEX = /\bLOCK\b|\bZ\b|\[Z\]/i;
+const UNLOCK_TAG_REGEX = /\bUNLOCK\b|\bY\b|\[Y\]/i;
+
+/**
+ * Convert a numeric group ID into the G-X label alphabet.
+ * @param {number} groupId - Group ID (0-15).
+ * @returns {string} Group label or "?" when out of range.
+ */
+function formatControlGroupLabel(groupId) {
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a single-letter control label into a numeric group ID.
+ * @param {string} label - Control label.
+ * @returns {number | null} Group ID or null when invalid.
+ */
+function parseControlGroupLabel(label) {
+  if (!label) {
+    return null;
+  }
+  const normalized = String(label).trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized);
+  return index >= 0 ? index : null;
+}
 
 /**
  * Update the status footer with a short message.
@@ -10945,7 +11031,8 @@ function describeSelection() {
   const groupId = groupSelect ? Number(groupSelect.value) : 0;
   const lockState = lockToggle ? lockToggle.checked : false;
   const resolution = resolutionInput ? Number(resolutionInput.value) : 1024;
-  return `Group ${groupId} • ${lockState ? "Locked" : "Unlocked"} • ${resolution}px`;
+  const groupLabel = formatControlGroupLabel(groupId);
+  return `Group ${groupLabel} (${groupId}) • ${lockState ? "Locked" : "Unlocked"} • ${resolution}px`;
 }
 
 /**
@@ -10968,6 +11055,23 @@ function normalizeGroupId(groupId, fallback) {
 }
 
 /**
+ * Parse a group token that may be numeric or label-based.
+ * @param {string | null} token - Candidate group token.
+ * @param {number} fallback - Fallback group ID.
+ * @returns {number} Parsed group ID.
+ */
+function parseGroupToken(token, fallback) {
+  if (!token) {
+    return fallback;
+  }
+  if (/^\d+$/.test(token)) {
+    return normalizeGroupId(Number(token), fallback);
+  }
+  const parsed = parseControlGroupLabel(token);
+  return parsed !== null ? parsed : fallback;
+}
+
+/**
  * Parse a metadata source string into group/lock hints.
  * @param {string} sourceText - Text to inspect (name or note).
  * @param {number} fallbackGroup - Fallback group ID.
@@ -10978,7 +11082,7 @@ function parseMetadataTags(sourceText, fallbackGroup, fallbackLock) {
   const bracketMatch = sourceText.match(GROUP_BRACKET_REGEX);
   const inlineMatch = sourceText.match(GROUP_TAG_REGEX);
   const rawGroup = bracketMatch ? bracketMatch[1] : inlineMatch ? inlineMatch[1] : null;
-  const groupId = normalizeGroupId(rawGroup ? Number(rawGroup) : undefined, fallbackGroup);
+  const groupId = parseGroupToken(rawGroup, fallbackGroup);
   const hasLockTag = LOCK_TAG_REGEX.test(sourceText);
   const hasUnlockTag = UNLOCK_TAG_REGEX.test(sourceText);
   const locked = hasLockTag ? true : hasUnlockTag ? false : fallbackLock;
@@ -11073,7 +11177,7 @@ function buildFlatteningPlan(document, resolution) {
  * @returns {{baseName: string, rgbaName: string, groupsName: string, lockName: string, rulesName: string, grinName: string}}
  */
 function buildExportNames(documentName) {
-  const baseName = documentName.replace(/\\.[^/.]+$/, "");
+  const baseName = documentName.replace(/\.[^/.]+$/, "");
   return {
     baseName,
     rgbaName: `${baseName}.png`,
@@ -11193,7 +11297,7 @@ async function writeRulesJson(rulesFile, rules) {
  * @returns {string} CLI command.
  */
 function buildEncodeCommand(exportRoot, names) {
-  return `node tools/bin/grin-encode.js \"${exportRoot}/${names.rgbaName}\" \"${exportRoot}/${names.grinName}\" --groups \"${exportRoot}/${names.groupsName}\" --rules \"${exportRoot}/${names.rulesName}\"`;
+  return `node tools/bin/grin-encode.js "${exportRoot}/${names.rgbaName}" "${exportRoot}/${names.grinName}" --groups "${exportRoot}/${names.groupsName}" --rules "${exportRoot}/${names.rulesName}"`;
 }
 
 /**
@@ -11203,7 +11307,7 @@ function buildEncodeCommand(exportRoot, names) {
  * @returns {string} CLI command.
  */
 function buildValidateCommand(exportRoot, names) {
-  return `node tools/bin/grin-validate.js \"${exportRoot}/${names.grinName}\"`;
+  return `node tools/bin/grin-validate.js "${exportRoot}/${names.grinName}"`;
 }
 
 /**
@@ -11254,7 +11358,7 @@ async function handleExport() {
     setStatus("Writing rules sidecar...");
     await writeRulesJson(rulesFile, []);
 
-    const exportRoot = exportFolder.nativePath.replace(/\\\\/g, "/");
+    const exportRoot = exportFolder.nativePath.replace(/\\/g, "/");
     const encodeCommand = buildEncodeCommand(exportRoot, names);
     const validateCommand = buildValidateCommand(exportRoot, names);
 
@@ -11404,7 +11508,7 @@ GRIN CLI validation tools.
 1. Copy `plugins/gimp/grin_gimp_plugin.py` into your GIMP plug-ins folder:
    - Linux: `~/.config/GIMP/2.10/plug-ins/`
    - macOS: `~/Library/Application Support/GIMP/2.10/plug-ins/`
-   - Windows: `%APPDATA%\\GIMP\\2.10\\plug-ins\\`
+   - Windows: `%APPDATA%\GIMP\2.10\plug-ins\`
 2. Ensure the script is executable (`chmod +x grin_gimp_plugin.py` on macOS/Linux).
 3. Restart GIMP.
 
@@ -11415,7 +11519,7 @@ The plugin appears under **Filters → GRIN → GRIN Export...**
 1. Paint your RGBA artwork in standard layers.
 2. Run **Filters → GRIN → GRIN Export...** to create the metadata layers.
 3. Use selections (lasso, brush selection, etc.) to mark regions and re-run the plugin with:
-   - **Active Group ID** set to the desired group (0-15).
+   - **Active Group ID** set to the desired group (0-15, labeled `G H J K L M N P Q R S T U V W X`).
    - **Lock pixels** toggled when you want the lock map filled.
 4. The plugin updates the `GRIN_GROUPS` and `GRIN_LOCK` layers, preserving your original art.
 
@@ -14491,7 +14595,7 @@ function printUsage() {
  */
 import { readGrinFile } from "../lib/grin.js";
 import { BaseOpcodeId } from "../lib/opcodes.js";
-import { CONTROL_BYTE_MASKS } from "../lib/format.js";
+import { CONTROL_BYTE_MASKS, formatControlGroupLabel, formatControlLockLabel } from "../lib/format.js";
 
 const args = process.argv.slice(2);
 const json = args.includes("--json");
@@ -14640,17 +14744,22 @@ function outputText(report, sections) {
   if (sections.groups && report.groups) {
     process.stdout.write("Groups:\n");
     report.groups.counts.forEach((count, groupId) => {
-      process.stdout.write(`  ${groupId}: ${count}\n`);
+      // Report both the control label and numeric ID for clarity.
+      const label = formatControlGroupLabel(groupId);
+      process.stdout.write(`  ${label} (${groupId}): ${count}\n`);
     });
-    process.stdout.write(`  locked: ${report.groups.locked}\n`);
+    process.stdout.write(`  locked (${formatControlLockLabel(true)}): ${report.groups.locked}\n`);
   }
 
   if (sections.pixels && report.pixels) {
     process.stdout.write("Pixels:\n");
     for (const pixel of report.pixels) {
+      // Include the control label and lock suffix alongside raw values.
+      const groupLabel = formatControlGroupLabel(pixel.groupId);
+      const lockLabel = formatControlLockLabel(pixel.locked);
       process.stdout.write(
         `  (${pixel.x},${pixel.y}) rgba=(${pixel.r},${pixel.g},${pixel.b},${pixel.a}) c=${pixel.c}` +
-          ` group=${pixel.groupId} locked=${pixel.locked}\n`
+          ` group=${groupLabel} (${pixel.groupId}) lock=${lockLabel}\n`
       );
     }
   }
@@ -14878,6 +14987,67 @@ export const CONTROL_BYTE_MASKS = {
   RESERVED: 0x70,
   LOCK: 0x80,
 };
+
+// Control group labels intentionally skip I/O to keep a 16-slot alphabet and avoid ambiguity.
+export const CONTROL_GROUP_LABELS = [
+  "G",
+  "H",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+];
+
+// Control lock suffixes are reserved for the final control channel indicator.
+export const CONTROL_LOCK_LABELS = {
+  UNLOCKED: "Y",
+  LOCKED: "Z",
+};
+
+/**
+ * Format a numeric group ID using the control-label alphabet.
+ * @param {number} groupId - Group index (0-15).
+ * @returns {string} Group label or "?" when out of range.
+ */
+export function formatControlGroupLabel(groupId) {
+  if (!Number.isInteger(groupId)) {
+    return "?";
+  }
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a control-label character into a numeric group ID.
+ * @param {string} label - Single-letter group label.
+ * @returns {number | null} Group ID or null when the label is not recognized.
+ */
+export function parseControlGroupLabel(label) {
+  if (!label) {
+    return null;
+  }
+  const normalized = String(label).trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized);
+  return index >= 0 ? index : null;
+}
+
+/**
+ * Format the lock suffix for a control channel.
+ * @param {boolean} locked - Whether the control byte is locked.
+ * @returns {string} "Y" for unlocked or "Z" for locked.
+ */
+export function formatControlLockLabel(locked) {
+  return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
 
 export function groupMaskTargetsGroup(groupMask, groupId) {
   const shift = groupId & 0x0f;
@@ -16128,10 +16298,12 @@ function prefixResult(errors, warnings, result, prefix) {
 import {
   CONTROL_BYTE_MASKS,
   DisplayBuffer,
+  formatControlGroupLabel,
   GrinCanvasRenderer,
   GrinLoader,
   GrinPlayer,
   OpcodeRegistry,
+  parseControlGroupLabel,
   RuleEngine,
   validateGrinFile,
 } from "../dist/grin.js";
@@ -16392,8 +16564,7 @@ function updateValidationSummary(grinFile) {
   if (notes.length === 0) {
     notes.push("No validation issues detected.");
   }
-  validationNotes.textContent = notes.join("
-");
+  validationNotes.textContent = notes.join("\n");
 }
 
 function resetValidationSummary() {
@@ -16411,7 +16582,8 @@ function updateGroupFilterStatus() {
     groupFilterStatus.textContent = "All";
     return;
   }
-  groupFilterStatus.textContent = activeGroup.toString(16).toUpperCase();
+  // Display control group labels instead of hex digits.
+  groupFilterStatus.textContent = formatControlGroupLabel(activeGroup);
 }
 
 function setActiveGroup(groupId, shouldRender = true) {
@@ -16492,9 +16664,14 @@ function handleKeyboardShortcuts(event) {
     setActiveGroup(null);
     return;
   }
-  if (key.length === 1 && /^[0-9a-f]$/.test(key)) {
+  if (key.length === 1 && /^[a-z]$/.test(key)) {
+    // Use the G-X control label alphabet for keyboard shortcuts.
+    const parsed = parseControlGroupLabel(key);
+    if (parsed === null) {
+      return;
+    }
     event.preventDefault();
-    setActiveGroup(parseInt(key, 16));
+    setActiveGroup(parsed);
   }
 }
 
@@ -16542,8 +16719,7 @@ function initializePlayer(grinFile) {
     `Dimensions: ${grinFile.header.width} × ${grinFile.header.height}`,
     `Rules: ${grinFile.header.ruleCount}`,
     `Tick Rate: ${grinFile.header.tickMicros} µs`,
-  ].join("
-");
+  ].join("\n");
   // Use rule count as a hint for the scrubber range without shrinking the default.
   const estimatedMax = Math.max(Number(seekSlider.max || "1000"), grinFile.header.ruleCount || 0);
   setMaxTick(estimatedMax);
@@ -17510,6 +17686,67 @@ export const CONTROL_BYTE_MASKS = {
   RESERVED: 0x70,
   LOCK: 0x80,
 } as const;
+
+// Control group labels intentionally skip I/O to keep a 16-slot alphabet and avoid ambiguity.
+export const CONTROL_GROUP_LABELS = [
+  "G",
+  "H",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+] as const;
+
+// Control lock suffixes are reserved for the final control channel indicator.
+export const CONTROL_LOCK_LABELS = {
+  UNLOCKED: "Y",
+  LOCKED: "Z",
+} as const;
+
+/**
+ * Format a numeric group ID using the control-label alphabet.
+ * @param groupId - Group index (0-15).
+ * @returns Group label or "?" when out of range.
+ */
+export function formatControlGroupLabel(groupId: number): string {
+  if (!Number.isInteger(groupId)) {
+    return "?";
+  }
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a control-label character into a numeric group ID.
+ * @param label - Single-letter group label.
+ * @returns Group ID or null when the label is not recognized.
+ */
+export function parseControlGroupLabel(label: string): number | null {
+  if (!label) {
+    return null;
+  }
+  const normalized = label.trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized as (typeof CONTROL_GROUP_LABELS)[number]);
+  return index >= 0 ? index : null;
+}
+
+/**
+ * Format the lock suffix for a control channel.
+ * @param locked - Whether the control byte is locked.
+ * @returns "Y" for unlocked or "Z" for locked.
+ */
+export function formatControlLockLabel(locked: boolean): string {
+  return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
 
 export function getGroupId(controlByte: number): number {
   return controlByte & CONTROL_BYTE_MASKS.GROUP_ID;

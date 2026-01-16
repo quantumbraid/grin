@@ -25,7 +25,7 @@
  */
 import { readGrinFile } from "../lib/grin.js";
 import { BaseOpcodeId } from "../lib/opcodes.js";
-import { CONTROL_BYTE_MASKS } from "../lib/format.js";
+import { CONTROL_BYTE_MASKS, formatControlGroupLabel, formatControlLockLabel } from "../lib/format.js";
 
 const args = process.argv.slice(2);
 const json = args.includes("--json");
@@ -174,17 +174,22 @@ function outputText(report, sections) {
   if (sections.groups && report.groups) {
     process.stdout.write("Groups:\n");
     report.groups.counts.forEach((count, groupId) => {
-      process.stdout.write(`  ${groupId}: ${count}\n`);
+      // Report both the control label and numeric ID for clarity.
+      const label = formatControlGroupLabel(groupId);
+      process.stdout.write(`  ${label} (${groupId}): ${count}\n`);
     });
-    process.stdout.write(`  locked: ${report.groups.locked}\n`);
+    process.stdout.write(`  locked (${formatControlLockLabel(true)}): ${report.groups.locked}\n`);
   }
 
   if (sections.pixels && report.pixels) {
     process.stdout.write("Pixels:\n");
     for (const pixel of report.pixels) {
+      // Include the control label and lock suffix alongside raw values.
+      const groupLabel = formatControlGroupLabel(pixel.groupId);
+      const lockLabel = formatControlLockLabel(pixel.locked);
       process.stdout.write(
         `  (${pixel.x},${pixel.y}) rgba=(${pixel.r},${pixel.g},${pixel.b},${pixel.a}) c=${pixel.c}` +
-          ` group=${pixel.groupId} locked=${pixel.locked}\n`
+          ` group=${groupLabel} (${pixel.groupId}) lock=${lockLabel}\n`
       );
     }
   }
