@@ -30,6 +30,10 @@ The panel scans layer names for metadata tags to help with preview summaries:
 - `LOCK` or `[Z]` marks a layer as locked (`Z` suffix).
 - `UNLOCK` or `[Y]` clears the lock hint (`Y` suffix).
 
+Authoring strings that include RGBA hex should append the control suffix as `rrggbbaaGY` or
+`rrggbbaaGZ` (group label `G`‑`X`, lock `Y`/`Z`). Any other suffix is considered corruption and
+should be rewritten with a chosen lock state.
+
 ## Export Pipeline
 
 1. Click **Export** to choose an output folder.

@@ -15,6 +15,11 @@ bit 7: lock
 bits 0-3: group ID (0-15)
 ```
 
+Authoring strings append the control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+The penultimate character must be a group label (`G`‑`X`), and the final character must be `Y` or `Z`.
+Any other suffix is considered corruption; resolve it by rewriting control suffixes with a chosen
+lock state (`Y` or `Z`) so the value is normalized.
+
 Control label example: `LY` means group L (ID 4), unlocked.
 
 ## Rule Group Masks

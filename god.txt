@@ -25,6 +25,7 @@ grin/
 ├── Makefile
 ├── NOTICE
 ├── README.md
+├── TODO.md
 ├── USER_GUIDE.md
 ├── SECURITY.md
 ├── agents.txt
@@ -2874,6 +2875,13 @@ quantumbraid@gmail.com
 This standard is intentionally constrained for security reasons and to encourage
 thoughtful, novel usage.
 
+#####/TODO.md#####
+# TODO
+
+- [x] Add control suffix validation helpers to shared format utilities.
+- [x] Update documentation to describe the new rrggbbaa + (G-X)(Y/Z) control suffix rules.
+- [x] Refresh God.txt with the latest repo structure and file contents.
+
 #####/USER_GUIDE.md#####
 # GRIN User Guide (Simplified)
 
@@ -2893,6 +2901,11 @@ hexadecimal RGBA digits.
 
 **Control group labels (0‑15):** `G H J K L M N P Q R S T U V W X`  
 **Lock suffix:** `Y` = unlocked, `Z` = locked
+
+Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+The penultimate character must be a group label (`G`‑`X`), and the final character must be `Y` or `Z`.
+Any other suffix is considered corruption and should be resolved by rewriting the suffix with a chosen
+lock state (`Y` or `Z`) for all affected pixels.
 
 Example control channel suffixes: `LY` (group L, unlocked) or `LZ` (group L, locked).
 
@@ -9558,6 +9571,11 @@ bit 7: lock
 bits 0-3: group ID (0-15)
 ```
 
+Authoring strings append the control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+The penultimate character must be a group label (`G`‑`X`), and the final character must be `Y` or `Z`.
+Any other suffix is considered corruption; resolve it by rewriting control suffixes with a chosen
+lock state (`Y` or `Z`) so the value is normalized.
+
 Control label example: `LY` means group L (ID 4), unlocked.
 
 ## Rule Group Masks
@@ -9698,6 +9716,10 @@ Control labels used in authoring/UI (not stored in the file):
 
 - Group labels: `G H J K L M N P Q R S T U V W X` (skip `I` and `O`).
 - Lock suffix: `Y` = unlocked, `Z` = locked.
+- Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+  The penultimate character must be a `G`‑`X` group label and the final character must be `Y` or `Z`.
+  Any other suffix is treated as corruption and should be normalized by rewriting suffixes with a
+  chosen lock state (`Y` or `Z`).
 
 ## 4. Validation Rules
 
@@ -9887,6 +9909,10 @@ Authoring/UI control labels (not stored in the file):
 
 - Group labels: `G H J K L M N P Q R S T U V W X` (skip `I` and `O`)
 - Lock suffix: `Y` = unlocked, `Z` = locked
+- Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+  The penultimate character must be a `G`‑`X` group label and the final character must be `Y` or `Z`.
+  Any other suffix is treated as corruption and should be normalized by rewriting suffixes with a
+  chosen lock state (`Y` or `Z`).
 
 Each pixel:
 
@@ -10196,6 +10222,10 @@ The panel scans layer names for metadata tags to help with preview summaries:
 - `GG`–`GX` or `[GG]`–`[GX]` set the group label (`G H J K L M N P Q R S T U V W X`).
 - `LOCK` or `[Z]` marks a layer as locked (`Z` suffix).
 - `UNLOCK` or `[Y]` clears the lock hint (`Y` suffix).
+
+Authoring strings that include RGBA hex should append the control suffix as `rrggbbaaGY` or
+`rrggbbaaGZ` (group label `G`‑`X`, lock `Y`/`Z`). Any other suffix is considered corruption and
+should be rewritten with a chosen lock state.
 
 ## Export Pipeline
 
@@ -10872,6 +10902,9 @@ The panel reads metadata from page item names or notes:
 
 Use tags on layers or objects to preview how many items are annotated. Tagged metadata can be
 used to drive group/lock map creation in your art.
+Authoring strings that include RGBA hex should append the control suffix as `rrggbbaaGY` or
+`rrggbbaaGZ` (group label `G`‑`X`, lock `Y`/`Z`). Any other suffix is considered corruption and
+should be rewritten with a chosen lock state.
 
 ## Export Pipeline
 
@@ -15014,6 +15047,12 @@ export const CONTROL_LOCK_LABELS = {
   LOCKED: "Z",
 };
 
+// Control suffixes append to rrggbbaa to represent the control channel in authoring strings.
+export const CONTROL_SUFFIX_PATTERN = new RegExp(
+  `^[${CONTROL_GROUP_LABELS.join("")}][${CONTROL_LOCK_LABELS.UNLOCKED}${CONTROL_LOCK_LABELS.LOCKED}]$`,
+  "i"
+);
+
 /**
  * Format a numeric group ID using the control-label alphabet.
  * @param {number} groupId - Group index (0-15).
@@ -15047,6 +15086,43 @@ export function parseControlGroupLabel(label) {
  */
 export function formatControlLockLabel(locked) {
   return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
+/**
+ * Format the authoring control suffix that follows rrggbbaa.
+ * @param {number} groupId - Group index (0-15).
+ * @param {boolean} locked - Whether the control byte is locked.
+ * @returns {string} Two-character suffix like "GY" or "GZ".
+ */
+export function formatControlSuffix(groupId, locked) {
+  return `${formatControlGroupLabel(groupId)}${formatControlLockLabel(locked)}`;
+}
+
+/**
+ * Validate a control suffix to detect corruption in authoring strings.
+ * @param {string} suffix - Two-character suffix to validate.
+ * @returns {boolean} True when the suffix matches a G-X + Y/Z pattern.
+ */
+export function isValidControlSuffix(suffix) {
+  return CONTROL_SUFFIX_PATTERN.test(String(suffix).trim());
+}
+
+/**
+ * Parse a control suffix into group/lock metadata when valid.
+ * @param {string} suffix - Two-character suffix like "GY" or "GZ".
+ * @returns {{groupId: number, locked: boolean} | null} Parsed payload or null when invalid.
+ */
+export function parseControlSuffix(suffix) {
+  if (!isValidControlSuffix(suffix)) {
+    return null;
+  }
+  const normalized = String(suffix).trim().toUpperCase();
+  const groupId = parseControlGroupLabel(normalized[0]);
+  if (groupId === null) {
+    return null;
+  }
+  const locked = normalized[1] === CONTROL_LOCK_LABELS.LOCKED;
+  return { groupId, locked };
 }
 
 export function groupMaskTargetsGroup(groupMask, groupId) {
@@ -17713,6 +17789,12 @@ export const CONTROL_LOCK_LABELS = {
   LOCKED: "Z",
 } as const;
 
+// Control suffixes append to rrggbbaa to represent the control channel in authoring strings.
+export const CONTROL_SUFFIX_PATTERN = new RegExp(
+  `^[${CONTROL_GROUP_LABELS.join("")}][${CONTROL_LOCK_LABELS.UNLOCKED}${CONTROL_LOCK_LABELS.LOCKED}]$`,
+  "i"
+);
+
 /**
  * Format a numeric group ID using the control-label alphabet.
  * @param groupId - Group index (0-15).
@@ -17746,6 +17828,45 @@ export function parseControlGroupLabel(label: string): number | null {
  */
 export function formatControlLockLabel(locked: boolean): string {
   return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
+/**
+ * Format the authoring control suffix that follows rrggbbaa.
+ * @param groupId - Group index (0-15).
+ * @param locked - Whether the control byte is locked.
+ * @returns Two-character suffix like "GY" or "GZ".
+ */
+export function formatControlSuffix(groupId: number, locked: boolean): string {
+  return `${formatControlGroupLabel(groupId)}${formatControlLockLabel(locked)}`;
+}
+
+/**
+ * Validate a control suffix to detect corruption in authoring strings.
+ * @param suffix - Two-character suffix to validate.
+ * @returns True when the suffix matches a G-X + Y/Z pattern.
+ */
+export function isValidControlSuffix(suffix: string): boolean {
+  return CONTROL_SUFFIX_PATTERN.test(suffix.trim());
+}
+
+/**
+ * Parse a control suffix into group/lock metadata when valid.
+ * @param suffix - Two-character suffix like "GY" or "GZ".
+ * @returns Parsed payload or null when invalid.
+ */
+export function parseControlSuffix(
+  suffix: string
+): { groupId: number; locked: boolean } | null {
+  if (!isValidControlSuffix(suffix)) {
+    return null;
+  }
+  const normalized = suffix.trim().toUpperCase();
+  const groupId = parseControlGroupLabel(normalized[0]);
+  if (groupId === null) {
+    return null;
+  }
+  const locked = normalized[1] === CONTROL_LOCK_LABELS.LOCKED;
+  return { groupId, locked };
 }
 
 export function getGroupId(controlByte: number): number {

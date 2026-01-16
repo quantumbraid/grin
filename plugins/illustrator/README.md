@@ -29,6 +29,9 @@ The panel reads metadata from page item names or notes:
 
 Use tags on layers or objects to preview how many items are annotated. Tagged metadata can be
 used to drive group/lock map creation in your art.
+Authoring strings that include RGBA hex should append the control suffix as `rrggbbaaGY` or
+`rrggbbaaGZ` (group label `G`‑`X`, lock `Y`/`Z`). Any other suffix is considered corruption and
+should be rewritten with a chosen lock state.
 
 ## Export Pipeline
 

@@ -104,6 +104,12 @@ export const CONTROL_LOCK_LABELS = {
   LOCKED: "Z",
 } as const;
 
+// Control suffixes append to rrggbbaa to represent the control channel in authoring strings.
+export const CONTROL_SUFFIX_PATTERN = new RegExp(
+  `^[${CONTROL_GROUP_LABELS.join("")}][${CONTROL_LOCK_LABELS.UNLOCKED}${CONTROL_LOCK_LABELS.LOCKED}]$`,
+  "i"
+);
+
 /**
  * Format a numeric group ID using the control-label alphabet.
  * @param groupId - Group index (0-15).
@@ -137,6 +143,45 @@ export function parseControlGroupLabel(label: string): number | null {
  */
 export function formatControlLockLabel(locked: boolean): string {
   return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
+/**
+ * Format the authoring control suffix that follows rrggbbaa.
+ * @param groupId - Group index (0-15).
+ * @param locked - Whether the control byte is locked.
+ * @returns Two-character suffix like "GY" or "GZ".
+ */
+export function formatControlSuffix(groupId: number, locked: boolean): string {
+  return `${formatControlGroupLabel(groupId)}${formatControlLockLabel(locked)}`;
+}
+
+/**
+ * Validate a control suffix to detect corruption in authoring strings.
+ * @param suffix - Two-character suffix to validate.
+ * @returns True when the suffix matches a G-X + Y/Z pattern.
+ */
+export function isValidControlSuffix(suffix: string): boolean {
+  return CONTROL_SUFFIX_PATTERN.test(suffix.trim());
+}
+
+/**
+ * Parse a control suffix into group/lock metadata when valid.
+ * @param suffix - Two-character suffix like "GY" or "GZ".
+ * @returns Parsed payload or null when invalid.
+ */
+export function parseControlSuffix(
+  suffix: string
+): { groupId: number; locked: boolean } | null {
+  if (!isValidControlSuffix(suffix)) {
+    return null;
+  }
+  const normalized = suffix.trim().toUpperCase();
+  const groupId = parseControlGroupLabel(normalized[0]);
+  if (groupId === null) {
+    return null;
+  }
+  const locked = normalized[1] === CONTROL_LOCK_LABELS.LOCKED;
+  return { groupId, locked };
 }
 
 export function getGroupId(controlByte: number): number {
