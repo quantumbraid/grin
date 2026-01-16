@@ -55,6 +55,110 @@ export const CONTROL_BYTE_MASKS = {
   LOCK: 0x80,
 };
 
+// Control group labels intentionally skip I/O to keep a 16-slot alphabet and avoid ambiguity.
+export const CONTROL_GROUP_LABELS = [
+  "G",
+  "H",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+];
+
+// Control lock suffixes are reserved for the final control channel indicator.
+export const CONTROL_LOCK_LABELS = {
+  UNLOCKED: "Y",
+  LOCKED: "Z",
+};
+
+// Control suffixes append to rrggbbaa to represent the control channel in authoring strings.
+export const CONTROL_SUFFIX_PATTERN = new RegExp(
+  `^[${CONTROL_GROUP_LABELS.join("")}][${CONTROL_LOCK_LABELS.UNLOCKED}${CONTROL_LOCK_LABELS.LOCKED}]$`,
+  "i"
+);
+
+/**
+ * Format a numeric group ID using the control-label alphabet.
+ * @param {number} groupId - Group index (0-15).
+ * @returns {string} Group label or "?" when out of range.
+ */
+export function formatControlGroupLabel(groupId) {
+  if (!Number.isInteger(groupId)) {
+    return "?";
+  }
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a control-label character into a numeric group ID.
+ * @param {string} label - Single-letter group label.
+ * @returns {number | null} Group ID or null when the label is not recognized.
+ */
+export function parseControlGroupLabel(label) {
+  if (!label) {
+    return null;
+  }
+  const normalized = String(label).trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized);
+  return index >= 0 ? index : null;
+}
+
+/**
+ * Format the lock suffix for a control channel.
+ * @param {boolean} locked - Whether the control byte is locked.
+ * @returns {string} "Y" for unlocked or "Z" for locked.
+ */
+export function formatControlLockLabel(locked) {
+  return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
+/**
+ * Format the authoring control suffix that follows rrggbbaa.
+ * @param {number} groupId - Group index (0-15).
+ * @param {boolean} locked - Whether the control byte is locked.
+ * @returns {string} Two-character suffix like "GY" or "GZ".
+ */
+export function formatControlSuffix(groupId, locked) {
+  return `${formatControlGroupLabel(groupId)}${formatControlLockLabel(locked)}`;
+}
+
+/**
+ * Validate a control suffix to detect corruption in authoring strings.
+ * @param {string} suffix - Two-character suffix to validate.
+ * @returns {boolean} True when the suffix matches a G-X + Y/Z pattern.
+ */
+export function isValidControlSuffix(suffix) {
+  return CONTROL_SUFFIX_PATTERN.test(String(suffix).trim());
+}
+
+/**
+ * Parse a control suffix into group/lock metadata when valid.
+ * @param {string} suffix - Two-character suffix like "GY" or "GZ".
+ * @returns {{groupId: number, locked: boolean} | null} Parsed payload or null when invalid.
+ */
+export function parseControlSuffix(suffix) {
+  if (!isValidControlSuffix(suffix)) {
+    return null;
+  }
+  const normalized = String(suffix).trim().toUpperCase();
+  const groupId = parseControlGroupLabel(normalized[0]);
+  if (groupId === null) {
+    return null;
+  }
+  const locked = normalized[1] === CONTROL_LOCK_LABELS.LOCKED;
+  return { groupId, locked };
+}
+
 export function groupMaskTargetsGroup(groupMask, groupId) {
   const shift = groupId & 0x0f;
   return (groupMask & (1 << shift)) !== 0;

@@ -1,16 +1,26 @@
 # Tutorial: Understanding GRIN Groups
 
 Groups are the only runtime-addressable unit in GRIN. Each pixel belongs to
-exactly one group (0-15) and can be targeted by rules via a bitmask.
+exactly one group (0-15) and can be targeted by rules via a bitmask. For
+authoring, use the control label alphabet (`G H J K L M N P Q R S T U V W X`)
+so the control channel never overlaps RGBA hex digits.
 
 ## Control Byte Recap
 
 The control byte (C) uses bits 0-3 for the group ID and bit 7 for the lock bit.
+Lock state is labeled with a suffix: `Y` = unlocked, `Z` = locked.
 
 ```text
 bit 7: lock
 bits 0-3: group ID (0-15)
 ```
+
+Authoring strings append the control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+The penultimate character must be a group label (`G`‑`X`), and the final character must be `Y` or `Z`.
+Any other suffix is considered corruption; resolve it by rewriting control suffixes with a chosen
+lock state (`Y` or `Z`) so the value is normalized.
+
+Control label example: `LY` means group L (ID 4), unlocked.
 
 ## Rule Group Masks
 

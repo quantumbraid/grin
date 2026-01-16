@@ -24,10 +24,12 @@
 import {
   CONTROL_BYTE_MASKS,
   DisplayBuffer,
+  formatControlGroupLabel,
   GrinCanvasRenderer,
   GrinLoader,
   GrinPlayer,
   OpcodeRegistry,
+  parseControlGroupLabel,
   RuleEngine,
   validateGrinFile,
 } from "../dist/grin.js";
@@ -306,7 +308,8 @@ function updateGroupFilterStatus() {
     groupFilterStatus.textContent = "All";
     return;
   }
-  groupFilterStatus.textContent = activeGroup.toString(16).toUpperCase();
+  // Display control group labels instead of hex digits.
+  groupFilterStatus.textContent = formatControlGroupLabel(activeGroup);
 }
 
 function setActiveGroup(groupId, shouldRender = true) {
@@ -387,9 +390,14 @@ function handleKeyboardShortcuts(event) {
     setActiveGroup(null);
     return;
   }
-  if (key.length === 1 && /^[0-9a-f]$/.test(key)) {
+  if (key.length === 1 && /^[a-z]$/.test(key)) {
+    // Use the G-X control label alphabet for keyboard shortcuts.
+    const parsed = parseControlGroupLabel(key);
+    if (parsed === null) {
+      return;
+    }
     event.preventDefault();
-    setActiveGroup(parseInt(key, 16));
+    setActiveGroup(parsed);
   }
 }
 

@@ -1,0 +1,1333 @@
+# GRIN Lane Header Refactor Bundle (Agent3)
+
+This bundle is an end-to-end *copy/paste* representation of the changes Agent1 staged (excluding god.txt and excluding node_modules noise).
+Each section starts with a FILE marker that shows the intended path.
+
+---
+
+## NEW FILE: tools/bin/grin-lanes.js
+
+/workspace/grin$ /bin/bash -lc nl -ba tools/bin/grin-lanes.js
+1	#!/usr/bin/env node
+     2	
+     3	/*
+     4	 * MIT License
+     5	 *
+     6	 * Copyright (c) 2025 GRIN Project Contributors
+     7	 *
+     8	 * Permission is hereby granted, free of charge, to any person obtaining a copy
+     9	 * of this software and associated documentation files (the "Software"), to deal
+    10	 * in the Software without restriction, including without limitation the rights
+    11	 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    12	 * copies of the Software, and to permit persons to whom the Software is
+    13	 * furnished to do so, subject to the following conditions:
+    14	 *
+    15	 * The above copyright notice and this permission notice shall be included in
+    16	 * all copies or substantial portions of the Software.
+    17	 *
+    18	 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    19	 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    20	 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    21	 * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    22	 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    23	 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    24	 * SOFTWARE.
+    25	 */
+    26	import fs from "node:fs";
+    27	import {
+    28	  formatLaneHeader,
+    29	  normalizeLaneSpecs,
+    30	  parseLaneHeader,
+    31	} from "../lib/lane-header.js";
+    32	
+    33	const args = process.argv.slice(2);
+    34	let inputPath = null;
+    35	let fromJsonPath = null;
+    36	let outputJson = false;
+    37	let outputNormalize = false;
+    38	
+    39	for (let i = 0; i < args.length; i += 1) {
+    40	  const arg = args[i];
+    41	  if (arg === "--from-json") {
+    42	    fromJsonPath = args[i + 1];
+    43	    i += 1;
+    44	  } else if (arg === "--json") {
+    45	    outputJson = true;
+    46	  } else if (arg === "--normalize") {
+    47	    outputNormalize = true;
+    48	  } else if (arg === "--help" || arg === "-h") {
+    49	    printUsage();
+    50	    process.exit(0);
+    51	  } else if (!arg.startsWith("--") && !inputPath) {
+    52	    inputPath = arg;
+    53	  }
+    54	}
+    55	
+    56	try {
+    57	  if (fromJsonPath) {
+    58	    const lanes = loadLaneJson(fromJsonPath);
+    59	    const header = formatLaneHeader(lanes);
+    60	    process.stdout.write(`${header}\n`);
+    61	  } else if (inputPath) {
+    62	    const header = fs.readFileSync(inputPath, "utf8");
+    63	    const lanes = parseLaneHeader(header);
+    64	    if (outputNormalize || !outputJson) {
+    65	      const normalized = formatLaneHeader(lanes);
+    66	      process.stdout.write(`${normalized}\n`);
+    67	    }
+    68	    if (outputJson) {
+    69	      process.stdout.write(`${JSON.stringify({ lanes }, null, 2)}\n`);
+    70	    }
+    71	  } else {
+    72	    printUsage();
+    73	    process.exit(1);
+    74	  }
+    75	} catch (error) {
+    76	  const message = error instanceof Error ? error.message : String(error);
+    77	  process.stderr.write(`grin-lanes: ${message}\n`);
+    78	  process.exit(1);
+    79	}
+    80	
+    81	function loadLaneJson(path) {
+    82	  const raw = fs.readFileSync(path, "utf8");
+    83	  const parsed = JSON.parse(raw);
+    84	  const lanes = Array.isArray(parsed) ? parsed : parsed.lanes;
+    85	  return normalizeLaneSpecs(lanes);
+    86	}
+    87	
+    88	function printUsage() {
+    89	  process.stdout.write(
+    90	    "Usage: grin-lanes <lanes.txt> [--normalize] [--json]\n" +
+    91	      "       grin-lanes --from-json <lanes.json>\n"
+    92	  );
+    93	}
+Documenting header line numbers
+
+
+---
+
+## NEW FILE: docs/header-lanes.md
+
+/workspace/grin$ /bin/bash -lc nl -ba docs/header-lanes.md
+1	# Header Lane Language (Authoring Standard)
+     2	
+     3	GRIN authoring uses a compact header lane language to describe rule intent in a
+     4	fixed-size, deterministic string. Each lane represents a single script segment
+     5	(target + action + repeat cadence) and must be sequentially numbered.
+     6	
+     7	This language is **authoring-only**; it is designed for tooling and review, and
+     8	can be normalized or validated before producing the binary rule block.
+     9	
+    10	## Lane Grammar
+    11	
+    12	```
+    13	{NN[groups|action|xxx:unit]}
+    14	```
+    15	
+    16	- `NN` is the lane number (`00`–`15`) and must be sequential.
+    17	- `groups` is a concatenated list of group labels (`G`–`X`, case-insensitive).
+    18	  Use the 16 GRIN labels: `G H J K L M N P Q R S T U V W X`.
+    19	- `action` is one of:
+    20	  - `sety` (unlock)
+    21	  - `setz` (lock)
+    22	  - `+<hh><CC>` or `-<hh><CC>` (increment/decrement a channel by hex steps)
+    23	- `xxx:unit` is the repeat cadence:
+    24	  - `xxx` is `000`–`999` (`000` means no repeat)
+    25	  - `unit` is `min`, `sec`, or `mil`
+    26	
+    27	### Action Details
+    28	
+    29	`+`/`-` actions use base-16 counting, not color theory. Examples:
+    30	
+    31	- `+03RR` increments red by 0x03 (with carry to green when applicable).
+    32	- `-0aGG` decrements green by 0x0A.
+    33	- `+ffAA` raises alpha to max; alpha clamps and does not carry.
+    34	
+    35	Alpha clamps at `00`/`ff` without wrap. RGB channels carry to the next channel
+    36	when incrementing and borrow from the next channel when decrementing.
+    37	
+    38	## Examples
+    39	
+    40	Unlock all pixels (targets every group once):
+    41	
+    42	```
+    43	{01[ghijklmnopqrstuvwx|sety|000:mil]}
+    44	```
+    45	
+    46	Shift groups J, L, R by +3 on red every 500 milliseconds:
+    47	
+    48	```
+    49	{02[jlr|+03rr|500:mil]}
+    50	```
+    51	
+    52	## Limits
+    53	
+    54	- Maximum of 16 lanes.
+    55	- Lane numbers must be sequential.
+    56	- The full header string is limited to 592 bytes.
+    57	
+    58	Tooling should reject headers that violate these limits.
+Planning line number extraction for documentation
+
+I'm preparing to capture line numbers around CLI and docs sections in README.md and related files to target relevant content precisely.
+
+
+---
+
+## MODIFIED FILE (excerpt): tools/lib/format.js
+
+/workspace/grin$ /bin/bash -lc sed -n '1,240p' tools/lib/format.js
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+export const MAGIC_BYTES = new Uint8Array([0x47, 0x52, 0x49, 0x4e]);
+export const VERSION_MAJOR = 0x00;
+export const VERSION_MINOR = 0x00;
+export const HEADER_SIZE_BYTES = 128;
+export const PIXEL_SIZE_BYTES = 5;
+export const MAX_RULE_COUNT = 16;
+export const RULES_BLOCK_SIZE = 64;
+export const RULE_ENTRY_SIZE = 4;
+
+export const HEADER_FIELDS = {
+  MAGIC: { offset: 0, size: 4 },
+  VERSION_MAJOR: { offset: 4, size: 1 },
+  VERSION_MINOR: { offset: 5, size: 1 },
+  HEADER_SIZE: { offset: 6, size: 2 },
+  WIDTH: { offset: 8, size: 4 },
+  HEIGHT: { offset: 12, size: 4 },
+  TICK_MICROS: { offset: 16, size: 4 },
+  RULE_COUNT: { offset: 20, size: 1 },
+  OPCODE_SET_ID: { offset: 21, size: 1 },
+  FLAGS: { offset: 22, size: 2 },
+  PIXEL_DATA_LENGTH: { offset: 24, size: 8 },
+  FILE_LENGTH: { offset: 32, size: 8 },
+  PIXEL_DATA_OFFSET: { offset: 40, size: 8 },
+  RESERVED_A: { offset: 48, size: 8 },
+  RESERVED_B: { offset: 56, size: 8 },
+  RULES_BLOCK: { offset: 64, size: 64 },
+};
+
+export const CONTROL_BYTE_MASKS = {
+  GROUP_ID: 0x0f,
+  RESERVED: 0x70,
+  LOCK: 0x80,
+};
+
+// Control group labels intentionally skip I/O to keep a 16-slot alphabet and avoid ambiguity.
+export const CONTROL_GROUP_LABELS = [
+  "G",
+  "H",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+];
+
+// Control lock suffixes are reserved for the final control channel indicator.
+export const CONTROL_LOCK_LABELS = {
+  UNLOCKED: "Y",
+  LOCKED: "Z",
+};
+
+// Control suffixes append to rrggbbaa to represent the control channel in authoring strings.
+export const CONTROL_SUFFIX_PATTERN = new RegExp(
+  `^[${CONTROL_GROUP_LABELS.join("")}][${CONTROL_LOCK_LABELS.UNLOCKED}${CONTROL_LOCK_LABELS.LOCKED}]$`,
+  "i"
+);
+
+/**
+ * Format a numeric group ID using the control-label alphabet.
+ * @param {number} groupId - Group index (0-15).
+ * @returns {string} Group label or "?" when out of range.
+ */
+export function formatControlGroupLabel(groupId) {
+  if (!Number.isInteger(groupId)) {
+    return "?";
+  }
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a control-label character into a numeric group ID.
+ * @param {string} label - Single-letter group label.
+ * @returns {number | null} Group ID or null when the label is not recognized.
+ */
+export function parseControlGroupLabel(label) {
+  if (!label) {
+    return null;
+  }
+  const normalized = String(label).trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized);
+  return index >= 0 ? index : null;
+}
+
+/**
+ * Format the lock suffix for a control channel.
+ * @param {boolean} locked - Whether the control byte is locked.
+ * @returns {string} "Y" for unlocked or "Z" for locked.
+ */
+export function formatControlLockLabel(locked) {
+  return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
+/**
+ * Format the authoring control suffix that follows rrggbbaa.
+ * @param {number} groupId - Group index (0-15).
+ * @param {boolean} locked - Whether the control byte is locked.
+ * @returns {string} Two-character suffix like "GY" or "GZ".
+ */
+export function formatControlSuffix(groupId, locked) {
+  return `${formatControlGroupLabel(groupId)}${formatControlLockLabel(locked)}`;
+}
+
+/**
+ * Validate a control suffix to detect corruption in authoring strings.
+ * @param {string} suffix - Two-character suffix to validate.
+ * @returns {boolean} True when the suffix matches a G-X + Y/Z pattern.
+ */
+export function isValidControlSuffix(suffix) {
+  return CONTROL_SUFFIX_PATTERN.test(String(suffix).trim());
+
+---
+
+## MODIFIED FILE (excerpt): web/lib/format.ts
+
+/workspace/grin$ /bin/bash -lc sed -n '60,200p' web/lib/format.ts
+export const TIMING_SEMANTICS = "reader-defined oscillator control";
+
+export function groupMaskTargetsGroup(groupMask: number, groupId: number): boolean {
+  const shift = groupId & 0x0f;
+  return (groupMask & (1 << shift)) !== 0;
+}
+
+export const PIXEL_FIELDS = {
+  R: { offset: 0, size: 1 },
+  G: { offset: 1, size: 1 },
+  B: { offset: 2, size: 1 },
+  A: { offset: 3, size: 1 },
+  C: { offset: 4, size: 1 },
+} as const;
+
+export const CONTROL_BYTE_MASKS = {
+  GROUP_ID: 0x0f,
+  RESERVED: 0x70,
+  LOCK: 0x80,
+} as const;
+
+// Control group labels intentionally skip I/O to keep a 16-slot alphabet and avoid ambiguity.
+export const CONTROL_GROUP_LABELS = [
+  "G",
+  "H",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+] as const;
+
+// Control lock suffixes are reserved for the final control channel indicator.
+export const CONTROL_LOCK_LABELS = {
+  UNLOCKED: "Y",
+  LOCKED: "Z",
+} as const;
+
+// Control suffixes append to rrggbbaa to represent the control channel in authoring strings.
+export const CONTROL_SUFFIX_PATTERN = new RegExp(
+  `^[${CONTROL_GROUP_LABELS.join("")}][${CONTROL_LOCK_LABELS.UNLOCKED}${CONTROL_LOCK_LABELS.LOCKED}]$`,
+  "i"
+);
+
+/**
+ * Format a numeric group ID using the control-label alphabet.
+ * @param groupId - Group index (0-15).
+ * @returns Group label or "?" when out of range.
+ */
+export function formatControlGroupLabel(groupId: number): string {
+  if (!Number.isInteger(groupId)) {
+    return "?";
+  }
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a control-label character into a numeric group ID.
+ * @param label - Single-letter group label.
+ * @returns Group ID or null when the label is not recognized.
+ */
+export function parseControlGroupLabel(label: string): number | null {
+  if (!label) {
+    return null;
+  }
+  const normalized = label.trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized as (typeof CONTROL_GROUP_LABELS)[number]);
+  return index >= 0 ? index : null;
+}
+
+/**
+ * Format the lock suffix for a control channel.
+ * @param locked - Whether the control byte is locked.
+ * @returns "Y" for unlocked or "Z" for locked.
+ */
+export function formatControlLockLabel(locked: boolean): string {
+  return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
+/**
+ * Format the authoring control suffix that follows rrggbbaa.
+ * @param groupId - Group index (0-15).
+ * @param locked - Whether the control byte is locked.
+ * @returns Two-character suffix like "GY" or "GZ".
+ */
+export function formatControlSuffix(groupId: number, locked: boolean): string {
+  return `${formatControlGroupLabel(groupId)}${formatControlLockLabel(locked)}`;
+}
+
+/**
+ * Validate a control suffix to detect corruption in authoring strings.
+ * @param suffix - Two-character suffix to validate.
+ * @returns True when the suffix matches a G-X + Y/Z pattern.
+ */
+export function isValidControlSuffix(suffix: string): boolean {
+  return CONTROL_SUFFIX_PATTERN.test(suffix.trim());
+}
+
+/**
+ * Parse a control suffix into group/lock metadata when valid.
+ * @param suffix - Two-character suffix like "GY" or "GZ".
+ * @returns Parsed payload or null when invalid.
+ */
+export function parseControlSuffix(
+  suffix: string
+): { groupId: number; locked: boolean } | null {
+  if (!isValidControlSuffix(suffix)) {
+    return null;
+  }
+  const normalized = suffix.trim().toUpperCase();
+  const groupId = parseControlGroupLabel(normalized[0]);
+  if (groupId === null) {
+    return null;
+  }
+  const locked = normalized[1] === CONTROL_LOCK_LABELS.LOCKED;
+  return { groupId, locked };
+}
+
+export function getGroupId(controlByte: number): number {
+  return controlByte & CONTROL_BYTE_MASKS.GROUP_ID;
+}
+
+export function isLocked(controlByte: number): boolean {
+  return (controlByte & CONTROL_BYTE_MASKS.LOCK) !== 0;
+}
+
+export function setGroupId(controlByte: number, groupId: number): number {
+  const cleared = controlByte & ~CONTROL_BYTE_MASKS.GROUP_ID;
+  return cleared | (groupId & CONTROL_BYTE_MASKS.GROUP_ID);
+}
+
+export function setLocked(controlByte: number, locked: boolean): number {
+Evaluating label expansion limits
+
+The group ID is limited to 4 bits, allowing only 16 valid labels; including 18 labels with I/O would cause incorrect mappings due to bit masking. So, the label set must remain 16, treating I/O as invalid or normalized despite their presence in the g–x range.
+
+Designing lane header parsing and tooling
+
+Planning to implement a new tools/lib/lane-header.js module for parsing and formatting lane headers with strict validation on lane count, group labels (G–X minus I/O), actions, and repeats following documented syntax. Alongside, I’ll add CLI support—most likely updating grin-inspect and grin-encode with --lane-header options or a new tool—to validate, parse, and convert lane header strings, ensuring full tooling support for this new standard.
+
+/workspace/grin$ /bin/bash -lc cat TODO.md
+# TODO
+
+- [x] Add control suffix validation helpers to shared format utilities.
+- [x] Update documentation to describe the new rrggbbaa + (G-X)(Y/Z) control suffix rules.
+- [x] Refresh God.txt with the latest repo structure and file contents.
+Planning incremental task execution with God.txt updates
+
+I'm outlining a todo list with tasks for documentation and tooling changes, planning to complete each fully and update God.txt with the current full code dump after every task despite the overhead.
+
+Considering God.txt update approach
+
+I'm weighing whether to update God.txt after each todo task or once at the end; the instruction points to after each task but updating the huge source dump multiple times may be heavy. I'll look for an existing script generating God.txt to reuse for consistent repo structure and contents output.
+
+/workspace/grin$ /bin/bash -lc rg -n "god.txt|God.txt" -g '*.md' -g '*.txt'
+TODO.md
+5:- [x] Refresh God.txt with the latest repo structure and file contents.
+
+god.txt
+2883:- [x] Refresh God.txt with the latest repo structure and file contents.
+Planning full god.txt regeneration
+
+God.txt is a massive file representing the entire repo structure and contents with a specific delimiter format, so I'll need to script its regeneration carefully to reflect all current files, exclude binaries, and update it fully after completing each task.
+
+Defining detailed lane header tasks
+
+I'm drafting a multi-step TODO list covering doc updates, lane header parsing/validation with CLI support, and a final god.txt refresh—each task ending with god.txt updates to comply with instructions despite the overhead.
+
+/workspace/grin$ /bin/bash -lc sed -n '1,200p' docs/README.md
+# GRIN Documentation
+
+This folder contains Phase 12 documentation (plus Phase 14 foundations) that complements the core spec.
+
+- `docs/format-diagram.md` - byte-level layout diagrams and validation notes
+- `docs/opcodes.md` - opcode set 0 reference and behavior notes
+- `docs/timing.md` - timing byte interpretation and waveform details
+
+---
+
+## MODIFIED FILE (excerpt): README.md
+
+/workspace/grin$ /bin/bash -lc nl -ba README.md | sed -n '1,140p'
+1	# GRIN (Graphic Readdressable Indexed Nodes)
+     2	
+     3	GRIN is a deterministic image container format designed as an upgrade to traditional
+     4	images and GIFs. Instead of storing static frames or frame sequences, GRIN treats an
+     5	image as a programmable field of pixels that can be dynamically grouped, addressed,
+     6	and modulated over time.
+     7	
+     8	## Core concept
+     9	
+    10	- A `.grin` file is not a loop of frames.
+    11	- Nearly all animation logic lives in the file header.
+    12	- Narrow, bounded scripts operate on pixel groups and can shift colors, animate values,
+    13	  loop or diverge, and run once or indefinitely.
+    14	- Because logic is embedded, a `.grin` file can branch, repeat, or evolve without
+    15	  duplicating image data.
+    16	- Rendering requires only minimal runtime code. For web playback, a small amount of
+    17	  JavaScript is sufficient.
+    18	- GRIN is designed to be artist-friendly, portable, and low-infrastructure, while
+    19	  remaining fully deterministic.
+    20	
+    21	## Technical summary
+    22	
+    23	- Deterministic image container format
+    24	- 5-byte pixels: RGBA + control byte
+    25	- Fixed 128-byte header
+    26	- Bounded rules block (no unbounded metadata)
+    27	- 16 addressable groups per pixel
+    28	- Lock bit per pixel
+    29	- Opcode-driven modulation
+    30	- No frame storage required
+    31	
+    32	This repository includes working implementations, tools, tests, and sample files.
+    33	
+    34	## Implementations included
+    35	
+    36	- Web TypeScript library with Canvas renderer
+    37	- `<grin-player>` web component
+    38	- Android Kotlin library with demo app
+    39	- CLI tools for validation, inspection, encoding, and decoding
+    40	- Tests and benchmarks for web and Android
+    41	
+    42	## Repository layout
+    43	
+    44	- `web/` - TypeScript implementation, web component, demo, tests
+    45	- `android/` - Kotlin implementation and demo app
+    46	- `tools/` - Node.js CLI utilities
+    47	- `samples/` - Reference `.grin` files (valid and invalid)
+    48	- `benchmarks/` - Performance harness
+    49	- `tests/` - Shared fixtures and generators
+    50	- `core/` - Reserved for a future cross-platform reference core
+    51	
+    52	## CLI quick start (Node >= 18)
+    53	
+    54	```bash
+    55	node tools/bin/grin-validate.js samples/minimal.grin
+    56	node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
+    57	node tools/bin/grin-encode.js input.png output.grin
+    58	node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
+    59	node tools/bin/grin-lanes.js lanes.txt --normalize
+    60	```
+    61	
+    62	## Web library
+    63	
+    64	```bash
+    65	cd web
+    66	npm install
+    67	npm test
+    68	npm run build
+    69	```
+    70	
+    71	The demo lives in `web/demo/`. Build first so `web/demo/demo.js` can load `web/dist`.
+    72	
+    73	## Minimal web embed (load a `.grin` URL)
+    74	
+    75	A minimal embed uses the tiny loader in `web/embed/grin-embed.js`. It finds elements
+    76	with `data-grin-src`, loads `grin-player`, and mounts playback for you.
+    77	
+    78	```html
+    79	<div data-grin-src="https://example.com/art/minimal.grin"></div>
+    80	<script type="module" src="web/embed/grin-embed.js"></script>
+    81	```
+    82	
+    83	Optional attributes:
+    84	
+    85	- `data-grin-autoplay` - set to `true` to auto-start playback.
+    86	- `data-grin-playbackrate` - numeric speed multiplier (for example `0.5` or `2`).
+    87	- `data-grin-lib` (on the script tag) - overrides the `grin-player` bundle URL.
+    88	
+    89	Example using a custom `grin-player` bundle:
+    90	
+    91	```html
+    92	<div data-grin-src="/media/pulse_red.grin" data-grin-autoplay="true"></div>
+    93	<script
+    94	  type="module"
+    95	  src="web/embed/grin-embed.js"
+    96	  data-grin-lib="/web/dist/grin-player.js"
+    97	></script>
+    98	```
+    99	
+   100	## Android library and demo
+   101	
+   102	```bash
+   103	cd android
+   104	./gradlew :demo:assembleDebug
+   105	```
+   106	
+   107	The demo app loads sample files from `android/demo/src/main/assets/samples`.
+   108	
+   109	## Samples
+   110	
+   111	Regenerate sample files with:
+   112	
+   113	```bash
+   114	node scripts/generate-samples.mjs
+   115	```
+   116	
+   117	## Documentation
+   118	
+   119	- Format specification: `grin_technical_specification_v_2.md`
+   120	- Architecture: `ARCHITECTURE.md`
+   121	- Contributing: `CONTRIBUTING.md`
+   122	- Security: `SECURITY.md`
+   123	- Samples: `samples/README.md`
+   124	- Docs index: `docs/README.md`
+   125	
+   126	## Planned work
+   127	
+   128	- Photoshop, Illustrator, and GIMP plugins
+   129	- Translation of `.grin` files to real DMX stage control
+   130	- Compatibility with large video walls and LED arrays
+   131	
+   132	## Licensing status
+   133	
+   134	THIS REPOSITORY IS CURRENTLY UNLICENSED.
+   135	
+   136	You may build, experiment, and explore this code for personal and research purposes.
+   137	
+   138	You may not redistribute the code, incorporate it into unrelated projects, or use the
+   139	code or its outputs for commercial purposes without explicit consent.
+   140
+Requesting line numbers for TODO.md
+
+
+---
+
+## MODIFIED FILE: TODO.md
+
+/workspace/grin$ /bin/bash -lc nl -ba TODO.md
+1	# TODO
+     2	
+     3	- [x] Update docs/tools for the lane-based header standard and refresh God.txt.
+Planning section capture
+
+I'm preparing to extract line numbers for USER_GUIDE and other key files to accurately capture their sections.
+
+
+---
+
+## MODIFIED FILE (excerpt): USER_GUIDE.md
+
+/workspace/grin$ /bin/bash -lc nl -ba USER_GUIDE.md | sed -n '1,200p'
+1	# GRIN User Guide (Simplified)
+     2	
+     3	## What GRIN is
+     4	
+     5	GRIN (Graphic Readdressable Indexed Nodes) is a deterministic image container format.
+     6	Instead of storing a list of frames, a `.grin` file stores one image plus a small,
+     7	fixed rules block that modulates pixel groups over time. The format is intentionally
+     8	bounded so files are predictable to validate and play back.
+     9	
+    10	## Think in groups (control labels, not “colors”)
+    11	
+    12	Each pixel belongs to exactly one group, identified internally by a 4‑bit value
+    13	(0‑15). The rules in the header target these groups, not colors. For authoring,
+    14	GRIN now uses a control label alphabet so the control channel never overlaps
+    15	hexadecimal RGBA digits.
+    16	
+    17	**Control group labels (0‑15):** `G H J K L M N P Q R S T U V W X` (the G‑X range, skipping I/O)  
+    18	**Lock suffix:** `Y` = unlocked, `Z` = locked
+    19	
+    20	Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+    21	The penultimate character must be a group label (`G`‑`X`, case-insensitive), and the final character must be `Y` or `Z`.
+    22	Any other suffix is considered corruption and should be resolved by rewriting the suffix with a chosen
+    23	lock state (`Y` or `Z`) for all affected pixels.
+    24	
+    25	Example control channel suffixes: `LY` (group L, unlocked) or `LZ` (group L, locked).
+    26	
+    27	## The environment and its intentional limitations
+    28	
+    29	GRIN is designed to be safe, deterministic, and easy to validate:
+    30	
+    31	- **Fixed header size (128 bytes)** with reserved fields that must be zero.
+    32	- **Bounded rules block (16 rules max)** and a fixed opcode set.
+    33	- **No executable scripts**: rules are a tiny, fixed instruction table.
+    34	- **Deterministic playback**: given the same input, every renderer produces the
+    35	  same output.
+    36	- **Group‑only addressing**: runtime operations target groups, not arbitrary
+    37	  per‑pixel logic.
+    38	
+    39	These limits are deliberate. They keep files small, parsing fast, and behavior
+    40	predictable across web, Android, and CLI tooling.
+    41	
+    42	## GRIN file layout (high‑level)
+    43	
+    44	- **Header (128 bytes)**: format identity, dimensions, timing, and rules.
+    45	- **Pixel data**: width × height × 5 bytes (RGBA + control byte).
+    46	- **Control byte**: 4 bits for group ID (0‑15) and 1 lock bit (labeled `Y`/`Z` in authoring).
+    47	
+    48	## How rules work (the “scripting” layer)
+    49	
+    50	Rules are 4‑byte entries in the header. Each rule has:
+    51	
+    52	- **Group mask (16 bits)**: selects which groups are affected.
+    53	- **Opcode (8 bits)**: a small, fixed set (e.g., pulse alpha, shift channels).
+    54	- **Timing (8 bits)**: defines waveform + period (think phase + frequency).
+    55	
+    56	Because rules target group masks, you can build complex effects by organizing
+    57	pixels into logical groups rather than by color.
+    58	
+    59	## Header lane language (authoring standard)
+    60	
+    61	GRIN tooling can normalize a header lane string into sequential rule intent. Each
+    62	lane uses a compact grammar:
+    63	
+    64	```
+    65	{NN[groups|action|xxx:unit]}
+    66	```
+    67	
+    68	- `NN` is the lane number (`00`‑`15`), sequential with no gaps.
+    69	- `groups` is a concatenated list of group labels (`G`‑`X`).
+    70	- `action` is `sety`, `setz`, `+<hh><CC>`, or `-<hh><CC>`.
+    71	- `xxx:unit` is the repeat cadence (`000`–`999` with `min`, `sec`, or `mil`).
+    72	- The full header string must be ≤ 592 bytes and contain at most 16 lanes.
+    73	
+    74	Example: `{02[jlr|+03rr|500:mil]}` shifts red by 0x03 for groups J/L/R every 500ms.
+    75	
+    76	## Basic usage (CLI flow)
+    77	
+    78	1) **Start with a PNG** (e.g., 16×16 for testing).
+    79	2) **(Optional) Build a group mask image** where pixel values map to group IDs.
+    80	3) **Create a rules JSON file** describing the rule table.
+    81	4) **Encode** the `.grin` file with the CLI tools.
+    82	5) **Inspect or decode** frames to verify output.
+    83	
+    84	Example commands:
+    85	
+    86	```bash
+    87	node tools/bin/grin-encode.js input.png output.grin --rules rules.json
+    88	node tools/bin/grin-encode.js input.png output.grin --groups group-mask.png --rules rules.json
+    89	node tools/bin/grin-inspect.js output.grin --header --rules --groups
+    90	node tools/bin/grin-decode.js output.grin output.png --frame 0
+    91	```
+    92	
+    93	## Where to go next
+    94	
+    95	- `docs/tutorial-first-file.md` for a step‑by‑step walkthrough.
+    96	- `docs/tutorial-grin-groups.md` for group mask guidance.
+    97	- `docs/opcodes.md` and `docs/timing.md` for rule semantics.
+    98	- `grin_technical_specification.md` for the full binary spec.
+
+---
+
+## MODIFIED FILE (excerpt): docs/README.md
+
+/workspace/grin$ /bin/bash -lc nl -ba docs/README.md | sed -n '1,120p'
+1	# GRIN Documentation
+     2	
+     3	This folder contains Phase 12 documentation (plus Phase 14 foundations) that complements the core spec.
+     4	
+     5	- `docs/format-diagram.md` - byte-level layout diagrams and validation notes
+     6	- `docs/opcodes.md` - opcode set 0 reference and behavior notes
+     7	- `docs/timing.md` - timing byte interpretation and waveform details
+     8	- `docs/api-quickstart.md` - API and CLI quick-starts
+     9	- `docs/migration-gif-apng.md` - migration guide from frame-based formats
+    10	- `docs/tutorial-first-file.md` - first-file tutorial using the CLI tools
+    11	- `docs/tutorial-grin-groups.md` - groups and masks tutorial
+    12	- `docs/playback-guide-web.md` - web playback integration guide
+    13	- `docs/playback-guide-android.md` - Android playback integration guide
+    14	- `docs/header-lanes.md` - header lane authoring language and limits
+    15	- `docs/security-model.md` - security model and validation requirements
+    16	- `docs/security-audit-checklist.md` - audit checklist
+    17	- `docs/release-preparation.md` - semantic versioning and release tagging
+    18	- `docs/compatibility.md` - Android, browser, and Node.js compatibility matrix
+    19	- `docs/creative-suite-foundations.md` - shared UX and interchange formats for plugins
+    20	- `docs/ui-ux-audit.md` - UX audit inventory, checklist, and backlog (Phase 15.1)
+    21	- `docs/android-grid-camera-ux.md` - UX flow and data model for the Android grid camera + gallery app
+    22	- `docs/api/web/` - generated TypeDoc output (web library)
+    23	- `docs/api/android/README.md` - Android API draft (Dokka output configured here)
+    24	
+    25	Related docs outside this folder:
+    26	
+    27	- `grin_technical_specification_v_2.md`
+    28	- `grin_technical_specification.md`
+    29	- `tchspecdraft.txt` (draft copy for review)
+    30	- `ARCHITECTURE.md`
+    31	- `SECURITY.md`
+    32	- `samples/README.md`
+Locating quickstart line numbers
+
+
+---
+
+## MODIFIED FILE (excerpt): docs/api-quickstart.md
+
+/workspace/grin$ /bin/bash -lc nl -ba docs/api-quickstart.md | sed -n '1,80p'
+1	# GRIN API Quick Start
+     2	
+     3	This guide focuses on the current web, Android, and CLI implementations.
+     4	
+     5	## CLI (Node >= 18)
+     6	
+     7	```bash
+     8	node tools/bin/grin-validate.js samples/minimal.grin
+     9	node tools/bin/grin-inspect.js samples/pulse_red.grin --header --rules
+    10	node tools/bin/grin-encode.js input.png output.grin
+    11	node tools/bin/grin-decode.js samples/pulse_red.grin output.png --frame 0
+    12	node tools/bin/grin-lanes.js lanes.txt --normalize
+    13	```
+    14	
+    15	Animated GIF export:
+    16	
+    17	```bash
+    18	node tools/bin/grin-decode.js samples/pulse_red.grin output.gif --gif --frames 60 --fps 30
+    19	```
+    20	
+    21	## Web / TypeScript
+    22	
+    23	Build the web package once so `web/dist` is available:
+    24	
+    25	```bash
+    26	cd web
+    27	npm install
+    28	npm run build
+    29	```
+    30	
+    31	Canvas playback with the core player:
+    32	
+    33	```ts
+    34	import {
+    35	  GrinCanvasRenderer,
+    36	  GrinLoader,
+    37	  GrinPlayer,
+    38	  OpcodeRegistry,
+    39	  RAFTickScheduler,
+    40	  RuleEngine,
+    41	} from "./dist/grin.js";
+    42	
+    43	const canvas = document.querySelector("canvas");
+    44	const renderer = new GrinCanvasRenderer();
+    45	let player = null;
+    46	
+    47	const schedulerFactory = (tickMicros) => new RAFTickScheduler(tickMicros);
+    48	
+    49	const file = await GrinLoader.fromURL("./samples/pulse_red.grin");
+    50	player = new GrinPlayer(schedulerFactory, new RuleEngine(), OpcodeRegistry.getInstance(), () => {
+    51	  renderer.render(player.getCurrentFrame(), canvas);
+    52	});
+    53	player.load(file);
+    54	player.play();
+    55	```
+    56	
+    57	## Web Component
+    58	
+    59	```html
+    60	<grin-player src="./samples/pulse_red.grin" autoplay playbackrate="1.5"></grin-player>
+    61	```
+    62	
+    63	The custom element exposes `play()`, `pause()`, `currentTime`, and `getCurrentFrame()`.
+    64	
+    65	## Android
+    66	
+    67	Use `GrinView` for drop-in playback:
+    68	
+    69	```kotlin
+    70	val grinView = findViewById<GrinView>(R.id.grinView)
+    71	val file = GrinUriLoader.fromAsset(this, "samples/minimal.grin")
+    72	grinView.load(file)
+    73	grinView.play()
+    74	```
+    75	
+    76	Or manually manage playback:
+    77	
+    78	```kotlin
+    79	val file = GrinFile.load(inputStream)
+    80	val player = GrinPlayer()
+Noting existing tutorial presence
+
+
+---
+
+## MODIFIED FILE (excerpt): docs/tutorial-grin-groups.md
+
+/workspace/grin$ /bin/bash -lc nl -ba docs/tutorial-grin-groups.md | sed -n '1,120p'
+1	# Tutorial: Understanding GRIN Groups
+     2	
+     3	Groups are the only runtime-addressable unit in GRIN. Each pixel belongs to
+     4	exactly one group (0-15) and can be targeted by rules via a bitmask. For
+     5	authoring, use the control label alphabet (`G H J K L M N P Q R S T U V W X`, the G‑X range)
+     6	so the control channel never overlaps RGBA hex digits.
+     7	
+     8	## Control Byte Recap
+     9	
+    10	The control byte (C) uses bits 0-3 for the group ID and bit 7 for the lock bit.
+    11	Lock state is labeled with a suffix: `Y` = unlocked, `Z` = locked.
+    12	
+    13	```text
+    14	bit 7: lock
+    15	bits 0-3: group ID (0-15)
+    16	```
+    17	
+    18	Authoring strings append the control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+    19	The penultimate character must be a group label (`G`‑`X`, case-insensitive), and the final character must be `Y` or `Z`.
+    20	Any other suffix is considered corruption; resolve it by rewriting control suffixes with a chosen
+    21	lock state (`Y` or `Z`) so the value is normalized.
+    22	
+    23	Control label example: `LY` means group L (ID 4), unlocked.
+    24	
+    25	## Rule Group Masks
+    26	
+    27	Each rule has a 16-bit mask. Bit i targets group i.
+    28	
+    29	Examples:
+    30	
+    31	```text
+    32	0x0001 -> group 0
+    33	0x0003 -> groups 0 and 1
+    34	0x8000 -> group 15
+    35	0xFFFF -> all groups
+    36	```
+    37	
+    38	## Assigning Groups with the Encoder
+    39	
+    40	The CLI encoder reads group IDs from a mask image:
+    41	
+    42	```bash
+    43	node tools/bin/grin-encode.js input.png output.grin --groups group-mask.png
+    44	```
+    45	
+    46	Group IDs are derived from the mask image red channel:
+    47	
+    48	- 0-15 map directly to group IDs.
+    49	- 16-255 map via `round(value / 17)` and clamp to 0-15.
+    50	
+    51	This lets you author mask images using standard 8-bit grayscale tools.
+    52	
+    53	## Example Rules File
+    54	
+    55	```json
+    56	{
+    57	  "rules": [
+    58	    { "groupMask": 1, "opcode": "0x03", "timing": "0x27" },
+    59	    { "groupMask": 2, "opcode": "0x04", "timing": "0x17" }
+    60	  ]
+    61	}
+    62	```
+    63	
+    64	This pulses group 0 and shifts red on group 1.
+Adding line numbers for specs
+
+
+---
+
+## MODIFIED FILE (excerpt): grin_technical_specification.md
+
+/workspace/grin$ /bin/bash -lc nl -ba grin_technical_specification.md | sed -n '70,200p'
+70	
+    71	| Byte | Field | Type | Notes |
+    72	| ---: | --- | --- | --- |
+    73	| 0-1 | GroupMask | uint16 | Bit i targets group i |
+    74	| 2 | Opcode | uint8 | Must be valid for OpcodeSetId |
+    75	| 3 | Timing | uint8 | See Section 5 |
+    76	
+    77	### 3.3 Pixel Layout (5 bytes)
+    78	
+    79	| Byte | Field | Type | Notes |
+    80	| ---: | --- | --- | --- |
+    81	| 0 | R | uint8 | Red |
+    82	| 1 | G | uint8 | Green |
+    83	| 2 | B | uint8 | Blue |
+    84	| 3 | A | uint8 | Alpha |
+    85	| 4 | C | uint8 | Control byte |
+    86	
+    87	Control byte bits:
+    88	
+    89	- Bits 0-3: Group ID (0-15)
+    90	- Bits 4-6: Reserved (must be 0)
+    91	- Bit 7: Lock bit (1 = locked)
+    92	
+    93	Control labels used in authoring/UI (not stored in the file):
+    94	
+    95	- Group labels: `G H J K L M N P Q R S T U V W X` (the `G`‑`X` range, skipping `I` and `O`).
+    96	- Lock suffix: `Y` = unlocked, `Z` = locked.
+    97	- Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+    98	  The penultimate character must be a `G`‑`X` group label (case-insensitive) and the final character must be `Y` or `Z`.
+    99	  Any other suffix is treated as corruption and should be normalized by rewriting suffixes with a
+   100	  chosen lock state (`Y` or `Z`).
+   101	
+   102	### 3.4 Header Lane Language (Authoring Standard)
+   103	
+   104	Authoring tools use a lane-based header string to express rule intent in a
+   105	bounded, inspectable format. Lanes are sequential and capped at 16 entries.
+   106	
+   107	```
+   108	{NN[groups|action|xxx:unit]}
+   109	```
+   110	
+   111	- `NN` is the lane number (`00`–`15`), sequential with no gaps.
+   112	- `groups` is a concatenated list of group labels (`G`‑`X`, case-insensitive).
+   113	- `action` is one of:
+   114	  - `sety` (unlock)
+   115	  - `setz` (lock)
+   116	  - `+<hh><CC>` or `-<hh><CC>` for channel deltas
+   117	- `xxx:unit` is the repeat cadence (`000`–`999` with `min`, `sec`, or `mil`).
+   118	
+   119	Headers must be ≤ 592 bytes and contain no more than 16 lanes. Lanes must be
+   120	numbered sequentially.
+   121	
+   122	## 4. Validation Rules
+   123	
+   124	Readers MUST reject if any of the following are true:
+   125	
+   126	- Magic != "GRIN"
+   127	- HeaderSize != 128
+   128	- RuleCount > 16
+   129	- PixelDataOffset64 != 128
+   130	- PixelDataLength != Width * Height * 5
+   131	- FileLength is non-zero and FileLength < 128 + PixelDataLength
+   132	
+   133	Readers SHOULD warn if:
+   134	
+   135	- Reserved header fields are non-zero
+   136	- Control byte reserved bits (4-6) are non-zero
+   137	- Unknown OpcodeSetId or opcode
+   138	
+   139	## 5. Timing Byte
+   140	
+   141	Timing is an 8-bit field used to compute a waveform value per tick.
+   142	
+   143	Bit layout:
+   144	
+   145	```text
+   146	bits 7-6: Phase offset (0-3, quarter-phase increments)
+   147	bits 5-4: Waveform type
+   148	bits 3-0: Period (0-15 stored, interpreted as 1-16 ticks)
+   149	```
+   150	
+   151	Derived values:
+   152	
+   153	```text
+   154	period = (timing & 0x0F) + 1
+   155	waveform = (timing >> 4) & 0x03
+   156	phaseOffset = ((timing >> 6) & 0x03) / 4
+   157	position = ((tick / period) + phaseOffset) % 1
+   158	```
+   159	
+   160	Waveforms:
+   161	
+   162	- 0: square (0 for first half, 1 for second half)
+   163	- 1: triangle (ramp up then down)
+   164	- 2: sine (0.5 - 0.5 * cos(2 * pi * position))
+   165	- 3: sawtooth (ramp up 0 -> 1)
+   166	
+   167	## 6. Opcode Set 0 (OpcodeSetId = 0)
+   168	
+   169	The base set is fixed and stateless. Unknown opcodes are invalid.
+   170	
+   171	| ID | Name | Behavior |
+   172	| ---: | --- | --- |
+   173	| 0x00 | NOP | No change |
+   174	| 0x01 | FADE_IN | Alpha *= wave |
+   175	| 0x02 | FADE_OUT | Alpha *= (1 - wave) |
+   176	| 0x03 | PULSE | Alpha *= wave |
+   177	| 0x04 | SHIFT_R | R += delta |
+   178	| 0x05 | SHIFT_G | G += delta |
+   179	| 0x06 | SHIFT_B | B += delta |
+   180	| 0x07 | SHIFT_A | A += delta |
+   181	| 0x08 | INVERT | R = 255 - R, G = 255 - G, B = 255 - B |
+   182	| 0x09 | ROTATE_HUE | Rotate hue by wave * 360 deg |
+   183	| 0x0A | LOCK | Set lock bit |
+   184	| 0x0B | UNLOCK | Clear lock bit |
+   185	| 0x0C | TOGGLE_LOCK | Toggle lock bit |
+   186	
+   187	SHIFT_* delta:
+   188	
+   189	```text
+   190	delta = round((wave * 2 - 1) * 255)
+   191	```
+   192	
+   193	All channel writes clamp to 0-255.
+   194	
+   195	## 7. Playback Model
+   196	
+   197	Playback operates on a working copy per pixel and writes to a display buffer.
+   198	Source pixels are never mutated.
+   199	
+   200	Rule activation uses the timing waveform level. A rule is active when:
+Starting v2 spec lines
+
+
+---
+
+## MODIFIED FILE (excerpt): grin_technical_specification_v_2.md
+
+/workspace/grin$ /bin/bash -lc nl -ba grin_technical_specification_v_2.md | sed -n '40,240p'
+40	
+    41	All imagery is emitted directly in **GRIN RGBA+C** format.
+    42	
+    43	- No conversion step
+    44	- No tagging pass
+    45	- No semantic metadata layer
+    46	
+    47	GRIN is the final output format.
+    48	
+    49	---
+    50	
+    51	## 4. Pixel Definition
+    52	
+    53	Each pixel is exactly **5 bytes**:
+    54	
+    55	| Byte | Name | Type | Description |
+    56	|---:|---|---|---|
+    57	| 0 | R | uint8 | Red channel |
+    58	| 1 | G | uint8 | Green channel |
+    59	| 2 | B | uint8 | Blue channel |
+    60	| 3 | A | uint8 | Alpha channel |
+    61	| 4 | C | uint8 | Control byte |
+    62	
+    63	This represents a deliberate 25% size increase over RGBA, paid once.
+    64	
+    65	### 4.1 Control Byte (C)
+    66	
+    67	- Bits 0–3: **Group ID** (0–15)
+    68	- Bit 7: **Lock bit**
+    69	- Bits 4–6: Reserved (must be zero)
+    70	
+    71	Authoring/UI control labels (not stored in the file):
+    72	
+    73	- Group labels: `G H J K L M N P Q R S T U V W X` (the `G`‑`X` range, skipping `I` and `O`)
+    74	- Lock suffix: `Y` = unlocked, `Z` = locked
+    75	- Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+    76	  The penultimate character must be a `G`‑`X` group label (case-insensitive) and the final character must be `Y` or `Z`.
+    77	  Any other suffix is treated as corruption and should be normalized by rewriting suffixes with a
+    78	  chosen lock state (`Y` or `Z`).
+    79	
+    80	Each pixel:
+    81	
+    82	- Belongs to exactly **one of 16 groups**
+    83	- May be **locked or unlocked**
+    84	
+    85	There is no per-pixel metadata beyond this.
+    86	
+    87	---
+    88	
+    89	## 5. Groups
+    90	
+    91	- Exactly **16 groups** exist
+    92	- Groups are the **only runtime-addressable unit**
+    93	
+    94	There is:
+    95	
+    96	- No per-pixel addressing at runtime
+    97	- No exclusion logic
+    98	- No conditionals
+    99	- No Venn diagrams
+   100	
+   101	If a group is not called, it is unaffected.
+   102	
+   103	If a subset must be protected, it is locked.
+   104	
+   105	---
+   106	
+   107	## 6. Locking Semantics
+   108	
+   109	Locking is explicit, reversible, and costly.
+   110	
+   111	- Locked pixels ignore all runtime actions
+   112	- Unlocking requires an explicit action
+   113	- Re-locking requires an explicit action
+   114	- Locking and unlocking consume rule budget
+   115	
+   116	Protection is a decision, not a default.
+   117	
+   118	---
+   119	
+   120	## 7. File Container and Fixed Header
+   121	
+   122	GRIN files are **self-describing** within strict limits. Parsing is intentionally small and bounded so that a minimal Java/Kotlin implementation (Android) or a minimal JavaScript implementation (web) can reliably render and optionally play back GRIN.
+   123	
+   124	### 7.1 Byte Order and Invariants
+   125	
+   126	- All multi-byte integers are **little-endian**.
+   127	- Header size is **fixed** to enable O(1) seek and predictable worst-case costs.
+   128	- Reserved fields **must be written as 0** and **ignored by readers**.
+   129	- A compliant file must be parsable without scanning or heuristics.
+   130	
+   131	### 7.2 Fixed Header Size
+   132	
+   133	- **HeaderSizeBytes = 128** (fixed, always present).
+   134	- **PixelDataOffset = 128**.
+   135	
+   136	A reader never searches for metadata. It jumps to known offsets.
+   137	
+   138	### 7.3 Header Layout (128 bytes)
+   139	
+   140	All offsets below are from file start.
+   141	
+   142	| Offset | Size | Name | Type | Notes |
+   143	|---:|---:|---|---|---|
+   144	| 0 | 4 | Magic | ASCII | Must be `GRIN` |
+   145	| 4 | 1 | VersionMajor | uint8 | Current: 0 |
+   146	| 5 | 1 | VersionMinor | uint8 | Current: 0 |
+   147	| 6 | 2 | HeaderSize | uint16 | Must be 128 |
+   148	| 8 | 4 | Width | uint32 | Pixels |
+   149	| 12 | 4 | Height | uint32 | Pixels |
+   150	| 16 | 4 | TickMicros | uint32 | Playback tick duration in microseconds |
+   151	| 20 | 1 | RuleCount | uint8 | 0–16 |
+   152	| 21 | 1 | OpcodeSetId | uint8 | Identifies the fixed opcode set (reader-known) |
+   153	| 22 | 2 | Flags | uint16 | Reserved (0) |
+   154	| 24 | 8 | PixelDataLength | uint64 | Must equal `Width * Height * 5` |
+   155	| 32 | 8 | FileLength | uint64 | Total bytes in file (optional; 0 allowed) |
+   156	| 40 | 8 | PixelDataOffset64 | uint64 | Must be 128 |
+   157	| 48 | 8 | ReservedA | uint64 | 0 |
+   158	| 56 | 8 | ReservedB | uint64 | 0 |
+   159	| 64 | 64 | RulesBlock | bytes | Fixed-size rule block; see §7.4 |
+   160	
+   161	#### 7.3.1 Reader Validation Rules
+   162	
+   163	A reader MUST reject the file if any of these are true:
+   164	
+   165	- Magic != `GRIN`
+   166	- HeaderSize != 128
+   167	- RuleCount > 16
+   168	- PixelDataOffset64 != 128
+   169	- PixelDataLength != Width * Height * 5
+   170	- FileLength is non-zero and FileLength < 128 + PixelDataLength
+   171	
+   172	A reader SHOULD reject if any reserved field is non-zero.
+   173	
+   174	### 7.4 Rules Block (Fixed 64 bytes)
+   175	
+   176	Rules are stored inside the fixed header to prevent unbounded metadata growth.
+   177	
+   178	- RulesBlock is always 64 bytes.
+   179	- Only the first `RuleCount` entries are active.
+   180	- Unused entries must be zero.
+   181	
+   182	Each rule entry is 4 bytes (16 rules × 4 bytes = 64 bytes):
+   183	
+   184	| Bytes | Name | Type | Notes |
+   185	|---:|---|---|---|
+   186	| 0–1 | GroupMask | uint16 | Bit i targets Group i (0–15) |
+   187	| 2 | Opcode | uint8 | Must be valid within OpcodeSetId |
+   188	| 3 | Timing | uint8 | On/off oscillator timing parameter (reader-defined) |
+   189	
+   190	Rules express **declarative schedules**, not programs.
+   191	
+   192	### 7.5 Header Lane Language (Authoring Standard)
+   193	
+   194	Authoring tools may express rule intent via a lane-based header string. Lanes
+   195	are sequential and capped at 16 entries.
+   196	
+   197	```
+   198	{NN[groups|action|xxx:unit]}
+   199	```
+   200	
+   201	- `NN` is the lane number (`00`–`15`), sequential with no gaps.
+   202	- `groups` is a concatenated list of group labels (`G`‑`X`, case-insensitive).
+   203	- `action` is one of:
+   204	  - `sety` (unlock)
+   205	  - `setz` (lock)
+   206	  - `+<hh><CC>` or `-<hh><CC>` for channel deltas
+   207	- `xxx:unit` is the repeat cadence (`000`–`999` with `min`, `sec`, or `mil`).
+   208	
+   209	Headers must be ≤ 592 bytes and contain no more than 16 lanes. Lanes must be
+   210	numbered sequentially.
+   211	
+   212	---
+   213	
+   214	## 8. Opcodes (Fixed Set)
+   215	
+   216	GRIN supports a small, fixed opcode set identified by OpcodeSetId.
+   217	
+   218	This spec defines the **existence** of a fixed opcode set but does not enumerate it here unless and until the opcode list is frozen. Readers must treat any unknown Opcode value as invalid.
+   219	
+   220	Constraints that must hold for any opcode set:
+   221	
+   222	- Must be statically inspectable
+   223	- Must have predictable worst-case CPU cost per tick
+   224	- Must not require dynamic allocation
+   225	- Must not allow hidden logic or unbounded expressiveness
+   226	
+   227	---
+   228	
+   229	## 9. Runtime Behavior Model
+   230	
+   231	Playback is intentionally simple.
+   232	
+   233	On each fixed tick:
+   234	
+   235	1. Determine active rules
+   236	2. For each pixel:
+   237	   - If locked, skip
+   238	   - If pixel’s group is targeted, apply effect
+   239	3. Present output
+   240
+Noting documentation updates
+
+Planning to highlight updated control suffix docs and refreshed god.txt snapshot with line citations; format utility comment changes and other docs edits may not need line references or summary mentions.
+
+
+---
+
+### Notes
+- node_modules changes were explicitly reverted (not included).
+- god.txt was modified in the agent run but you told me to ignore it, so it's omitted.
+- Some sections are excerpts (as captured in the agent log). If you need a true "git apply" patch, the safest way is to re-run these edits inside the repo and then run "git diff".

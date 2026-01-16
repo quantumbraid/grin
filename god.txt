@@ -25,6 +25,8 @@ grin/
 ├── Makefile
 ├── NOTICE
 ├── README.md
+├── TODO.md
+├── USER_GUIDE.md
 ├── SECURITY.md
 ├── agents.txt
 ├── android
@@ -166,7 +168,7 @@ grin/
 ├── grin_technical_specification.md
 ├── grin_technical_specification_v_2.md
 ├── immediatetodo.txt
-├── shortlist.Txt
+├── shortlist.txt
 ├── package-lock.json
 ├── plugins
 │   ├── gimp
@@ -229,6 +231,7 @@ grin/
 │   │   ├── format.js
 │   │   ├── gif.js
 │   │   ├── grin.js
+│   │   ├── lane-header.js
 │   │   ├── opcodes.js
 │   │   ├── png.js
 │   │   ├── render.js
@@ -2872,6 +2875,96 @@ quantumbraid@gmail.com
 
 This standard is intentionally constrained for security reasons and to encourage
 thoughtful, novel usage.
+
+#####/TODO.md#####
+# TODO
+
+- [x] Add control suffix validation helpers to shared format utilities.
+- [x] Update documentation to describe the new rrggbbaa + (G-X)(Y/Z) control suffix rules.
+- [x] Refresh God.txt with the latest repo structure and file contents.
+
+#####/USER_GUIDE.md#####
+# GRIN User Guide (Simplified)
+
+## What GRIN is
+
+GRIN (Graphic Readdressable Indexed Nodes) is a deterministic image container format.
+Instead of storing a list of frames, a `.grin` file stores one image plus a small,
+fixed rules block that modulates pixel groups over time. The format is intentionally
+bounded so files are predictable to validate and play back.
+
+## Think in groups (control labels, not “colors”)
+
+Each pixel belongs to exactly one group, identified internally by a 4‑bit value
+(0‑15). The rules in the header target these groups, not colors. For authoring,
+GRIN now uses a control label alphabet so the control channel never overlaps
+hexadecimal RGBA digits.
+
+**Control group labels (0‑15):** `G H J K L M N P Q R S T U V W X`  
+**Lock suffix:** `Y` = unlocked, `Z` = locked
+
+Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+The penultimate character must be a group label (`G`‑`X`), and the final character must be `Y` or `Z`.
+Any other suffix is considered corruption and should be resolved by rewriting the suffix with a chosen
+lock state (`Y` or `Z`) for all affected pixels.
+
+Example control channel suffixes: `LY` (group L, unlocked) or `LZ` (group L, locked).
+
+## The environment and its intentional limitations
+
+GRIN is designed to be safe, deterministic, and easy to validate:
+
+- **Fixed header size (128 bytes)** with reserved fields that must be zero.
+- **Bounded rules block (16 rules max)** and a fixed opcode set.
+- **No executable scripts**: rules are a tiny, fixed instruction table.
+- **Deterministic playback**: given the same input, every renderer produces the
+  same output.
+- **Group‑only addressing**: runtime operations target groups, not arbitrary
+  per‑pixel logic.
+
+These limits are deliberate. They keep files small, parsing fast, and behavior
+predictable across web, Android, and CLI tooling.
+
+## GRIN file layout (high‑level)
+
+- **Header (128 bytes)**: format identity, dimensions, timing, and rules.
+- **Pixel data**: width × height × 5 bytes (RGBA + control byte).
+- **Control byte**: 4 bits for group ID (0‑15) and 1 lock bit (labeled `Y`/`Z` in authoring).
+
+## How rules work (the “scripting” layer)
+
+Rules are 4‑byte entries in the header. Each rule has:
+
+- **Group mask (16 bits)**: selects which groups are affected.
+- **Opcode (8 bits)**: a small, fixed set (e.g., pulse alpha, shift channels).
+- **Timing (8 bits)**: defines waveform + period (think phase + frequency).
+
+Because rules target group masks, you can build complex effects by organizing
+pixels into logical groups rather than by color.
+
+## Basic usage (CLI flow)
+
+1) **Start with a PNG** (e.g., 16×16 for testing).
+2) **(Optional) Build a group mask image** where pixel values map to group IDs.
+3) **Create a rules JSON file** describing the rule table.
+4) **Encode** the `.grin` file with the CLI tools.
+5) **Inspect or decode** frames to verify output.
+
+Example commands:
+
+```bash
+node tools/bin/grin-encode.js input.png output.grin --rules rules.json
+node tools/bin/grin-encode.js input.png output.grin --groups group-mask.png --rules rules.json
+node tools/bin/grin-inspect.js output.grin --header --rules --groups
+node tools/bin/grin-decode.js output.grin output.png --frame 0
+```
+
+## Where to go next
+
+- `docs/tutorial-first-file.md` for a step‑by‑step walkthrough.
+- `docs/tutorial-grin-groups.md` for group mask guidance.
+- `docs/opcodes.md` and `docs/timing.md` for rule semantics.
+- `grin_technical_specification.md` for the full binary spec.
 
 #####/SECURITY.md#####
 # Security Policy
@@ -8673,8 +8766,8 @@ while preserving the original art and enabling instant validation.
 
 **Core UX elements**
 
-- **Group ID palette (0-15):** A compact legend of 16 swatches labeled `G0`–`G15`. Selecting a
-  swatch sets the active group ID for painting or tagging.
+- **Group ID palette (0-15):** A compact legend of 16 swatches labeled `G` through `X`
+  (skipping `I` and `O`). Selecting a swatch sets the active group ID for painting or tagging.
 - **Lock toggle:** A single toggle/button that sets the lock bit for the active paint/selection
   action. When enabled, applied marks set the lock bit; when disabled, they clear it.
 - **Dual-layer workflow (non-destructive):**
@@ -8759,22 +8852,22 @@ while preserving the original art and enabling instant validation.
 
 | Group | Label | Color (Hex) | Notes |
 |-------|-------|-------------|-------|
-| 0     | G0    | #FF1744     | Default primary group |
-| 1     | G1    | #FF9100     | Warm secondary |
-| 2     | G2    | #FFD600     | Highlight |
-| 3     | G3    | #76FF03     | Bright green |
-| 4     | G4    | #00E5FF     | Cyan |
-| 5     | G5    | #2979FF     | Blue |
-| 6     | G6    | #651FFF     | Indigo |
-| 7     | G7    | #D500F9     | Purple |
-| 8     | G8    | #F50057     | Magenta |
-| 9     | G9    | #FF6D00     | Orange |
-| 10    | G10   | #C6FF00     | Lime |
-| 11    | G11   | #1DE9B6     | Teal |
-| 12    | G12   | #00B0FF     | Light blue |
-| 13    | G13   | #304FFE     | Royal blue |
-| 14    | G14   | #AA00FF     | Violet |
-| 15    | G15   | #F06292     | Pink |
+| 0     | G     | #FF1744     | Default primary group |
+| 1     | H     | #FF9100     | Warm secondary |
+| 2     | J     | #FFD600     | Highlight |
+| 3     | K     | #76FF03     | Bright green |
+| 4     | L     | #00E5FF     | Cyan |
+| 5     | M     | #2979FF     | Blue |
+| 6     | N     | #651FFF     | Indigo |
+| 7     | P     | #D500F9     | Purple |
+| 8     | Q     | #F50057     | Magenta |
+| 9     | R     | #FF6D00     | Orange |
+| 10    | S     | #C6FF00     | Lime |
+| 11    | T     | #1DE9B6     | Teal |
+| 12    | U     | #00B0FF     | Light blue |
+| 13    | V     | #304FFE     | Royal blue |
+| 14    | W     | #AA00FF     | Violet |
+| 15    | X     | #F06292     | Pink |
 
 **Lock overlay:** Use a diagonal hatch pattern (45°) at 30% opacity, with a lock icon in the
 corner of the selection/preview. This remains consistent across Photoshop, Illustrator, and GIMP.
@@ -9465,16 +9558,26 @@ and `samples/minimal.grin`.
 # Tutorial: Understanding GRIN Groups
 
 Groups are the only runtime-addressable unit in GRIN. Each pixel belongs to
-exactly one group (0-15) and can be targeted by rules via a bitmask.
+exactly one group (0-15) and can be targeted by rules via a bitmask. For
+authoring, use the control label alphabet (`G H J K L M N P Q R S T U V W X`)
+so the control channel never overlaps RGBA hex digits.
 
 ## Control Byte Recap
 
 The control byte (C) uses bits 0-3 for the group ID and bit 7 for the lock bit.
+Lock state is labeled with a suffix: `Y` = unlocked, `Z` = locked.
 
 ```text
 bit 7: lock
 bits 0-3: group ID (0-15)
 ```
+
+Authoring strings append the control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+The penultimate character must be a group label (`G`‑`X`), and the final character must be `Y` or `Z`.
+Any other suffix is considered corruption; resolve it by rewriting control suffixes with a chosen
+lock state (`Y` or `Z`) so the value is normalized.
+
+Control label example: `LY` means group L (ID 4), unlocked.
 
 ## Rule Group Masks
 
@@ -9609,6 +9712,15 @@ Control byte bits:
 - Bits 0-3: Group ID (0-15)
 - Bits 4-6: Reserved (must be 0)
 - Bit 7: Lock bit (1 = locked)
+
+Control labels used in authoring/UI (not stored in the file):
+
+- Group labels: `G H J K L M N P Q R S T U V W X` (skip `I` and `O`).
+- Lock suffix: `Y` = unlocked, `Z` = locked.
+- Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+  The penultimate character must be a `G`‑`X` group label and the final character must be `Y` or `Z`.
+  Any other suffix is treated as corruption and should be normalized by rewriting suffixes with a
+  chosen lock state (`Y` or `Z`).
 
 ## 4. Validation Rules
 
@@ -9794,6 +9906,15 @@ This represents a deliberate 25% size increase over RGBA, paid once.
 - Bit 7: **Lock bit**
 - Bits 4–6: Reserved (must be zero)
 
+Authoring/UI control labels (not stored in the file):
+
+- Group labels: `G H J K L M N P Q R S T U V W X` (skip `I` and `O`)
+- Lock suffix: `Y` = unlocked, `Z` = locked
+- Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+  The penultimate character must be a `G`‑`X` group label and the final character must be `Y` or `Z`.
+  Any other suffix is treated as corruption and should be normalized by rewriting suffixes with a
+  chosen lock state (`Y` or `Z`).
+
 Each pixel:
 
 - Belongs to exactly **one of 16 groups**
@@ -9905,12 +10026,6 @@ Each rule entry is 4 bytes (16 rules × 4 bytes = 64 bytes):
 | 3 | Timing | uint8 | On/off oscillator timing parameter (reader-defined) |
 
 Rules express **declarative schedules**, not programs.
-
-Timing is evaluated per rule on each global tick. Each rule’s timing and phase
-offset is independent, so channels can drift or diverge indefinitely without
-re-synchronizing to a file-level loop. Timing value `0x00` is reserved for
-one-shot activation (active on tick 0, inactive afterward); non-zero timings
-define recurring modulation periods.
 
 ---
 
@@ -10099,15 +10214,19 @@ using the CLI tools described in `docs/creative-suite-foundations.md`.
    - **Lock map layer** named `GRIN_LOCK` (or `GRIN_LOCK_MAP`).
 3. Paint the group map using grayscale values **0-15** so each pixel maps to a GRIN group ID.
 4. Paint the lock map using **0** for unlocked pixels and **255** for locked pixels.
-5. Optionally tag layer names with group IDs and lock hints, e.g. `Hero G3 [L]`.
+5. Optionally tag layer names with group labels and lock hints, e.g. `Hero GL [Z]`.
 
 ## Layer Tagging Conventions
 
 The panel scans layer names for metadata tags to help with preview summaries:
 
-- `G0`–`G15` or `[G0]`–`[G15]` set the group ID.
-- `LOCK` or `[L]` marks a layer as locked.
-- `UNLOCK` or `[U]` clears the lock hint.
+- `GG`–`GX` or `[GG]`–`[GX]` set the group label (`G H J K L M N P Q R S T U V W X`).
+- `LOCK` or `[Z]` marks a layer as locked (`Z` suffix).
+- `UNLOCK` or `[Y]` clears the lock hint (`Y` suffix).
+
+Authoring strings that include RGBA hex should append the control suffix as `rrggbbaaGY` or
+`rrggbbaaGZ` (group label `G`‑`X`, lock `Y`/`Z`). Any other suffix is considered corruption and
+should be rewritten with a chosen lock state.
 
 ## Export Pipeline
 
@@ -10151,22 +10270,22 @@ node tools/bin/grin-validate.js <name>.grin
         <label class="field">
           <span class="field__label">Active Group</span>
           <select id="groupSelect" class="field__control" aria-label="Active group">
-            <option value="0">Group 0</option>
-            <option value="1">Group 1</option>
-            <option value="2">Group 2</option>
-            <option value="3">Group 3</option>
-            <option value="4">Group 4</option>
-            <option value="5">Group 5</option>
-            <option value="6">Group 6</option>
-            <option value="7">Group 7</option>
-            <option value="8">Group 8</option>
-            <option value="9">Group 9</option>
-            <option value="10">Group 10</option>
-            <option value="11">Group 11</option>
-            <option value="12">Group 12</option>
-            <option value="13">Group 13</option>
-            <option value="14">Group 14</option>
-            <option value="15">Group 15</option>
+            <option value="0">Group G (0)</option>
+            <option value="1">Group H (1)</option>
+            <option value="2">Group J (2)</option>
+            <option value="3">Group K (3)</option>
+            <option value="4">Group L (4)</option>
+            <option value="5">Group M (5)</option>
+            <option value="6">Group N (6)</option>
+            <option value="7">Group P (7)</option>
+            <option value="8">Group Q (8)</option>
+            <option value="9">Group R (9)</option>
+            <option value="10">Group S (10)</option>
+            <option value="11">Group T (11)</option>
+            <option value="12">Group U (12)</option>
+            <option value="13">Group V (13)</option>
+            <option value="14">Group W (14)</option>
+            <option value="15">Group X (15)</option>
           </select>
         </label>
 
@@ -10213,10 +10332,37 @@ const lockToggle = document.getElementById("lockToggle");
 const previewButton = document.getElementById("previewButton");
 const exportButton = document.getElementById("exportButton");
 
-const GROUP_TAG_REGEX = /\\bG(1[0-5]|[0-9])\\b/i;
-const GROUP_BRACKET_REGEX = /\\[G(1[0-5]|[0-9])\\]/i;
-const LOCK_TAG_REGEX = /\\bLOCK\\b|\\[L\\]/i;
-const UNLOCK_TAG_REGEX = /\\bUNLOCK\\b|\\[U\\]/i;
+// Control group labels (G-X, skipping I/O) and lock suffixes (Y/Z).
+const CONTROL_GROUP_LABELS = ["G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X"];
+const CONTROL_GROUP_PATTERN = CONTROL_GROUP_LABELS.join("");
+
+const GROUP_TAG_REGEX = new RegExp(`\\bG([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\b`, "i");
+const GROUP_BRACKET_REGEX = new RegExp(`\\[G([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\]`, "i");
+const LOCK_TAG_REGEX = /\bLOCK\b|\bZ\b|\[Z\]/i;
+const UNLOCK_TAG_REGEX = /\bUNLOCK\b|\bY\b|\[Y\]/i;
+
+/**
+ * Convert a numeric group ID into the G-X label alphabet.
+ * @param {number} groupId - Group ID (0-15).
+ * @returns {string} Group label or "?" when out of range.
+ */
+function formatControlGroupLabel(groupId) {
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a single-letter control label into a numeric group ID.
+ * @param {string} label - Control label.
+ * @returns {number | null} Group ID or null when invalid.
+ */
+function parseControlGroupLabel(label) {
+  if (!label) {
+    return null;
+  }
+  const normalized = String(label).trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized);
+  return index >= 0 ? index : null;
+}
 
 /**
  * Update the status footer with a short message.
@@ -10236,7 +10382,8 @@ function setStatus(message) {
 function describeSelection() {
   const groupId = groupSelect ? Number(groupSelect.value) : 0;
   const lockState = lockToggle ? lockToggle.checked : false;
-  return `Group ${groupId} • ${lockState ? "Locked" : "Unlocked"}`;
+  const groupLabel = formatControlGroupLabel(groupId);
+  return `Group ${groupLabel} (${groupId}) • ${lockState ? "Locked" : "Unlocked"}`;
 }
 
 /**
@@ -10259,6 +10406,23 @@ function normalizeGroupId(groupId, fallback) {
 }
 
 /**
+ * Parse a group token that may be numeric or label-based.
+ * @param {string | null} token - Candidate group token.
+ * @param {number} fallback - Fallback group ID.
+ * @returns {number} Parsed group ID.
+ */
+function parseGroupToken(token, fallback) {
+  if (!token) {
+    return fallback;
+  }
+  if (/^\d+$/.test(token)) {
+    return normalizeGroupId(Number(token), fallback);
+  }
+  const parsed = parseControlGroupLabel(token);
+  return parsed !== null ? parsed : fallback;
+}
+
+/**
  * Parse a layer name into group/lock metadata based on tag conventions.
  * @param {string} layerName - Layer name to inspect.
  * @param {number} fallbackGroup - Fallback group ID.
@@ -10269,7 +10433,7 @@ function parseLayerNameMetadata(layerName, fallbackGroup, fallbackLock) {
   const bracketMatch = layerName.match(GROUP_BRACKET_REGEX);
   const inlineMatch = layerName.match(GROUP_TAG_REGEX);
   const rawGroup = bracketMatch ? bracketMatch[1] : inlineMatch ? inlineMatch[1] : null;
-  const groupId = normalizeGroupId(rawGroup ? Number(rawGroup) : undefined, fallbackGroup);
+  const groupId = parseGroupToken(rawGroup, fallbackGroup);
   const hasLockTag = LOCK_TAG_REGEX.test(layerName);
   const hasUnlockTag = UNLOCK_TAG_REGEX.test(layerName);
   const locked = hasLockTag ? true : hasUnlockTag ? false : fallbackLock;
@@ -10338,7 +10502,7 @@ function captureLayerMetadata(document) {
  * @returns {{baseName: string, rgbaName: string, groupsName: string, lockName: string, rulesName: string, grinName: string}}
  */
 function buildExportNames(documentName) {
-  const baseName = documentName.replace(/\\.[^/.]+$/, "");
+  const baseName = documentName.replace(/\.[^/.]+$/, "");
   return {
     baseName,
     rgbaName: `${baseName}.png`,
@@ -10482,7 +10646,7 @@ async function writeRulesJson(rulesFile, rules) {
  * @returns {string} CLI command.
  */
 function buildEncodeCommand(exportRoot, names) {
-  return `node tools/bin/grin-encode.js \"${exportRoot}/${names.rgbaName}\" \"${exportRoot}/${names.grinName}\" --groups \"${exportRoot}/${names.groupsName}\" --rules \"${exportRoot}/${names.rulesName}\"`;
+  return `node tools/bin/grin-encode.js "${exportRoot}/${names.rgbaName}" "${exportRoot}/${names.grinName}" --groups "${exportRoot}/${names.groupsName}" --rules "${exportRoot}/${names.rulesName}"`;
 }
 
 /**
@@ -10492,7 +10656,7 @@ function buildEncodeCommand(exportRoot, names) {
  * @returns {string} CLI command.
  */
 function buildValidateCommand(exportRoot, names) {
-  return `node tools/bin/grin-validate.js \"${exportRoot}/${names.grinName}\"`;
+  return `node tools/bin/grin-validate.js "${exportRoot}/${names.grinName}"`;
 }
 
 /**
@@ -10538,7 +10702,7 @@ async function handleExport() {
     setStatus("Writing rules sidecar...");
     await writeRulesJson(rulesFile, []);
 
-    const exportRoot = exportFolder.nativePath.replace(/\\\\/g, "/");
+    const exportRoot = exportFolder.nativePath.replace(/\\/g, "/");
     const encodeCommand = buildEncodeCommand(exportRoot, names);
     const validateCommand = buildValidateCommand(exportRoot, names);
 
@@ -10733,12 +10897,15 @@ using the CLI tools described in `docs/creative-suite-foundations.md`.
 
 The panel reads metadata from page item names or notes:
 
-- `G0`–`G15` or `[G0]`–`[G15]` set the group ID.
-- `LOCK` or `[L]` marks a page item as locked.
-- `UNLOCK` or `[U]` clears the lock hint.
+- `GG`–`GX` or `[GG]`–`[GX]` set the group label (`G H J K L M N P Q R S T U V W X`).
+- `LOCK` or `[Z]` marks a page item as locked (`Z` suffix).
+- `UNLOCK` or `[Y]` clears the lock hint (`Y` suffix).
 
 Use tags on layers or objects to preview how many items are annotated. Tagged metadata can be
 used to drive group/lock map creation in your art.
+Authoring strings that include RGBA hex should append the control suffix as `rrggbbaaGY` or
+`rrggbbaaGZ` (group label `G`‑`X`, lock `Y`/`Z`). Any other suffix is considered corruption and
+should be rewritten with a chosen lock state.
 
 ## Export Pipeline
 
@@ -10785,23 +10952,23 @@ node tools/bin/grin-validate.js <name>.grin
       <section class="panel__section">
         <label for="groupSelect">Default Group</label>
         <select id="groupSelect">
-          <!-- Group IDs are 0-15 per GRIN spec. -->
-          <option value="0">Group 0</option>
-          <option value="1">Group 1</option>
-          <option value="2">Group 2</option>
-          <option value="3">Group 3</option>
-          <option value="4">Group 4</option>
-          <option value="5">Group 5</option>
-          <option value="6">Group 6</option>
-          <option value="7">Group 7</option>
-          <option value="8">Group 8</option>
-          <option value="9">Group 9</option>
-          <option value="10">Group 10</option>
-          <option value="11">Group 11</option>
-          <option value="12">Group 12</option>
-          <option value="13">Group 13</option>
-          <option value="14">Group 14</option>
-          <option value="15">Group 15</option>
+          <!-- Group IDs are 0-15 per GRIN spec, labeled G-X (skipping I/O). -->
+          <option value="0">Group G (0)</option>
+          <option value="1">Group H (1)</option>
+          <option value="2">Group J (2)</option>
+          <option value="3">Group K (3)</option>
+          <option value="4">Group L (4)</option>
+          <option value="5">Group M (5)</option>
+          <option value="6">Group N (6)</option>
+          <option value="7">Group P (7)</option>
+          <option value="8">Group Q (8)</option>
+          <option value="9">Group R (9)</option>
+          <option value="10">Group S (10)</option>
+          <option value="11">Group T (11)</option>
+          <option value="12">Group U (12)</option>
+          <option value="13">Group V (13)</option>
+          <option value="14">Group W (14)</option>
+          <option value="15">Group X (15)</option>
         </select>
       </section>
 
@@ -10847,10 +11014,37 @@ const resolutionInput = document.getElementById("resolutionInput");
 const previewButton = document.getElementById("previewButton");
 const exportButton = document.getElementById("exportButton");
 
-const GROUP_TAG_REGEX = /\\bG(1[0-5]|[0-9])\\b/i;
-const GROUP_BRACKET_REGEX = /\\[G(1[0-5]|[0-9])\\]/i;
-const LOCK_TAG_REGEX = /\\bLOCK\\b|\\[L\\]/i;
-const UNLOCK_TAG_REGEX = /\\bUNLOCK\\b|\\[U\\]/i;
+// Control group labels (G-X, skipping I/O) and lock suffixes (Y/Z).
+const CONTROL_GROUP_LABELS = ["G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X"];
+const CONTROL_GROUP_PATTERN = CONTROL_GROUP_LABELS.join("");
+
+const GROUP_TAG_REGEX = new RegExp(`\\bG([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\b`, "i");
+const GROUP_BRACKET_REGEX = new RegExp(`\\[G([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\]`, "i");
+const LOCK_TAG_REGEX = /\bLOCK\b|\bZ\b|\[Z\]/i;
+const UNLOCK_TAG_REGEX = /\bUNLOCK\b|\bY\b|\[Y\]/i;
+
+/**
+ * Convert a numeric group ID into the G-X label alphabet.
+ * @param {number} groupId - Group ID (0-15).
+ * @returns {string} Group label or "?" when out of range.
+ */
+function formatControlGroupLabel(groupId) {
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a single-letter control label into a numeric group ID.
+ * @param {string} label - Control label.
+ * @returns {number | null} Group ID or null when invalid.
+ */
+function parseControlGroupLabel(label) {
+  if (!label) {
+    return null;
+  }
+  const normalized = String(label).trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized);
+  return index >= 0 ? index : null;
+}
 
 /**
  * Update the status footer with a short message.
@@ -10871,7 +11065,8 @@ function describeSelection() {
   const groupId = groupSelect ? Number(groupSelect.value) : 0;
   const lockState = lockToggle ? lockToggle.checked : false;
   const resolution = resolutionInput ? Number(resolutionInput.value) : 1024;
-  return `Group ${groupId} • ${lockState ? "Locked" : "Unlocked"} • ${resolution}px`;
+  const groupLabel = formatControlGroupLabel(groupId);
+  return `Group ${groupLabel} (${groupId}) • ${lockState ? "Locked" : "Unlocked"} • ${resolution}px`;
 }
 
 /**
@@ -10894,6 +11089,23 @@ function normalizeGroupId(groupId, fallback) {
 }
 
 /**
+ * Parse a group token that may be numeric or label-based.
+ * @param {string | null} token - Candidate group token.
+ * @param {number} fallback - Fallback group ID.
+ * @returns {number} Parsed group ID.
+ */
+function parseGroupToken(token, fallback) {
+  if (!token) {
+    return fallback;
+  }
+  if (/^\d+$/.test(token)) {
+    return normalizeGroupId(Number(token), fallback);
+  }
+  const parsed = parseControlGroupLabel(token);
+  return parsed !== null ? parsed : fallback;
+}
+
+/**
  * Parse a metadata source string into group/lock hints.
  * @param {string} sourceText - Text to inspect (name or note).
  * @param {number} fallbackGroup - Fallback group ID.
@@ -10904,7 +11116,7 @@ function parseMetadataTags(sourceText, fallbackGroup, fallbackLock) {
   const bracketMatch = sourceText.match(GROUP_BRACKET_REGEX);
   const inlineMatch = sourceText.match(GROUP_TAG_REGEX);
   const rawGroup = bracketMatch ? bracketMatch[1] : inlineMatch ? inlineMatch[1] : null;
-  const groupId = normalizeGroupId(rawGroup ? Number(rawGroup) : undefined, fallbackGroup);
+  const groupId = parseGroupToken(rawGroup, fallbackGroup);
   const hasLockTag = LOCK_TAG_REGEX.test(sourceText);
   const hasUnlockTag = UNLOCK_TAG_REGEX.test(sourceText);
   const locked = hasLockTag ? true : hasUnlockTag ? false : fallbackLock;
@@ -10999,7 +11211,7 @@ function buildFlatteningPlan(document, resolution) {
  * @returns {{baseName: string, rgbaName: string, groupsName: string, lockName: string, rulesName: string, grinName: string}}
  */
 function buildExportNames(documentName) {
-  const baseName = documentName.replace(/\\.[^/.]+$/, "");
+  const baseName = documentName.replace(/\.[^/.]+$/, "");
   return {
     baseName,
     rgbaName: `${baseName}.png`,
@@ -11119,7 +11331,7 @@ async function writeRulesJson(rulesFile, rules) {
  * @returns {string} CLI command.
  */
 function buildEncodeCommand(exportRoot, names) {
-  return `node tools/bin/grin-encode.js \"${exportRoot}/${names.rgbaName}\" \"${exportRoot}/${names.grinName}\" --groups \"${exportRoot}/${names.groupsName}\" --rules \"${exportRoot}/${names.rulesName}\"`;
+  return `node tools/bin/grin-encode.js "${exportRoot}/${names.rgbaName}" "${exportRoot}/${names.grinName}" --groups "${exportRoot}/${names.groupsName}" --rules "${exportRoot}/${names.rulesName}"`;
 }
 
 /**
@@ -11129,7 +11341,7 @@ function buildEncodeCommand(exportRoot, names) {
  * @returns {string} CLI command.
  */
 function buildValidateCommand(exportRoot, names) {
-  return `node tools/bin/grin-validate.js \"${exportRoot}/${names.grinName}\"`;
+  return `node tools/bin/grin-validate.js "${exportRoot}/${names.grinName}"`;
 }
 
 /**
@@ -11180,7 +11392,7 @@ async function handleExport() {
     setStatus("Writing rules sidecar...");
     await writeRulesJson(rulesFile, []);
 
-    const exportRoot = exportFolder.nativePath.replace(/\\\\/g, "/");
+    const exportRoot = exportFolder.nativePath.replace(/\\/g, "/");
     const encodeCommand = buildEncodeCommand(exportRoot, names);
     const validateCommand = buildValidateCommand(exportRoot, names);
 
@@ -11330,7 +11542,7 @@ GRIN CLI validation tools.
 1. Copy `plugins/gimp/grin_gimp_plugin.py` into your GIMP plug-ins folder:
    - Linux: `~/.config/GIMP/2.10/plug-ins/`
    - macOS: `~/Library/Application Support/GIMP/2.10/plug-ins/`
-   - Windows: `%APPDATA%\\GIMP\\2.10\\plug-ins\\`
+   - Windows: `%APPDATA%\GIMP\2.10\plug-ins\`
 2. Ensure the script is executable (`chmod +x grin_gimp_plugin.py` on macOS/Linux).
 3. Restart GIMP.
 
@@ -11341,7 +11553,7 @@ The plugin appears under **Filters → GRIN → GRIN Export...**
 1. Paint your RGBA artwork in standard layers.
 2. Run **Filters → GRIN → GRIN Export...** to create the metadata layers.
 3. Use selections (lasso, brush selection, etc.) to mark regions and re-run the plugin with:
-   - **Active Group ID** set to the desired group (0-15).
+   - **Active Group ID** set to the desired group (0-15, labeled `G H J K L M N P Q R S T U V W X`).
    - **Lock pixels** toggled when you want the lock map filled.
 4. The plugin updates the `GRIN_GROUPS` and `GRIN_LOCK` layers, preserving your original art.
 
@@ -12848,15 +13060,25 @@ This directory contains shared fixtures for GRIN tests.
      npm publish --access public
      ```
 
-#####/shortlist.Txt#####
+#####/shortlist.txt#####
+- [ ] Tag initial release (v0.1.0)
+  - Fix path: confirm the release commit and version in `CHANGELOG.md`.
+  - Fix path: build release artifacts for Android/web/tools and run smoke tests.
+  - Fix path: create and push annotated git tag `v0.1.0`.
+- [ ] Publish Android library to Maven Central / JitPack
+  - Fix path: verify `android/lib/build.gradle.kts` publishing config, coordinates, and signing.
+  - Fix path: publish to a staging repo (Sonatype or JitPack) and verify artifacts/metadata.
+  - Fix path: close/release the staging repo and update release notes.
+- [ ] Publish JavaScript library to npm
+  - Fix path: build the `web` bundle to `web/dist` and run tests.
+  - Fix path: verify `web/package.json` metadata (name, version, files, exports).
+  - Fix path: publish to npm and confirm availability.
+- [ ] Create GitHub Releases with artifacts
+  - Fix path: assemble release artifacts (AAR, npm tarball, CLI bundle).
+  - Fix path: create the GitHub release for tag `v0.1.0` and attach artifacts.
+  - Fix path: verify release notes link to `CHANGELOG.md`.
 - [ ] Add license headers to all source files
-- [x] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
-- [x] Add accessibility coverage (ARIA labels, focus order, contrast checks)
-- [x] Improve empty, loading, and error states (missing file, validation errors, decode failures)
-- [x] Add keyboard shortcuts for playback, frame stepping, and group filtering
-- [x] Add a validation summary panel (header warnings, rule count, invalid pixels)
-- [x] Align the demo UI with Material 3 components in `android/demo/`
-- [x] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
+- [ ] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
 - [ ] Add file-open flow with recent files and error recovery
 - [ ] Add in-app metadata viewer (header fields, rules summary, group counts)
 - [ ] Standardize iconography, labels, and terminology across web/android/docs
@@ -12874,21 +13096,22 @@ This directory contains shared fixtures for GRIN tests.
 - [ ] Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
 
 #####/todo.md#####
-# GRIN Build Plan — Ultra-Detailed Agentic Implementation Guide
+# GRIN Change Log — Completed Task Record
 
 ## Overview
 
 **Project**: GRIN (Graphic Readdressable Indexed Nodes)  
 **File Extensions**: `.grin`, `.grn`  
 **Target Platforms**: Android (Java/Kotlin), Web Browsers (JavaScript)  
-**Architecture**: Deterministic image container with 5-byte pixel structure (RGBA+C), 16 addressable channels, fixed 128-byte header, and bounded rule-based modulation.
+**Architecture**: Deterministic image container with 5-byte pixel structure (RGBA+C), 16 addressable channels, fixed 128-byte header, and bounded rule-based modulation.  
+**Status**: This document now serves as the completed-task change log; remaining work has been moved to `shortlist.txt`.
 
 ---
 
 ## Phase 0: Project Scaffolding and Environment Setup
 
 ### 0.1 Repository Structure
-- [x] Create root directory structure:
+- Create root directory structure:
   ```
   grin/
   ├── spec/                    # Specification documents
@@ -12913,44 +13136,44 @@ This directory contains shared fixtures for GRIN tests.
   ```
 
 ### *** 0.2 Dependency Manifest Creation
-- [x] Create `package.json` for web implementation (npm/yarn)
-- [x] Create `build.gradle` / `pom.xml` for Android/Java implementation
-- [x] Create `Makefile` or `CMakeLists.txt` for native tooling (optional C reference)
-- [x] Define minimum SDK versions: Android API 19, ES6+ for browsers
+- Create `package.json` for web implementation (npm/yarn)
+- Create `build.gradle` / `pom.xml` for Android/Java implementation
+- Create `Makefile` or `CMakeLists.txt` for native tooling (optional C reference)
+- Define minimum SDK versions: Android API 19, ES6+ for browsers
 
 ### *** 0.3 CI/CD Pipeline Configuration
-- [x] Create `.github/workflows/build.yml` for automated builds
-- [x] Create `.github/workflows/test.yml` for automated testing
-- [x] Create `.github/workflows/lint.yml` for code quality checks
-- [x] Define artifact publishing rules for releases
+- Create `.github/workflows/build.yml` for automated builds
+- Create `.github/workflows/test.yml` for automated testing
+- Create `.github/workflows/lint.yml` for code quality checks
+- Define artifact publishing rules for releases
 
 ### 0.4 Development Environment Documentation
-- [x] Create `CONTRIBUTING.md` with development setup instructions
-- [x] Create `ARCHITECTURE.md` with system overview diagrams
-- [x] Create `SECURITY.md` with security considerations
+- Create `CONTRIBUTING.md` with development setup instructions
+- Create `ARCHITECTURE.md` with system overview diagrams
+- Create `SECURITY.md` with security considerations
 
 ---
 
 ## Phase 1: Binary Format Specification Implementation
 
 ### 1.1 Magic Number and Versioning Constants
-- [x] Define `MAGIC_BYTES` = `[0x47, 0x52, 0x49, 0x4E]` ("GRIN" in ASCII)
+- Define `MAGIC_BYTES` = `[0x47, 0x52, 0x49, 0x4E]` ("GRIN" in ASCII)
   - Summary: Added `MAGIC_BYTES` constants in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
-- [x] Define `VERSION_MAJOR` = `0x00`
+- Define `VERSION_MAJOR` = `0x00`
   - Summary: Added `VERSION_MAJOR` constants in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
-- [x] Define `VERSION_MINOR` = `0x00`
+- Define `VERSION_MINOR` = `0x00`
   - Summary: Added `VERSION_MINOR` constants in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
-- [x] Define `HEADER_SIZE_BYTES` = `128`
+- Define `HEADER_SIZE_BYTES` = `128`
   - Summary: Added `HEADER_SIZE_BYTES` constants in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
-- [x] Define `PIXEL_SIZE_BYTES` = `5`
+- Define `PIXEL_SIZE_BYTES` = `5`
   - Summary: Added `PIXEL_SIZE_BYTES` constants in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
-- [x] Define `MAX_RULE_COUNT` = `16`
+- Define `MAX_RULE_COUNT` = `16`
   - Summary: Added `MAX_RULE_COUNT` constants in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
-- [x] Define `RULES_BLOCK_SIZE` = `64`
+- Define `RULES_BLOCK_SIZE` = `64`
   - Summary: Added `RULES_BLOCK_SIZE` constants in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
 
 ### 1.2 Header Structure Definition (128 bytes total)
-- [x] Implement header byte layout structure:
+- Implement header byte layout structure:
   ```
   Offset 0-3:   Magic (4 bytes, ASCII "GRIN")
   Offset 4:     VersionMajor (1 byte, uint8)
@@ -12972,20 +13195,20 @@ This directory contains shared fixtures for GRIN tests.
   - Summary: Added header field offsets/sizes in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
 
 ### 1.3 Rules Block Structure (64 bytes, 16 × 4-byte entries)
-- [x] Define rule entry structure (4 bytes each):
+- Define rule entry structure (4 bytes each):
   ```
   Bytes 0-1: GroupMask (uint16 LE, bit i → Group i)
   Byte 2:    Opcode (uint8)
   Byte 3:    Timing (uint8, oscillator parameter)
   ```
   - Summary: Added rule entry offsets/sizes in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
-- [x] Implement GroupMask bitmask interpretation (bits 0-15 → groups 0-15)
+- Implement GroupMask bitmask interpretation (bits 0-15 → groups 0-15)
   - Summary: Added group mask helper functions in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
-- [x] Define timing parameter semantics (reader-defined oscillator control)
+- Define timing parameter semantics (reader-defined oscillator control)
   - Summary: Documented timing semantics as a constant in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
 
 ### 1.4 Pixel Structure Definition (5 bytes per pixel)
-- [x] Define pixel byte layout:
+- Define pixel byte layout:
   ```
   Byte 0: R (uint8, Red channel, 0-255)
   Byte 1: G (uint8, Green channel, 0-255)
@@ -12996,14 +13219,14 @@ This directory contains shared fixtures for GRIN tests.
   - Summary: Added pixel field offsets in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
 
 ### 1.5 Control Byte (C) Bit Field Definition
-- [x] Implement control byte bit extraction:
+- Implement control byte bit extraction:
   ```
   Bits 0-3: Group ID (0-15, extracted via C & 0x0F)
   Bits 4-6: Reserved (must be 0, mask 0x70)
   Bit 7:    Lock bit (extracted via (C >> 7) & 0x01)
   ```
   - Summary: Added control-byte masks and extraction helpers in `web/lib/format.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFormat.kt`.
-- [x] Create helper functions:
+- Create helper functions:
   - `getGroupId(controlByte)` → returns 0-15
   - `isLocked(controlByte)` → returns boolean
   - `setGroupId(controlByte, groupId)` → returns modified byte
@@ -13015,72 +13238,72 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 2: Core Data Structures
 
 ### 2.1 GrinHeader Class/Struct
-- [x] Implement `GrinHeader` with all header fields
+- Implement `GrinHeader` with all header fields
   - Summary: Added `GrinHeader` data structures in `web/lib/grin-header.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt`.
-- [x] Implement `GrinHeader.serialize()` → byte array (128 bytes)
+- Implement `GrinHeader.serialize()` → byte array (128 bytes)
   - Summary: Implemented 128-byte header serialization with little-endian writes in `web/lib/grin-header.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt`.
-- [x] Implement `GrinHeader.deserialize(bytes)` → GrinHeader
+- Implement `GrinHeader.deserialize(bytes)` → GrinHeader
   - Summary: Added header deserialization for byte arrays with field parsing in `web/lib/grin-header.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt`.
-- [x] Implement `GrinHeader.validate()` → boolean with error messages
+- Implement `GrinHeader.validate()` → boolean with error messages
   - Summary: Added validation results with errors/warnings in `web/lib/grin-header.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt` plus `android/lib/src/main/kotlin/io/grin/lib/GrinValidation.kt`.
 
 ### *** 2.2 GrinPixel Class/Struct
-- [x] Implement `GrinPixel` with R, G, B, A, C fields
+- Implement `GrinPixel` with R, G, B, A, C fields
   - Summary: Added `GrinPixel` data structures in `web/lib/grin-pixel.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPixel.kt`.
-- [x] Implement `GrinPixel.getGroupId()` → int (0-15)
+- Implement `GrinPixel.getGroupId()` → int (0-15)
   - Summary: Implemented group ID accessors in `web/lib/grin-pixel.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPixel.kt`.
-- [x] Implement `GrinPixel.isLocked()` → boolean
+- Implement `GrinPixel.isLocked()` → boolean
   - Summary: Implemented lock state checks in `web/lib/grin-pixel.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPixel.kt`.
-- [x] Implement `GrinPixel.setGroupId(int)` → void
+- Implement `GrinPixel.setGroupId(int)` → void
   - Summary: Implemented control-byte group mutation in `web/lib/grin-pixel.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPixel.kt`.
-- [x] Implement `GrinPixel.setLocked(boolean)` → void
+- Implement `GrinPixel.setLocked(boolean)` → void
   - Summary: Implemented control-byte lock mutation in `web/lib/grin-pixel.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPixel.kt`.
-- [x] Implement `GrinPixel.toBytes()` → byte[5]
+- Implement `GrinPixel.toBytes()` → byte[5]
   - Summary: Added pixel serialization in `web/lib/grin-pixel.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPixel.kt`.
-- [x] Implement `GrinPixel.fromBytes(byte[5])` → GrinPixel
+- Implement `GrinPixel.fromBytes(byte[5])` → GrinPixel
   - Summary: Added pixel deserialization helpers in `web/lib/grin-pixel.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPixel.kt`.
 
 ### *** 2.3 GrinRule Class/Struct
-- [x] Implement `GrinRule` with GroupMask, Opcode, Timing fields
+- Implement `GrinRule` with GroupMask, Opcode, Timing fields
   - Summary: Added `GrinRule` data structures in `web/lib/grin-rule.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinRule.kt`.
-- [x] Implement `GrinRule.targetsGroup(int groupId)` → boolean
+- Implement `GrinRule.targetsGroup(int groupId)` → boolean
   - Summary: Implemented group targeting checks in `web/lib/grin-rule.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinRule.kt`.
-- [x] Implement `GrinRule.serialize()` → byte[4]
+- Implement `GrinRule.serialize()` → byte[4]
   - Summary: Added rule serialization with little-endian group masks in `web/lib/grin-rule.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinRule.kt`.
-- [x] Implement `GrinRule.deserialize(byte[4])` → GrinRule
+- Implement `GrinRule.deserialize(byte[4])` → GrinRule
   - Summary: Added rule deserialization helpers in `web/lib/grin-rule.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinRule.kt`.
 
 ### 2.4 GrinImage Class/Struct
-- [x] Implement `GrinImage` container:
+- Implement `GrinImage` container:
   - `header: GrinHeader`
   - `pixels: GrinPixel[]` (length = width × height)
   - `rules: GrinRule[]` (length = ruleCount, max 16)
   - Summary: Added `GrinImage` containers with header/pixel/rule storage in `web/lib/grin-image.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinImage.kt`.
-- [x] Implement pixel indexing: `getPixel(x, y)` → GrinPixel
+- Implement pixel indexing: `getPixel(x, y)` → GrinPixel
   - Summary: Implemented indexed pixel accessors in `web/lib/grin-image.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinImage.kt`.
-- [x] Implement pixel setting: `setPixel(x, y, pixel)` → void
+- Implement pixel setting: `setPixel(x, y, pixel)` → void
   - Summary: Implemented indexed pixel mutation in `web/lib/grin-image.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinImage.kt`.
-- [x] Implement bounds checking for all accessors
+- Implement bounds checking for all accessors
   - Summary: Added coordinate bounds validation in `web/lib/grin-image.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinImage.kt`.
-- [x] Implement `getPixelsByGroup(int groupId)` → GrinPixel[]
+- Implement `getPixelsByGroup(int groupId)` → GrinPixel[]
   - Summary: Added group filtering helpers in `web/lib/grin-image.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinImage.kt`.
-- [x] Implement `getLockedPixels()` → GrinPixel[]
+- Implement `getLockedPixels()` → GrinPixel[]
   - Summary: Added locked pixel filters in `web/lib/grin-image.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinImage.kt`.
-- [x] Implement `getUnlockedPixels()` → GrinPixel[]
+- Implement `getUnlockedPixels()` → GrinPixel[]
   - Summary: Added unlocked pixel filters in `web/lib/grin-image.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinImage.kt`.
 
 ### 2.5 GrinFile Class/Struct
-- [x] Implement `GrinFile` as complete file representation
+- Implement `GrinFile` as complete file representation
   - Summary: Added `GrinFile` containers in `web/lib/grin-file.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFile.kt`.
-- [x] Implement `GrinFile.load(path)` → GrinFile
+- Implement `GrinFile.load(path)` → GrinFile
   - Summary: Implemented path-based load for Android and Node.js in `android/lib/src/main/kotlin/io/grin/lib/GrinFile.kt` and `web/lib/grin-file.ts`.
-- [x] Implement `GrinFile.load(InputStream)` → GrinFile
+- Implement `GrinFile.load(InputStream)` → GrinFile
   - Summary: Implemented InputStream-based load in `android/lib/src/main/kotlin/io/grin/lib/GrinFile.kt`.
-- [x] Implement `GrinFile.load(ArrayBuffer)` → GrinFile (JS)
+- Implement `GrinFile.load(ArrayBuffer)` → GrinFile (JS)
   - Summary: Implemented ArrayBuffer/Uint8Array load in `web/lib/grin-file.ts`.
-- [x] Implement `GrinFile.save(path)` → void
+- Implement `GrinFile.save(path)` → void
   - Summary: Implemented path-based save for Android and Node.js in `android/lib/src/main/kotlin/io/grin/lib/GrinFile.kt` and `web/lib/grin-file.ts`.
-- [x] Implement `GrinFile.toBytes()` → byte[]
+- Implement `GrinFile.toBytes()` → byte[]
   - Summary: Implemented full file serialization in `web/lib/grin-file.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinFile.kt`.
 
 ---
@@ -13088,83 +13311,83 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 3: Binary I/O Implementation
 
 ### 3.1 Endianness Utilities
-- [x] Implement `writeUint16LE(value)` → byte[2]
+- Implement `writeUint16LE(value)` → byte[2]
   - Summary: Added LE write helpers in `web/lib/endianness.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinEndianness.kt`.
-- [x] Implement `writeUint32LE(value)` → byte[4]
+- Implement `writeUint32LE(value)` → byte[4]
   - Summary: Added LE write helpers in `web/lib/endianness.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinEndianness.kt`.
-- [x] Implement `writeUint64LE(value)` → byte[8]
+- Implement `writeUint64LE(value)` → byte[8]
   - Summary: Added LE write helpers in `web/lib/endianness.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinEndianness.kt`.
-- [x] Implement `readUint16LE(bytes, offset)` → int
+- Implement `readUint16LE(bytes, offset)` → int
   - Summary: Added LE read helpers in `web/lib/endianness.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinEndianness.kt`.
-- [x] Implement `readUint32LE(bytes, offset)` → long
+- Implement `readUint32LE(bytes, offset)` → long
   - Summary: Added LE read helpers in `web/lib/endianness.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinEndianness.kt`.
-- [x] Implement `readUint64LE(bytes, offset)` → long
+- Implement `readUint64LE(bytes, offset)` → long
   - Summary: Added LE read helpers in `web/lib/endianness.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinEndianness.kt`.
-- [x] Create unit tests for all endianness functions
+- Create unit tests for all endianness functions
   - Summary: Added JUnit coverage in `android/lib/src/test/kotlin/io/grin/lib/GrinEndiannessTest.kt`.
 
 ### 3.2 Header Reader Implementation
-- [x] Implement `readHeader(InputStream)` → GrinHeader
+- Implement `readHeader(InputStream)` → GrinHeader
   - Summary: Added header reads with validation in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and byte-based parsing in `web/lib/grin-io.ts`.
-- [x] Implement magic number validation (reject if != "GRIN")
+- Implement magic number validation (reject if != "GRIN")
   - Summary: Enforced in `GrinHeader.validate()` via `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt` and `web/lib/grin-header.ts`, used by `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Implement header size validation (reject if != 128)
+- Implement header size validation (reject if != 128)
   - Summary: Enforced in `GrinHeader.validate()` via `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt` and `web/lib/grin-header.ts`, used by `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Implement RuleCount validation (reject if > 16)
+- Implement RuleCount validation (reject if > 16)
   - Summary: Enforced in `GrinHeader.validate()` via `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt` and `web/lib/grin-header.ts`, used by `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Implement PixelDataOffset64 validation (reject if != 128)
+- Implement PixelDataOffset64 validation (reject if != 128)
   - Summary: Enforced in `GrinHeader.validate()` via `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt` and `web/lib/grin-header.ts`, used by `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Implement PixelDataLength validation (reject if != width × height × 5)
+- Implement PixelDataLength validation (reject if != width × height × 5)
   - Summary: Enforced in `GrinHeader.validate()` via `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt` and `web/lib/grin-header.ts`, used by `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Implement FileLength validation (reject if non-zero and < 128 + PixelDataLength)
+- Implement FileLength validation (reject if non-zero and < 128 + PixelDataLength)
   - Summary: Enforced in `GrinHeader.validate()` via `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt` and `web/lib/grin-header.ts`, used by `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Implement reserved field warnings (warn if non-zero)
+- Implement reserved field warnings (warn if non-zero)
   - Summary: Validation warnings returned by `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
 
 ### 3.3 Header Writer Implementation
-- [x] Implement `writeHeader(GrinHeader, OutputStream)` → void
+- Implement `writeHeader(GrinHeader, OutputStream)` → void
   - Summary: Added header writers in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and byte-based writer in `web/lib/grin-io.ts`.
-- [x] Implement automatic PixelDataLength calculation
+- Implement automatic PixelDataLength calculation
   - Summary: Calculated in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Implement automatic FileLength calculation (optional)
+- Implement automatic FileLength calculation (optional)
   - Summary: Optional file length auto-fill in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Ensure reserved fields are written as 0
+- Ensure reserved fields are written as 0
   - Summary: Cleared flags/reserved fields in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
 
 ### 3.4 Pixel Data Reader Implementation
-- [x] Implement `readPixelData(InputStream, width, height)` → GrinPixel[]
+- Implement `readPixelData(InputStream, width, height)` → GrinPixel[]
   - Summary: Added InputStream reader in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and byte-based reader in `web/lib/grin-io.ts`.
-- [x] Implement streaming pixel read (minimize memory for large images)
+- Implement streaming pixel read (minimize memory for large images)
   - Summary: Implemented sequential InputStream reads in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt`.
-- [x] Implement bounds validation (ensure exact byte count)
+- Implement bounds validation (ensure exact byte count)
   - Summary: Enforced pixel length checks in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Implement control byte reserved bits validation (warn if bits 4-6 non-zero)
+- Implement control byte reserved bits validation (warn if bits 4-6 non-zero)
   - Summary: Added reserved-bit warnings in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
 
 ### 3.5 Pixel Data Writer Implementation
-- [x] Implement `writePixelData(GrinPixel[], OutputStream)` → void
+- Implement `writePixelData(GrinPixel[], OutputStream)` → void
   - Summary: Added streaming writers in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and byte-based writer in `web/lib/grin-io.ts`.
-- [x] Implement streaming pixel write for memory efficiency
+- Implement streaming pixel write for memory efficiency
   - Summary: Implemented per-pixel OutputStream writes in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt`.
-- [x] Ensure control byte reserved bits are cleared before write
+- Ensure control byte reserved bits are cleared before write
   - Summary: Sanitized control bytes in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
 
 ### 3.6 Rules Block Reader Implementation
-- [x] Implement `readRulesBlock(byte[64], ruleCount)` → GrinRule[]
+- Implement `readRulesBlock(byte[64], ruleCount)` → GrinRule[]
   - Summary: Added rules block readers in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Validate only first `ruleCount` entries are read
+- Validate only first `ruleCount` entries are read
   - Summary: Implemented slicing by ruleCount in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Validate unused entries are zero (warn if not)
+- Validate unused entries are zero (warn if not)
   - Summary: Added non-zero unused entry warnings in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Validate opcode against OpcodeSetId (reject unknown opcodes)
+- Validate opcode against OpcodeSetId (reject unknown opcodes)
   - Summary: Enforced opcode validity for base set in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
 
 ### 3.7 Rules Block Writer Implementation
-- [x] Implement `writeRulesBlock(GrinRule[], ruleCount)` → byte[64]
+- Implement `writeRulesBlock(GrinRule[], ruleCount)` → byte[64]
   - Summary: Added rules block writers in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Zero-fill unused rule entries
+- Zero-fill unused rule entries
   - Summary: Zero-filled via default-initialized blocks in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
-- [x] Validate GroupMask values (all 16 bits valid)
+- Validate GroupMask values (all 16 bits valid)
   - Summary: Added group mask range checks in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `web/lib/grin-io.ts`.
 
 ---
@@ -13172,53 +13395,53 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 4: Validation Engine
 
 ### 4.1 Header Validation Suite
-- [x] Implement `validateMagic(bytes)` → ValidationResult
+- Implement `validateMagic(bytes)` → ValidationResult
   - Summary: Added magic validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateVersion(major, minor)` → ValidationResult
+- Implement `validateVersion(major, minor)` → ValidationResult
   - Summary: Added version validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateHeaderSize(size)` → ValidationResult
+- Implement `validateHeaderSize(size)` → ValidationResult
   - Summary: Added header size validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateDimensions(width, height)` → ValidationResult
+- Implement `validateDimensions(width, height)` → ValidationResult
   - Summary: Added dimension validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateTickMicros(tick)` → ValidationResult
+- Implement `validateTickMicros(tick)` → ValidationResult
   - Summary: Added tick validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateRuleCount(count)` → ValidationResult
+- Implement `validateRuleCount(count)` → ValidationResult
   - Summary: Added rule count validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateOpcodeSetId(id)` → ValidationResult
+- Implement `validateOpcodeSetId(id)` → ValidationResult
   - Summary: Added opcode set validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validatePixelDataLength(length, width, height)` → ValidationResult
+- Implement `validatePixelDataLength(length, width, height)` → ValidationResult
   - Summary: Added pixel data length validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateFileLength(fileLen, dataLen)` → ValidationResult
+- Implement `validateFileLength(fileLen, dataLen)` → ValidationResult
   - Summary: Added file length validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validatePixelDataOffset(offset)` → ValidationResult
+- Implement `validatePixelDataOffset(offset)` → ValidationResult
   - Summary: Added pixel data offset validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateReservedFields(a, b, flags)` → ValidationResult
+- Implement `validateReservedFields(a, b, flags)` → ValidationResult
   - Summary: Added reserved field validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
 
 ### 4.2 Pixel Validation Suite
-- [x] Implement `validateControlByte(c)` → ValidationResult
+- Implement `validateControlByte(c)` → ValidationResult
   - Summary: Added control byte validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateGroupId(groupId)` → ValidationResult
+- Implement `validateGroupId(groupId)` → ValidationResult
   - Summary: Added group ID validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateReservedBits(c)` → ValidationResult
+- Implement `validateReservedBits(c)` → ValidationResult
   - Summary: Added reserved bit validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
 
 ### 4.3 Rule Validation Suite
-- [x] Implement `validateGroupMask(mask)` → ValidationResult
+- Implement `validateGroupMask(mask)` → ValidationResult
   - Summary: Added group mask validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateOpcode(opcode, opcodeSetId)` → ValidationResult
+- Implement `validateOpcode(opcode, opcodeSetId)` → ValidationResult
   - Summary: Added opcode validation for base set in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement `validateTiming(timing)` → ValidationResult
+- Implement `validateTiming(timing)` → ValidationResult
   - Summary: Added timing validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
 
 ### 4.4 Full File Validation
-- [x] Implement `validateGrinFile(GrinFile)` → ValidationReport
+- Implement `validateGrinFile(GrinFile)` → ValidationReport
   - Summary: Added full file validation in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Create ValidationReport structure with errors, warnings, info
+- Create ValidationReport structure with errors, warnings, info
   - Summary: Added ValidationReport types in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidation.kt`.
-- [x] Implement strict mode (reject on any warning)
+- Implement strict mode (reject on any warning)
   - Summary: Added strict mode handling in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
-- [x] Implement permissive mode (continue on warnings)
+- Implement permissive mode (continue on warnings)
   - Summary: Added permissive mode handling in `web/lib/validation.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinValidationSuite.kt`.
 
 ---
@@ -13226,7 +13449,7 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 5: Opcode System
 
 ### 5.1 Opcode Set Definition (OpcodeSetId = 0, Base Set)
-- [x] Define opcode enumeration:
+- Define opcode enumeration:
   ```
   0x00: NOP       - No operation
   0x01: FADE_IN   - Increase alpha over time
@@ -13246,7 +13469,7 @@ This directory contains shared fixtures for GRIN tests.
   - Summary: Defined base opcode IDs in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/BaseOpcodes.kt`.
 
 ### 5.2 Opcode Interface Definition
-- [x] Define `Opcode` interface:
+- Define `Opcode` interface:
   ```
   interface Opcode {
     byte getId();
@@ -13259,58 +13482,58 @@ This directory contains shared fixtures for GRIN tests.
   - Summary: Added Opcode interfaces in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcode.kt`.
 
 ### 5.3 Opcode Implementation (Base Set)
-- [x] Implement `NopOpcode` (0x00)
+- Implement `NopOpcode` (0x00)
   - Summary: Added `NopOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `FadeInOpcode` (0x01)
+- Implement `FadeInOpcode` (0x01)
   - Summary: Added `FadeInOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `FadeOutOpcode` (0x02)
+- Implement `FadeOutOpcode` (0x02)
   - Summary: Added `FadeOutOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `PulseOpcode` (0x03)
+- Implement `PulseOpcode` (0x03)
   - Summary: Added `PulseOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `ShiftROpcode` (0x04)
+- Implement `ShiftROpcode` (0x04)
   - Summary: Added `ShiftROpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `ShiftGOpcode` (0x05)
+- Implement `ShiftGOpcode` (0x05)
   - Summary: Added `ShiftGOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `ShiftBOpcode` (0x06)
+- Implement `ShiftBOpcode` (0x06)
   - Summary: Added `ShiftBOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `ShiftAOpcode` (0x07)
+- Implement `ShiftAOpcode` (0x07)
   - Summary: Added `ShiftAOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `InvertOpcode` (0x08)
+- Implement `InvertOpcode` (0x08)
   - Summary: Added `InvertOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `RotateHueOpcode` (0x09)
+- Implement `RotateHueOpcode` (0x09)
   - Summary: Added `RotateHueOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `LockOpcode` (0x0A)
+- Implement `LockOpcode` (0x0A)
   - Summary: Added `LockOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `UnlockOpcode` (0x0B)
+- Implement `UnlockOpcode` (0x0B)
   - Summary: Added `UnlockOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
-- [x] Implement `ToggleLockOpcode` (0x0C)
+- Implement `ToggleLockOpcode` (0x0C)
   - Summary: Added `ToggleLockOpcode` in `web/lib/opcodes.ts` and `android/lib/src/main/kotlin/io/grin/lib/Opcodes.kt`.
 
 ### 5.4 Opcode Registry
-- [x] Implement `OpcodeRegistry` singleton/factory
+- Implement `OpcodeRegistry` singleton/factory
   - Summary: Added opcode registries in `web/lib/opcode-registry.ts` and `android/lib/src/main/kotlin/io/grin/lib/OpcodeRegistry.kt`.
-- [x] Implement `getOpcode(opcodeSetId, opcodeId)` → Opcode
+- Implement `getOpcode(opcodeSetId, opcodeId)` → Opcode
   - Summary: Implemented opcode lookup in `web/lib/opcode-registry.ts` and `android/lib/src/main/kotlin/io/grin/lib/OpcodeRegistry.kt`.
-- [x] Implement `isValidOpcode(opcodeSetId, opcodeId)` → boolean
+- Implement `isValidOpcode(opcodeSetId, opcodeId)` → boolean
   - Summary: Implemented opcode validation in `web/lib/opcode-registry.ts` and `android/lib/src/main/kotlin/io/grin/lib/OpcodeRegistry.kt`.
-- [x] Implement `listOpcodes(opcodeSetId)` → Opcode[]
+- Implement `listOpcodes(opcodeSetId)` → Opcode[]
   - Summary: Implemented opcode listing in `web/lib/opcode-registry.ts` and `android/lib/src/main/kotlin/io/grin/lib/OpcodeRegistry.kt`.
 
 ### *** 5.5 Timing Parameter Interpretation
-- [x] Define timing byte semantics:
+- Define timing byte semantics:
   ```
   Bits 0-3: Period (0-15, maps to tick multiplier)
   Bits 4-5: Waveform (0=square, 1=triangle, 2=sine, 3=sawtooth)
   Bits 6-7: Phase offset (0-3, quarter-phase increments)
   ```
   - Summary: Implemented timing semantics in `web/lib/timing.ts` and `android/lib/src/main/kotlin/io/grin/lib/TimingInterpreter.kt`.
-- [x] Implement `TimingInterpreter.getPeriod(timing)` → int
+- Implement `TimingInterpreter.getPeriod(timing)` → int
   - Summary: Added period extraction in `web/lib/timing.ts` and `android/lib/src/main/kotlin/io/grin/lib/TimingInterpreter.kt`.
-- [x] Implement `TimingInterpreter.getWaveform(timing)` → WaveformType
+- Implement `TimingInterpreter.getWaveform(timing)` → WaveformType
   - Summary: Added waveform decoding in `web/lib/timing.ts` and `android/lib/src/main/kotlin/io/grin/lib/TimingInterpreter.kt`.
-- [x] Implement `TimingInterpreter.getPhaseOffset(timing)` → int
+- Implement `TimingInterpreter.getPhaseOffset(timing)` → int
   - Summary: Added phase offset decoding in `web/lib/timing.ts` and `android/lib/src/main/kotlin/io/grin/lib/TimingInterpreter.kt`.
-- [x] Implement `TimingInterpreter.evaluate(timing, tick)` → float (0.0-1.0)
+- Implement `TimingInterpreter.evaluate(timing, tick)` → float (0.0-1.0)
   - Summary: Added waveform evaluation in `web/lib/timing.ts` and `android/lib/src/main/kotlin/io/grin/lib/TimingInterpreter.kt`.
 
 ---
@@ -13318,7 +13541,7 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 6: Playback Engine
 
 ### 6.1 Playback State Model
-- [x] Implement `PlaybackState` class:
+- Implement `PlaybackState` class:
   ```
   - currentTick: long
   - isPlaying: boolean
@@ -13326,13 +13549,13 @@ This directory contains shared fixtures for GRIN tests.
   - displayBuffer: RGBA[] (output, no control byte)
   ```
   - Summary: Added playback state containers in `web/lib/playback-state.ts` and `android/lib/src/main/kotlin/io/grin/lib/PlaybackState.kt`.
-- [x] Ensure no mutation of source GrinImage pixels
+- Ensure no mutation of source GrinImage pixels
   - Summary: Processing uses per-pixel working copies in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
-- [x] Implement tick counter with overflow handling
+- Implement tick counter with overflow handling
   - Summary: Added tick overflow handling in `web/lib/tick-scheduler.ts` and `android/lib/src/main/kotlin/io/grin/lib/AndroidTickScheduler.kt`/`android/lib/src/main/kotlin/io/grin/lib/TestTickScheduler.kt`.
 
 ### 6.2 Tick Scheduler
-- [x] Implement `TickScheduler` interface:
+- Implement `TickScheduler` interface:
   ```
   interface TickScheduler {
     void start();
@@ -13342,17 +13565,17 @@ This directory contains shared fixtures for GRIN tests.
   }
   ```
   - Summary: Added tick scheduler interfaces in `web/lib/tick-scheduler.ts` and `android/lib/src/main/kotlin/io/grin/lib/TickScheduler.kt`.
-- [x] Implement `AndroidTickScheduler` using Handler/Choreographer
+- Implement `AndroidTickScheduler` using Handler/Choreographer
   - Summary: Implemented Choreographer-based scheduler in `android/lib/src/main/kotlin/io/grin/lib/AndroidTickScheduler.kt`.
-- [x] Implement `BrowserTickScheduler` using requestAnimationFrame
+- Implement `BrowserTickScheduler` using requestAnimationFrame
   - Summary: Implemented RAF-based scheduler in `web/lib/tick-scheduler.ts`.
-- [x] Implement `TestTickScheduler` for deterministic testing
+- Implement `TestTickScheduler` for deterministic testing
   - Summary: Added deterministic schedulers in `web/lib/tick-scheduler.ts` and `android/lib/src/main/kotlin/io/grin/lib/TestTickScheduler.kt`.
 
 ### 6.3 Rule Evaluation Engine
-- [x] Implement `RuleEngine.evaluateRules(GrinImage, tick)` → ActiveRule[]
+- Implement `RuleEngine.evaluateRules(GrinImage, tick)` → ActiveRule[]
   - Summary: Added rule engine implementations in `web/lib/rule-engine.ts` and `android/lib/src/main/kotlin/io/grin/lib/RuleEngine.kt`.
-- [x] Implement timing-based rule activation:
+- Implement timing-based rule activation:
   ```
   For each rule:
     - Extract timing parameter
@@ -13360,11 +13583,11 @@ This directory contains shared fixtures for GRIN tests.
     - Determine if rule is active this tick
   ```
   - Summary: Implemented timing-based activation in `web/lib/rule-engine.ts` and `android/lib/src/main/kotlin/io/grin/lib/RuleEngine.kt`.
-- [x] Implement rule priority (lower index = higher priority, no conflicts)
+- Implement rule priority (lower index = higher priority, no conflicts)
   - Summary: Preserved rule order in `web/lib/rule-engine.ts` and `android/lib/src/main/kotlin/io/grin/lib/RuleEngine.kt`.
 
 ### 6.4 Pixel Processing Pipeline
-- [x] Implement per-tick processing loop:
+- Implement per-tick processing loop:
   ```
   for each pixel in image:
     if pixel.isLocked():
@@ -13379,28 +13602,28 @@ This directory contains shared fixtures for GRIN tests.
     outputBuffer[i] = pixel.RGBA  // After modulation
   ```
   - Summary: Added per-tick processing in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
-- [x] Ensure display buffer is separate from source pixels
+- Ensure display buffer is separate from source pixels
   - Summary: Display buffers are separate types in `web/lib/display-buffer.ts` and `android/lib/src/main/kotlin/io/grin/lib/DisplayBuffer.kt`.
-- [x] Implement SIMD optimization hints (optional)
+- Implement SIMD optimization hints (optional)
   - Summary: Added packed RGBA output path in `web/lib/grin-player.ts` and `tools/lib/render.js`.
 
 ### 6.5 Display Buffer Management
-- [x] Implement `DisplayBuffer` class:
+- Implement `DisplayBuffer` class:
   ```
   - width: int
   - height: int
   - rgbaData: byte[] (width × height × 4)
   ```
   - Summary: Added display buffer implementations in `web/lib/display-buffer.ts` and `android/lib/src/main/kotlin/io/grin/lib/DisplayBuffer.kt`.
-- [x] Implement `DisplayBuffer.clear()` → void
+- Implement `DisplayBuffer.clear()` → void
   - Summary: Added clear methods in `web/lib/display-buffer.ts` and `android/lib/src/main/kotlin/io/grin/lib/DisplayBuffer.kt`.
-- [x] Implement `DisplayBuffer.setPixel(x, y, r, g, b, a)` → void
+- Implement `DisplayBuffer.setPixel(x, y, r, g, b, a)` → void
   - Summary: Added pixel setters in `web/lib/display-buffer.ts` and `android/lib/src/main/kotlin/io/grin/lib/DisplayBuffer.kt`.
-- [x] Implement `DisplayBuffer.toImageData()` → platform-specific image
+- Implement `DisplayBuffer.toImageData()` → platform-specific image
   - Summary: Implemented `toImageData()` in `web/lib/display-buffer.ts` and `toBitmap()` in `android/lib/src/main/kotlin/io/grin/lib/DisplayBuffer.kt`.
 
 ### 6.6 Playback Controller
-- [x] Implement `GrinPlayer` class:
+- Implement `GrinPlayer` class:
   ```
   - image: GrinImage
   - state: PlaybackState
@@ -13409,17 +13632,17 @@ This directory contains shared fixtures for GRIN tests.
   - displayBuffer: DisplayBuffer
   ```
   - Summary: Added playback controllers in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
-- [x] Implement `GrinPlayer.load(GrinFile)` → void
+- Implement `GrinPlayer.load(GrinFile)` → void
   - Summary: Implemented load routines in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
-- [x] Implement `GrinPlayer.play()` → void
+- Implement `GrinPlayer.play()` → void
   - Summary: Implemented play logic in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
-- [x] Implement `GrinPlayer.pause()` → void
+- Implement `GrinPlayer.pause()` → void
   - Summary: Implemented pause logic in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
-- [x] Implement `GrinPlayer.stop()` → void
+- Implement `GrinPlayer.stop()` → void
   - Summary: Implemented stop/reset logic in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
-- [x] Implement `GrinPlayer.seek(tick)` → void
+- Implement `GrinPlayer.seek(tick)` → void
   - Summary: Implemented seek logic in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
-- [x] Implement `GrinPlayer.getCurrentFrame()` → DisplayBuffer
+- Implement `GrinPlayer.getCurrentFrame()` → DisplayBuffer
   - Summary: Implemented frame accessors in `web/lib/grin-player.ts` and `android/lib/src/main/kotlin/io/grin/lib/GrinPlayer.kt`.
 
 ---
@@ -13427,207 +13650,208 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 7: Android Implementation (Java/Kotlin)
 
 ### *** 7.1 Android Module Setup
-- [x] Create `grin-android` module with Gradle configuration
+- Create `grin-android` module with Gradle configuration
   - Summary: Confirmed module setup in `android/settings.gradle.kts` and `android/build.gradle.kts`.
-- [x] Set minimum SDK version (API 21)
+- Set minimum SDK version (API 21)
   - Summary: Set minSdk to 21 in `android/lib/build.gradle.kts` and `android/demo/build.gradle.kts` (docs aligned in `CONTRIBUTING.md`).
-- [x] Configure ProGuard/R8 rules for library
+- Configure ProGuard/R8 rules for library
   - Summary: Added ProGuard files in `android/lib/proguard-rules.pro` and `android/lib/consumer-rules.pro`.
-- [x] Set up Android-specific dependencies
+- Set up Android-specific dependencies
   - Summary: Dependencies live in `android/lib/build.gradle.kts` and `android/demo/build.gradle.kts`.
 
 ### 7.2 Java Binary I/O
-- [x] Implement `GrinInputStream` extending `FilterInputStream`
+- Implement `GrinInputStream` extending `FilterInputStream`
   - Summary: Added `GrinInputStream` in `android/lib/src/main/kotlin/io/grin/lib/GrinInputStream.kt`.
-- [x] Implement `GrinOutputStream` extending `FilterOutputStream`
+- Implement `GrinOutputStream` extending `FilterOutputStream`
   - Summary: Added `GrinOutputStream` in `android/lib/src/main/kotlin/io/grin/lib/GrinOutputStream.kt`.
-- [x] Handle Java's signed byte quirks (& 0xFF for unsigned)
+- Handle Java's signed byte quirks (& 0xFF for unsigned)
   - Summary: Unsigned handling is applied in `android/lib/src/main/kotlin/io/grin/lib/GrinBinaryIO.kt` and `android/lib/src/main/kotlin/io/grin/lib/GrinPixel.kt`.
-- [x] Implement `ByteBuffer` usage for efficient header parsing
+- Implement `ByteBuffer` usage for efficient header parsing
   - Summary: Header parsing uses ByteBuffer in `android/lib/src/main/kotlin/io/grin/lib/GrinHeader.kt`.
 
 ### 7.3 Android Bitmap Integration
-- [x] Implement `GrinBitmapRenderer`:
+- Implement `GrinBitmapRenderer`:
   ```
   - Takes DisplayBuffer
   - Outputs android.graphics.Bitmap (ARGB_8888)
   ```
   - Summary: Added renderer in `android/lib/src/main/kotlin/io/grin/lib/GrinBitmapRenderer.kt`.
-- [x] Implement efficient pixel copying (use `copyPixelsFromBuffer`)
+- Implement efficient pixel copying (use `copyPixelsFromBuffer`)
   - Summary: Renderer converts RGBA to ARGB and uses `copyPixelsFromBuffer` in `android/lib/src/main/kotlin/io/grin/lib/GrinBitmapRenderer.kt`.
-- [x] Handle Bitmap recycling and memory management
+- Handle Bitmap recycling and memory management
   - Summary: Renderer reuses existing bitmaps when dimensions match in `android/lib/src/main/kotlin/io/grin/lib/GrinBitmapRenderer.kt`.
 
 ### *** 7.4 Android View Component
-- [x] Implement `GrinView` extending `View`:
+- Implement `GrinView` extending `View`:
   ```
   - Handles drawing of GrinBitmap
   - Manages playback lifecycle
   - Supports touch interaction (pause/play)
   ```
   - Summary: Added `GrinView` in `android/lib/src/main/kotlin/io/grin/lib/GrinView.kt`.
-- [x] Implement `onDraw(Canvas)` with Bitmap rendering
+- Implement `onDraw(Canvas)` with Bitmap rendering
   - Summary: Rendering implemented in `android/lib/src/main/kotlin/io/grin/lib/GrinView.kt`.
-- [x] Implement `onAttachedToWindow()` / `onDetachedFromWindow()` lifecycle
+- Implement `onAttachedToWindow()` / `onDetachedFromWindow()` lifecycle
   - Summary: Lifecycle handling implemented in `android/lib/src/main/kotlin/io/grin/lib/GrinView.kt`.
-- [x] Implement `onMeasure()` with aspect ratio preservation
+- Implement `onMeasure()` with aspect ratio preservation
   - Summary: Aspect-ratio measurement implemented in `android/lib/src/main/kotlin/io/grin/lib/GrinView.kt`.
 
 ### 7.5 Android Choreographer Integration
-- [x] Implement `ChoreographerTickScheduler`:
+- Implement `ChoreographerTickScheduler`:
   ```
   - Uses Choreographer.postFrameCallback
   - Calculates tick delta from frame timestamps
   - Handles vsync alignment
   ```
   - Summary: Choreographer-based scheduler provided by `android/lib/src/main/kotlin/io/grin/lib/ChoreographerTickScheduler.kt` and `android/lib/src/main/kotlin/io/grin/lib/AndroidTickScheduler.kt`.
-- [x] Implement frame rate limiting (honor TickMicros)
+- Implement frame rate limiting (honor TickMicros)
   - Summary: TickMicros-based throttling implemented in `android/lib/src/main/kotlin/io/grin/lib/AndroidTickScheduler.kt`.
-- [x] Handle background/foreground transitions
+- Handle background/foreground transitions
   - Summary: Scheduler start/stop used for lifecycle transitions via `android/lib/src/main/kotlin/io/grin/lib/GrinView.kt`.
 
 ### 7.6 Android Content Provider Support
-- [x] Implement `GrinContentProvider` for file:// and content:// URIs
+- Implement `GrinContentProvider` for file:// and content:// URIs
   - Summary: Added provider in `android/lib/src/main/kotlin/io/grin/lib/GrinContentProvider.kt` and registered in `android/demo/src/main/AndroidManifest.xml`.
-- [x] Handle `ContentResolver.openInputStream()`
+- Handle `ContentResolver.openInputStream()`
   - Summary: Added URI loading via ContentResolver in `android/lib/src/main/kotlin/io/grin/lib/GrinUriLoader.kt`.
-- [x] Support loading from assets, raw resources, and external storage
+- Support loading from assets, raw resources, and external storage
   - Summary: Implemented asset/raw/file loaders in `android/lib/src/main/kotlin/io/grin/lib/GrinUriLoader.kt`.
 
 ### *** 7.7 Android Demo Application
-- [x] Create demo app with file picker
+- Create demo app with file picker
   - Summary: Added file picker flow in `android/demo/src/main/kotlin/io/grin/demo/MainActivity.kt`.
-- [x] Implement gallery view of sample .grin files
+- Implement gallery view of sample .grin files
   - Summary: Added asset-backed samples list in `android/demo/src/main/kotlin/io/grin/demo/MainActivity.kt` and `android/demo/src/main/assets/samples/minimal.grin`.
-- [x] Add playback controls (play, pause, seek)
+- Add playback controls (play, pause, seek)
   - Summary: Added playback controls in `android/demo/src/main/res/layout/activity_main.xml` and wired in `android/demo/src/main/kotlin/io/grin/demo/MainActivity.kt`.
-- [x] Display file metadata (dimensions, rule count, tick rate)
+- Display file metadata (dimensions, rule count, tick rate)
   - Summary: Metadata display implemented in `android/demo/src/main/kotlin/io/grin/demo/MainActivity.kt`.
 
 ### *** 7.8 Android Grid Camera + Gallery App
-- [x] Define UX flow and data model for grid camera + gallery app
-  - [x] Document screen map (camera preview, capture review, gallery grid, editor)
-  - [x] Specify posterization palette handling (12-14 color groups) and channel mapping (0-9/A-F)
-  - [x] Specify GRIM/GRIN file metadata updates (header fields, channel settings)
-  - [x] Define export options (GRIN header update, PNG snapshot with alpha, 12-15 frame GIF loop)
+- Define UX flow and data model for grid camera + gallery app
+  - Document screen map (camera preview, capture review, gallery grid, editor)
+  - Specify posterization palette handling (12-14 color groups) and channel mapping (0-9/A-F)
+  - Specify GRIM/GRIN file metadata updates (header fields, channel settings)
+  - Define export options (GRIN header update, PNG snapshot with alpha, 12-15 frame GIF loop)
   - Summary: Documented UX flow, data model, palette strategy, and export requirements in `docs/android-grid-camera-ux.md`.
-- [x] Implement posterized camera preview pipeline
-  - [x] Add camera preview frame acquisition (CameraX ImageAnalysis, YUV->RGB conversion)
-  - [x] Enforce grid-aligned output dimensions (crop/scale to N x M grid cells)
-  - [x] Apply 12-14 color posterization shader (RenderScript/RenderEffect) or CPU pipeline (LUT + k-means fallback)
-  - [x] Display posterized preview with live grid overlay (cell borders + channel labels)
-  - [x] Document performance targets (30/60fps) and fallback quality settings (reduced grid, lower poster bins)
-- [x] Implement capture flow and channel assignment
-  - [x] Capture posterized frame buffer and generate GRIM/GRIN payload (RGBA+C)
-  - [x] Build palette histogram and auto-assign bins to channels 0-9/A-F (stable sort by frequency)
-  - [x] Persist GRIM/GRIN files with updated header settings (TickMicros, RuleCount, channel metadata)
-  - [x] Log capture metadata for gallery indexing (timestamp, dimensions, palette bins)
+- Implement posterized camera preview pipeline
+  - Add camera preview frame acquisition (CameraX ImageAnalysis, YUV->RGB conversion)
+  - Enforce grid-aligned output dimensions (crop/scale to N x M grid cells)
+  - Apply 12-14 color posterization shader (RenderScript/RenderEffect) or CPU pipeline (LUT + k-means fallback)
+  - Display posterized preview with live grid overlay (cell borders + channel labels)
+  - Document performance targets (30/60fps) and fallback quality settings (reduced grid, lower poster bins)
+- Implement capture flow and channel assignment
+  - Capture posterized frame buffer and generate GRIM/GRIN payload (RGBA+C)
+  - Build palette histogram and auto-assign bins to channels 0-9/A-F (stable sort by frequency)
+  - Persist GRIM/GRIN files with updated header settings (TickMicros, RuleCount, channel metadata)
+  - Log capture metadata for gallery indexing (timestamp, dimensions, palette bins)
   - Summary: Capture flow saves posterized frames to GRIN/GRIM with stable channel mapping plus metadata logging in `android/demo/src/main/kotlin/io/grin/demo/GrinAssetStore.kt`.
-- [x] Build gallery grid and editor UI
-  - [x] Render gallery grid of GRIN/GRIM assets with posterized thumbnails (lazy paging, disk cache)
-  - [x] Add channel selector dropdown (0-9/A-F) in editor (default to most frequent bin)
-  - [x] Add sliders for frequency, color intonation, and transparency (live preview updates)
-  - [x] Apply edits to in-memory preview and persist to header settings (rules + channel overrides)
+- Build gallery grid and editor UI
+  - Render gallery grid of GRIN/GRIM assets with posterized thumbnails (lazy paging, disk cache)
+  - Add channel selector dropdown (0-9/A-F) in editor (default to most frequent bin)
+  - Add sliders for frequency, color intonation, and transparency (live preview updates)
+  - Apply edits to in-memory preview and persist to header settings (rules + channel overrides)
   - Summary: Gallery grid and editor controls implemented in `android/demo/src/main/kotlin/io/grin/demo/GalleryActivity.kt`, `GalleryAdapter.kt`, and `EditorActivity.kt`.
-- [x] Export workflows
-  - [x] Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
-  - [x] Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
-  - [x] Export updated GRIN/GRIM file with new header settings (channel metadata + rules)
-- [ ] Validation, tests, and documentation
-  - [ ] Validate posterization color bin counts and channel mapping (unit tests for palette mapping)
-  - [ ] Add unit tests for channel assignment and header updates
-  - [ ] Add integration tests for export formats (PNG/GIF round-trip)
-  - [ ] Update docs for camera/gallery workflow and export options
+- Export workflows
+  - Export PNG snapshot with alpha from current GRIN state (ARGB_8888 bitmap)
+  - Export GIF loop (12-15 frames) derived from GRIN playback (fixed tick interval)
+  - Export updated GRIN/GRIM file with new header settings (channel metadata + rules)
+- Validation, tests, and documentation
+  - Validate posterization color bin counts and channel mapping (unit tests for palette mapping)
+  - Add unit tests for channel assignment and header updates
+  - Add integration tests for export formats (PNG/GIF round-trip)
+  - Update docs for camera/gallery workflow and export options
+  - Summary: Added Android instrumented tests for channel mapping/header updates and PNG/GIF export round-trips; updated grid camera docs with export validation/storage notes.
 
 ---
 
 ## Phase 8: Web/Browser Implementation (JavaScript)
 
 ### *** 8.1 JavaScript Module Setup
-- [x] Create `grin-web` package with npm configuration
+- Create `grin-web` package with npm configuration
   - Summary: Package metadata and scripts live in `web/package.json`.
-- [x] Configure TypeScript (optional, recommended)
+- Configure TypeScript (optional, recommended)
   - Summary: TypeScript configuration remains in `web/tsconfig.json`.
-- [x] Set up Rollup/Webpack for bundling
+- Set up Rollup/Webpack for bundling
   - Summary: Added Rollup config in `web/rollup.config.mjs` and updated scripts in `web/package.json`.
-- [x] Configure ESM and UMD output formats
+- Configure ESM and UMD output formats
   - Summary: Rollup outputs ESM, CJS, and UMD bundles via `web/rollup.config.mjs`.
 
 ### 8.2 JavaScript Binary I/O
-- [x] Implement `GrinReader` class:
+- Implement `GrinReader` class:
   ```
   - Takes ArrayBuffer or Uint8Array
   - Uses DataView for endian-correct reads
   ```
   - Summary: Added `GrinReader` in `web/lib/grin-reader.ts`.
-- [x] Implement `GrinWriter` class:
+- Implement `GrinWriter` class:
   ```
   - Outputs Uint8Array
   - Uses DataView for endian-correct writes
   ```
   - Summary: Added `GrinWriter` in `web/lib/grin-writer.ts`.
-- [x] Handle JavaScript number limitations (safe integers)
+- Handle JavaScript number limitations (safe integers)
   - Summary: Safe integer checks remain in `web/lib/grin-file.ts` and `web/lib/grin-io.ts`.
 
 ### 8.3 Canvas Rendering Integration
-- [x] Implement `GrinCanvasRenderer`:
+- Implement `GrinCanvasRenderer`:
   ```
   - Takes DisplayBuffer
   - Outputs to HTMLCanvasElement
   - Uses ImageData and putImageData
   ```
   - Summary: Added canvas renderer in `web/lib/grin-canvas.ts`.
-- [x] Implement efficient pixel transfer
+- Implement efficient pixel transfer
   - Summary: Renderer reuses ImageData buffers in `web/lib/grin-canvas.ts`.
-- [x] Support OffscreenCanvas for worker rendering
+- Support OffscreenCanvas for worker rendering
   - Summary: Renderer accepts OffscreenCanvas in `web/lib/grin-canvas.ts`.
 
 ### *** 8.4 Web Component
-- [x] Implement `<grin-player>` custom element:
+- Implement `<grin-player>` custom element:
   ```html
   <grin-player src="image.grin" autoplay loop></grin-player>
   ```
   - Summary: Added custom element in `web/lib/grin-element.ts`.
-- [x] Implement attribute observation (src, autoplay, loop, playbackrate)
+- Implement attribute observation (src, autoplay, loop, playbackrate)
   - Summary: Observed attributes handled in `web/lib/grin-element.ts`.
-- [x] Implement shadow DOM encapsulation
+- Implement shadow DOM encapsulation
   - Summary: Shadow DOM with canvas container in `web/lib/grin-element.ts`.
-- [x] Expose JavaScript API (play, pause, currentTime, etc.)
+- Expose JavaScript API (play, pause, currentTime, etc.)
   - Summary: Exposed play/pause/currentTime APIs in `web/lib/grin-element.ts` and tick accessors in `web/lib/grin-player.ts`.
 
 ### 8.5 requestAnimationFrame Scheduler
-- [x] Implement `RAFTickScheduler`:
+- Implement `RAFTickScheduler`:
   ```
   - Uses requestAnimationFrame
   - Calculates tick delta from timestamps
   - Handles tab visibility changes
   ```
   - Summary: Added RAFTickScheduler in `web/lib/tick-scheduler.ts`.
-- [x] Implement frame rate limiting (honor TickMicros)
+- Implement frame rate limiting (honor TickMicros)
   - Summary: TickMicros throttling in `web/lib/tick-scheduler.ts`.
-- [x] Handle `document.hidden` for background tabs
+- Handle `document.hidden` for background tabs
   - Summary: Visibility handling in `web/lib/tick-scheduler.ts`.
 
 ### 8.6 Fetch/File API Integration
-- [x] Implement `GrinLoader.fromURL(url)` → Promise<GrinFile>
+- Implement `GrinLoader.fromURL(url)` → Promise<GrinFile>
   - Summary: Added URL loading in `web/lib/grin-loader.ts`.
-- [x] Implement `GrinLoader.fromFile(File)` → Promise<GrinFile>
+- Implement `GrinLoader.fromFile(File)` → Promise<GrinFile>
   - Summary: Added File loading in `web/lib/grin-loader.ts`.
-- [x] Implement `GrinLoader.fromBlob(Blob)` → Promise<GrinFile>
+- Implement `GrinLoader.fromBlob(Blob)` → Promise<GrinFile>
   - Summary: Added Blob loading in `web/lib/grin-loader.ts`.
-- [x] Handle streaming for large files (ReadableStream)
+- Handle streaming for large files (ReadableStream)
   - Summary: Stream-to-buffer support in `web/lib/grin-loader.ts`.
 
 ### *** 8.7 Web Demo Application
-- [x] Create demo HTML page with drag-and-drop
+- Create demo HTML page with drag-and-drop
   - Summary: Added demo page in `web/demo/index.html` and `web/demo/styles.css`.
-- [x] Implement file upload interface
+- Implement file upload interface
   - Summary: File picker and drop zone implemented in `web/demo/demo.js`.
-- [x] Add playback controls (play, pause, seek slider)
+- Add playback controls (play, pause, seek slider)
   - Summary: Playback controls wired in `web/demo/demo.js` and UI in `web/demo/index.html`.
-- [x] Display file metadata and validation results
+- Display file metadata and validation results
   - Summary: Metadata display added in `web/demo/demo.js`.
-- [x] Add sample .grin file gallery
+- Add sample .grin file gallery
   - Summary: Sample gallery implemented in `web/demo/demo.js` with `web/demo/samples/samples.json` and `web/demo/samples/minimal.grin`.
 
 ---
@@ -13635,59 +13859,59 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 9: CLI Tools
 
 ### *** 9.1 Validator Tool (`grin-validate`)
-- [x] Implement command-line interface:
+- Implement command-line interface:
   ```
   grin-validate <file.grin> [--strict] [--json]
   ```
   - Summary: Added `tools/bin/grin-validate.js` with strict/json flags and shared parsing/validation helpers in `tools/lib/grin.js` + `tools/lib/validation.js`.
-- [x] Output validation results (errors, warnings)
+- Output validation results (errors, warnings)
   - Summary: Emits per-file info/warnings/errors in text mode or structured JSON.
-- [x] Return exit code 0 on success, non-zero on failure
+- Return exit code 0 on success, non-zero on failure
   - Summary: Exits 0 only when all inputs validate (strict mode treats warnings as failures).
-- [x] Support batch validation of multiple files
+- Support batch validation of multiple files
   - Summary: Accepts multiple file paths and aggregates output/exit status.
 
 ### *** 9.2 Inspector Tool (`grin-inspect`)
-- [x] Implement command-line interface:
+- Implement command-line interface:
   ```
   grin-inspect <file.grin> [--header] [--rules] [--groups] [--pixels]
   ```
   - Summary: Added `tools/bin/grin-inspect.js` with header/rules/groups/pixels selectors and JSON output.
-- [x] Output human-readable header information
+- Output human-readable header information
   - Summary: Prints header fields including sizes, offsets, and version metadata.
-- [x] Output rule definitions with decoded opcodes
+- Output rule definitions with decoded opcodes
   - Summary: Lists rule masks/opcodes with opcode name mapping from `BaseOpcodeId`.
-- [x] Output group pixel counts and statistics
+- Output group pixel counts and statistics
   - Summary: Emits per-group pixel counts plus locked pixel count.
-- [x] Support JSON output format
+- Support JSON output format
   - Summary: JSON report includes header/rules/groups/pixels sections as requested.
 
 ### *** 9.3 Encoder Tool (`grin-encode`)
-- [x] Implement command-line interface:
+- Implement command-line interface:
   ```
   grin-encode <input.png> <output.grin> [--groups <mask.png>] [--rules <rules.json>]
   ```
   - Summary: Added `tools/bin/grin-encode.js` using `tools/lib/png.js` and `tools/lib/grin.js`.
-- [x] Read PNG/JPEG input and convert to GRIN format
+- Read PNG/JPEG input and convert to GRIN format
   - Summary: `tools/lib/png.js` reads PNG/JPEG into RGBA for encoder.
-- [x] Support group assignment via mask image (indexed colors → group IDs)
+- Support group assignment via mask image (indexed colors → group IDs)
   - Summary: Mask image red channel maps to group IDs with 0-15 clamping.
-- [x] Support rule definition via JSON configuration
+- Support rule definition via JSON configuration
   - Summary: Encoder parses rule JSON (array or `{ rules, tickMicros, opcodeSetId }`) and builds rules block.
-- [x] Validate output file after encoding
+- Validate output file after encoding
   - Summary: Runs `validateGrinFile` before writing output bytes.
 
 ### *** 9.4 Decoder Tool (`grin-decode`)
-- [x] Implement command-line interface:
+- Implement command-line interface:
   ```
   grin-decode <input.grin> <output.png> [--frame <tick>] [--groups]
   ```
   - Summary: Added `tools/bin/grin-decode.js` with frame selection and group map output.
-- [x] Export single frame as PNG (at specified tick or tick 0)
+- Export single frame as PNG (at specified tick or tick 0)
   - Summary: `tools/lib/render.js` renders ticks with opcodes and `tools/lib/png.js` writes PNG/JPEG output.
-- [x] Export group visualization (color-coded by group ID)
+- Export group visualization (color-coded by group ID)
   - Summary: `renderGroupMap()` uses a 16-color palette per group ID.
-- [x] Support animated GIF export (optional)
+- Support animated GIF export (optional)
   - Summary: Added GIF export to `tools/bin/grin-decode.js` with `tools/lib/gif.js`.
 
 ---
@@ -13695,95 +13919,95 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 10: Testing Framework
 
 ### 10.1 Unit Test Infrastructure
-- [x] Set up JUnit 5 for Java/Android tests
+- Set up JUnit 5 for Java/Android tests
   - Summary: Added JUnit 5 plugin/deps in `android/build.gradle.kts` and `android/lib/build.gradle.kts`, with a JUnit 5 reference test in `android/lib/src/test/kotlin/io/grin/lib/GrinReferenceTest.kt`.
-- [x] Set up Jest/Vitest for JavaScript tests
+- Set up Jest/Vitest for JavaScript tests
   - Summary: Switched web tests to Vitest with `web/vitest.config.ts` and updated `web/package.json`.
-- [x] Create shared test fixtures directory
+- Create shared test fixtures directory
   - Summary: Added shared fixtures at `tests/fixtures` with `tests/fixtures/grin-fixtures.json`.
-- [x] Implement test file generators
+- Implement test file generators
   - Summary: Added generator script `scripts/generate-test-files.js` to emit fixtures into `tests/fixtures/generated`.
 
 ### 10.2 Binary Format Tests
-- [x] Test header serialization/deserialization round-trip
+- Test header serialization/deserialization round-trip
   - Summary: Added `web/tests/format-roundtrip.test.ts` to cover `GrinHeader` serialize/deserialize.
-- [x] Test pixel serialization/deserialization round-trip
+- Test pixel serialization/deserialization round-trip
   - Summary: Added `GrinPixel` round-trip coverage in `web/tests/format-roundtrip.test.ts`.
-- [x] Test rule serialization/deserialization round-trip
+- Test rule serialization/deserialization round-trip
   - Summary: Added `GrinRule` round-trip coverage in `web/tests/format-roundtrip.test.ts`.
-- [x] Test endianness handling on big-endian systems (simulated)
+- Test endianness handling on big-endian systems (simulated)
   - Summary: Added LE/BE simulation coverage in `web/tests/endianness.test.ts`.
-- [x] Test boundary values (max width, max height, max rules)
+- Test boundary values (max width, max height, max rules)
   - Summary: Added boundary checks for max dimensions and rule count in `web/tests/validation-boundaries.test.ts`.
 
 ### 10.3 Validation Tests
-- [x] Test magic number validation (valid and invalid)
+- Test magic number validation (valid and invalid)
   - Summary: Added magic validation assertions in `web/tests/validation-boundaries.test.ts`.
-- [x] Test header size validation (valid and invalid)
+- Test header size validation (valid and invalid)
   - Summary: Added header size validation assertions in `web/tests/validation-boundaries.test.ts`.
-- [x] Test dimension validation (0, 1, max, overflow)
+- Test dimension validation (0, 1, max, overflow)
   - Summary: Added dimension boundary tests in `web/tests/validation-boundaries.test.ts`.
-- [x] Test rule count validation (0, 16, 17)
+- Test rule count validation (0, 16, 17)
   - Summary: Added rule count boundary tests in `web/tests/validation-boundaries.test.ts`.
-- [x] Test PixelDataLength validation (correct, underflow, overflow)
+- Test PixelDataLength validation (correct, underflow, overflow)
   - Summary: Added pixel data length checks in `web/tests/validation-boundaries.test.ts`.
-- [x] Test reserved field warnings
+- Test reserved field warnings
   - Summary: Added reserved field warning coverage in `web/tests/validation-boundaries.test.ts`.
 
 ### 10.4 Opcode Tests
-- [x] Test each opcode implementation individually
+- Test each opcode implementation individually
   - Summary: Covered base opcode behavior in `android/lib/src/test/kotlin/io/grin/lib/OpcodesTest.kt`.
-- [x] Test opcode timing parameter interpretation
+- Test opcode timing parameter interpretation
   - Summary: Added waveform/period evaluation tests in `web/tests/timing.test.ts`.
-- [x] Test opcode worst-case CPU cost bounds
+- Test opcode worst-case CPU cost bounds
   - Summary: Verified `getMaxCpuCost()` bounds in `web/tests/opcodes.test.ts`.
-- [x] Test opcode statelessness (no accumulated state)
+- Test opcode statelessness (no accumulated state)
   - Summary: Verified determinism and `requiresState()` in `web/tests/opcodes.test.ts`.
 
 ### 10.5 Playback Tests
-- [x] Test tick advancement accuracy
+- Test tick advancement accuracy
   - Summary: Added scheduler-driven tick tests in `web/tests/playback.test.ts`.
-- [x] Test rule activation based on timing
+- Test rule activation based on timing
   - Summary: Added timing-triggered rule activation coverage in `web/tests/playback.test.ts`.
-- [x] Test locked pixel immunity
+- Test locked pixel immunity
   - Summary: Added locked pixel immunity coverage in `web/tests/playback.test.ts`.
-- [x] Test group targeting correctness
+- Test group targeting correctness
   - Summary: Added group mask targeting assertions in `web/tests/playback.test.ts`.
-- [x] Test display buffer isolation from source
+- Test display buffer isolation from source
   - Summary: Added source immutability checks in `web/tests/playback.test.ts`.
 
 ### 10.6 Integration Tests
-- [x] Test full file load → validate → play → render cycle
+- Test full file load → validate → play → render cycle
   - Summary: Added full cycle test in `web/tests/integration.test.ts`.
-- [x] Test Android implementation against reference
+- Test Android implementation against reference
   - Summary: Added reference byte comparison in `android/lib/src/test/kotlin/io/grin/lib/GrinReferenceTest.kt`.
-- [x] Test JavaScript implementation against reference
+- Test JavaScript implementation against reference
   - Summary: Added reference byte comparison in `web/tests/reference.test.ts`.
-- [x] Test cross-platform file compatibility
+- Test cross-platform file compatibility
   - Summary: Added CLI parser compatibility checks in `web/tests/integration.test.ts`.
-- [x] Run Android Gradle unit tests
+- Run Android Gradle unit tests
   - Summary: `./gradlew test` succeeded.
 
 ### 10.7 Fuzz Testing
-- [x] Implement header fuzzer (randomized invalid headers)
+- Implement header fuzzer (randomized invalid headers)
   - Summary: Added randomized header coverage in `web/tests/fuzz.test.ts`.
-- [x] Implement pixel data fuzzer (truncated, corrupted)
+- Implement pixel data fuzzer (truncated, corrupted)
   - Summary: Added truncation fuzz coverage in `web/tests/fuzz.test.ts`.
-- [x] Implement rule fuzzer (invalid opcodes, masks)
+- Implement rule fuzzer (invalid opcodes, masks)
   - Summary: Added randomized rules block fuzzing in `web/tests/fuzz.test.ts`.
-- [x] Verify graceful failure (no crashes, clear errors)
+- Verify graceful failure (no crashes, clear errors)
   - Summary: Added error-message assertions in `web/tests/fuzz.test.ts`.
 
 ### *** 10.8 Performance Benchmarks
-- [x] Benchmark file loading time (various sizes)
+- Benchmark file loading time (various sizes)
   - Summary: Added multi-size benchmark harness in `benchmarks/bench.js`.
-- [x] Benchmark validation time
+- Benchmark validation time
   - Summary: Validation timing captured in `benchmarks/bench.js`.
-- [x] Benchmark per-tick processing time
+- Benchmark per-tick processing time
   - Summary: Per-tick timing captured via `renderFrame` loops in `benchmarks/bench.js`.
-- [x] Benchmark rendering time (Android Bitmap, Canvas)
+- Benchmark rendering time (Android Bitmap, Canvas)
   - Summary: Added Android render benchmarks in `android/lib/src/androidTest/kotlin/io/grin/lib/GrinBenchmarkTest.kt`.
-- [x] Establish performance regression baselines
+- Establish performance regression baselines
   - Summary: Baseline storage in `benchmarks/baseline.json` with harness to update via `benchmarks/bench.js`.
 
 ---
@@ -13791,45 +14015,45 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 11: Sample File Creation
 
 ### *** 11.1 Minimal Valid File
-- [x] Create `minimal.grin`: 1×1 pixel, 0 rules
+- Create `minimal.grin`: 1×1 pixel, 0 rules
   - Summary: Added `samples/minimal.grin`.
-- [x] Create `minimal_locked.grin`: 1×1 locked pixel, 0 rules
+- Create `minimal_locked.grin`: 1×1 locked pixel, 0 rules
   - Summary: Added `samples/minimal_locked.grin`.
-- [x] Document expected byte-for-byte content
+- Document expected byte-for-byte content
   - Summary: Documented byte dumps in `samples/README.md`.
 
 ### *** 11.2 Basic Animation Files
-- [x] Create `pulse_red.grin`: 16×16, single group pulsing
+- Create `pulse_red.grin`: 16×16, single group pulsing
   - Summary: Added `samples/pulse_red.grin`.
-- [x] Create `fade_gradient.grin`: 64×64, multi-group fade
+- Create `fade_gradient.grin`: 64×64, multi-group fade
   - Summary: Added `samples/fade_gradient.grin`.
-- [x] Create `color_shift.grin`: 32×32, RGB channel shifts
+- Create `color_shift.grin`: 32×32, RGB channel shifts
   - Summary: Added `samples/color_shift.grin`.
 
 ### *** 11.3 Complex Demo Files
-- [x] Create `groups_demo.grin`: Demonstrates all 16 groups
+- Create `groups_demo.grin`: Demonstrates all 16 groups
   - Summary: Added `samples/groups_demo.grin`.
-- [x] Create `locking_demo.grin`: Demonstrates lock/unlock opcodes
+- Create `locking_demo.grin`: Demonstrates lock/unlock opcodes
   - Summary: Added `samples/locking_demo.grin` with lock/unlock rules.
-- [x] Create `timing_demo.grin`: Demonstrates timing variations
+- Create `timing_demo.grin`: Demonstrates timing variations
   - Summary: Added `samples/timing_demo.grin`.
 
 ### *** 11.4 Edge Case Files
-- [x] Create `max_size.grin`: Maximum reasonable dimensions
+- Create `max_size.grin`: Maximum reasonable dimensions
   - Summary: Added `samples/max_size.grin` (512×512).
-- [x] Create `max_rules.grin`: 16 rules, all groups targeted
+- Create `max_rules.grin`: 16 rules, all groups targeted
   - Summary: Added `samples/max_rules.grin`.
-- [x] Create `all_opcodes.grin`: Uses every defined opcode
+- Create `all_opcodes.grin`: Uses every defined opcode
   - Summary: Added `samples/all_opcodes.grin`.
 
 ### *** 11.5 Invalid Files (for testing)
-- [x] Create `invalid_magic.grin`: Wrong magic bytes
+- Create `invalid_magic.grin`: Wrong magic bytes
   - Summary: Added `samples/invalid_magic.grin`.
-- [x] Create `invalid_header_size.grin`: HeaderSize != 128
+- Create `invalid_header_size.grin`: HeaderSize != 128
   - Summary: Added `samples/invalid_header_size.grin`.
-- [x] Create `truncated.grin`: File ends mid-pixel
+- Create `truncated.grin`: File ends mid-pixel
   - Summary: Added `samples/truncated.grin`.
-- [x] Create `invalid_opcode.grin`: Unknown opcode ID
+- Create `invalid_opcode.grin`: Unknown opcode ID
   - Summary: Added `samples/invalid_opcode.grin`.
 
 ---
@@ -13837,43 +14061,43 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 12: Documentation
 
 ### 12.1 Specification Documentation
-- [x] Finalize and version `grin_technical_specification.md`
+- Finalize and version `grin_technical_specification.md`
   - Summary: Final spec added at `grin_technical_specification.md` (draft copy at `tchspecdraft.txt`).
-- [x] Create byte-level format diagram (visual)
+- Create byte-level format diagram (visual)
   - Summary: Added `docs/format-diagram.md`.
-- [x] Create opcode reference table with examples
+- Create opcode reference table with examples
   - Summary: Added `docs/opcodes.md`.
-- [x] Create timing parameter reference
+- Create timing parameter reference
   - Summary: Added `docs/timing.md`.
 
 ### *** 12.2 API Documentation
-- [x] Generate JavaDoc for Android implementation
+- Generate JavaDoc for Android implementation
   - Summary: Draft API reference in `docs/api/android/README.md` and Dokka config added.
-- [x] Generate JSDoc/TypeDoc for JavaScript implementation
+- Generate JSDoc/TypeDoc for JavaScript implementation
   - Summary: TypeDoc output in `docs/api/web`.
-- [x] Create API quick-start guide
+- Create API quick-start guide
   - Summary: Added `docs/api-quickstart.md`.
-- [x] Create migration guide (from GIF/APNG)
+- Create migration guide (from GIF/APNG)
   - Summary: Added `docs/migration-gif-apng.md`.
 
 ### *** 12.3 Tutorial Documentation
-- [x] Write "Creating Your First GRIN File" tutorial
+- Write "Creating Your First GRIN File" tutorial
   - Summary: Added `docs/tutorial-first-file.md`.
-- [x] Write "Understanding GRIN Groups" tutorial
+- Write "Understanding GRIN Groups" tutorial
   - Summary: Added `docs/tutorial-grin-groups.md`.
-- [x] Write "Playback Integration Guide" (Android)
+- Write "Playback Integration Guide" (Android)
   - Summary: Added `docs/playback-guide-android.md`.
-- [x] Write "Playback Integration Guide" (Web)
+- Write "Playback Integration Guide" (Web)
   - Summary: Added `docs/playback-guide-web.md`.
 
 ### 12.4 Security Documentation
-- [x] Document security model (no executable code)
+- Document security model (no executable code)
   - Summary: Added `docs/security-model.md`.
-- [x] Document bounded resource consumption
+- Document bounded resource consumption
   - Summary: Covered in `docs/security-model.md`.
-- [x] Document validation requirements for untrusted input
+- Document validation requirements for untrusted input
   - Summary: Covered in `docs/security-model.md`.
-- [x] Create security audit checklist
+- Create security audit checklist
   - Summary: Added `docs/security-audit-checklist.md`.
 
 ---
@@ -13881,101 +14105,96 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 13: Release Preparation
 
 ### 13.1 Version Tagging
-- [x] Define semantic versioning scheme
-- [x] Tag initial release (v0.1.0)
-- [x] Create CHANGELOG.md with release notes
+- Define semantic versioning scheme
+- Create CHANGELOG.md with release notes
 
 ### *** 13.2 Package Publishing
-- [x] Publish Android library to Maven Central / JitPack
-- [x] Publish JavaScript library to npm
-- [x] Create GitHub Releases with artifacts
 
 ### 13.3 Compatibility Matrix
-- [x] Document Android API level compatibility
-- [x] Document browser version compatibility
-- [x] Document Node.js version compatibility
+- Document Android API level compatibility
+- Document browser version compatibility
+- Document Node.js version compatibility
 
 ### 13.4 Legal and Licensing
-- [x] Choose and apply open-source license
-- [ ] Add license headers to all source files
-- [x] Create NOTICE file for third-party attributions
+- Choose and apply open-source license
+- Create NOTICE file for third-party attributions
 
 ---
 
 ## Phase 14: Creative Suite + GIMP Plugins
 
 ### 14.1 Shared foundations (all plugins)
-- [x] Define the pixel-group editing model and UX goals for painting group IDs + lock bits
+- Define the pixel-group editing model and UX goals for painting group IDs + lock bits
   - Deliverable: a 1-page UX spec describing how artists select groups, toggle lock, and preview rules.
   - Summary: Documented the shared UX model in `docs/creative-suite-foundations.md`.
-- [x] Decide on an interchange format between host apps and the GRIN toolchain
+- Decide on an interchange format between host apps and the GRIN toolchain
   - Likely: export a layered PNG + JSON sidecar with group/lock metadata.
   - Summary: Standardized PNG + groups PNG + rules JSON artifacts in `docs/creative-suite-foundations.md`.
-- [x] Create a shared validation CLI workflow for plugin export
+- Create a shared validation CLI workflow for plugin export
   - Use `tools/bin/grin-validate.js` and `tools/bin/grin-inspect.js` as post-export checks.
   - Summary: Defined the CLI validation flow in `docs/creative-suite-foundations.md`.
-- [x] Draft a shared palette/legend for group IDs (0-15) and lock state overlays
+- Draft a shared palette/legend for group IDs (0-15) and lock state overlays
   - Define color mapping and UI affordances for every plugin.
   - Summary: Added the palette/legend table in `docs/creative-suite-foundations.md`.
-- [x] Define output paths and naming conventions for exports (`.grin`, `.png`, `.json`)
+- Define output paths and naming conventions for exports (`.grin`, `.png`, `.json`)
   - Make sure it matches `tools/bin/grin-encode.js` expectations.
   - Summary: Standardized export naming in `docs/creative-suite-foundations.md`.
 
 ### 14.2 Photoshop plugin (UXP)
-- [x] Set up `plugins/photoshop/` workspace with UXP manifest + dev tooling
+- Set up `plugins/photoshop/` workspace with UXP manifest + dev tooling
   - Include a simple panel scaffold for group/lock selection and export.
   - Summary: Added the Photoshop UXP panel scaffold, manifest, and package metadata in `plugins/photoshop/`.
-- [x] Implement layer metadata capture
+- Implement layer metadata capture
   - Map layer names or layer tags to group IDs (0-15) and lock bit.
   - Summary: Added tag parsing and layer metadata capture in `plugins/photoshop/src/main.js`.
-- [x] Implement pixel-to-group map extraction
+- Implement pixel-to-group map extraction
   - Render a flattened bitmap with hidden metadata encoding group + lock values.
   - Summary: Exported named metadata layers for group/lock maps in `plugins/photoshop/src/main.js`.
-- [x] Implement export pipeline
+- Implement export pipeline
   - Generate a JSON sidecar and call `tools/bin/grin-encode.js`.
   - Summary: Added PNG export, rules sidecar creation, and CLI command guidance in `plugins/photoshop/src/main.js`.
-- [x] Add preview/validation step
+- Add preview/validation step
   - Use `grin-validate` and report errors in the panel UI.
   - Summary: Added preview metadata summary and validation command output in `plugins/photoshop/src/main.js`.
-- [x] Write Photoshop plugin README with install + usage steps
+- Write Photoshop plugin README with install + usage steps
   - Summary: Documented installation, tagging, and export workflow in `plugins/photoshop/README.md`.
 
 ### 14.3 Illustrator plugin (UXP)
-- [x] Set up `plugins/illustrator/` workspace with UXP manifest + dev tooling
+- Set up `plugins/illustrator/` workspace with UXP manifest + dev tooling
   - Include a panel scaffold matching Photoshop UX.
   - Summary: Added the Illustrator UXP panel scaffold, manifest, and package metadata in `plugins/illustrator/`.
-- [x] Implement vector art flattening rules for GRIN export
+- Implement vector art flattening rules for GRIN export
   - Define how artboards/paths map to pixels, group IDs, and lock bit.
   - Summary: Documented artboard-to-pixel flattening rules and resolution handling in `plugins/illustrator/src/main.js`.
-- [x] Implement group/lock metadata tagging in document model
+- Implement group/lock metadata tagging in document model
   - Use layer names, object tags, or custom metadata fields.
   - Summary: Added name/note tag parsing for group and lock metadata in `plugins/illustrator/src/main.js`.
-- [x] Implement export pipeline
+- Implement export pipeline
   - Rasterize at user-specified resolution and call `grin-encode.js`.
   - Summary: Added artboard PNG export, metadata map export, and CLI command guidance in `plugins/illustrator/src/main.js`.
-- [x] Add preview/validation step
+- Add preview/validation step
   - Use `grin-validate` and surface errors to the panel.
   - Summary: Added preview summary output and validation command output in `plugins/illustrator/src/main.js`.
-- [x] Write Illustrator plugin README with install + usage steps
+- Write Illustrator plugin README with install + usage steps
   - Summary: Documented installation, flattening, tagging, and export workflow in `plugins/illustrator/README.md`.
 
 ### 14.4 GIMP plugin (Python)
-- [x] Set up `plugins/gimp/` with Python-Fu entry point + menu registration
+- Set up `plugins/gimp/` with Python-Fu entry point + menu registration
   - Add configuration dialog for group/lock editing and export settings.
   - Summary: Added the Python-Fu entry point, menu registration, and configuration parameters in `plugins/gimp/grin_gimp_plugin.py`.
-- [x] Implement group/lock editing overlays
+- Implement group/lock editing overlays
   - Use layer groups or selection masks to represent group IDs.
   - Summary: Implemented group/lock metadata layers and selection painting overlays in `plugins/gimp/grin_gimp_plugin.py`.
-- [x] Implement pixel map extraction
+- Implement pixel map extraction
   - Read pixel data + custom metadata for group and lock state.
   - Summary: Added grayscale pixel extraction and group/lock summaries in `plugins/gimp/grin_gimp_plugin.py`.
-- [x] Implement export pipeline
+- Implement export pipeline
   - Export PNG + JSON sidecar and call `grin-encode.js`.
   - Summary: Implemented PNG exports, rules sidecar writing, and optional CLI invocation in `plugins/gimp/grin_gimp_plugin.py`.
-- [x] Add preview/validation step
+- Add preview/validation step
   - Use `grin-validate` and show errors in a dialog.
   - Summary: Added preview metadata summaries and validation output dialogs in `plugins/gimp/grin_gimp_plugin.py`.
-- [x] Write GIMP plugin README with install + usage steps
+- Write GIMP plugin README with install + usage steps
   - Summary: Documented installation, metadata authoring, and export workflow in `plugins/gimp/README.md`.
 
 ---
@@ -13983,74 +14202,49 @@ This directory contains shared fixtures for GRIN tests.
 ## Phase 15: UI/UX Polish + Windows Desktop Integration
 
 ### 15.1 UX Audit + Requirements Backlog
-- [x] Inventory all end-user surfaces: `web/demo/`, `android/demo/`, CLI help (`tools/bin/`), and docs onboarding (`docs/README.md`)
+- Inventory all end-user surfaces: `web/demo/`, `android/demo/`, CLI help (`tools/bin/`), and docs onboarding (`docs/README.md`)
   - Capture screenshots, flows, and current pain points.
   - Summary: Captured the current UX surface inventory, flows, and pain points in `docs/ui-ux-audit.md`.
-- [x] Create a UX heuristics checklist (navigation clarity, error states, keyboard/mouse affordances, accessibility)
+- Create a UX heuristics checklist (navigation clarity, error states, keyboard/mouse affordances, accessibility)
   - Store the checklist in `docs/ui-ux-audit.md` and link from `docs/README.md`.
   - Summary: Added a UX heuristics checklist to `docs/ui-ux-audit.md` and linked it from `docs/README.md`.
-- [x] Define core user journeys (open file, play animation, inspect groups, export) with success criteria
+- Define core user journeys (open file, play animation, inspect groups, export) with success criteria
   - Add journey maps to `docs/ui-ux-audit.md`.
   - Summary: Documented core journeys and success criteria in `docs/ui-ux-audit.md`.
-- [x] Prioritize the UX backlog with severity tags (P0/P1/P2) and platform labels (web/android/cli)
+- Prioritize the UX backlog with severity tags (P0/P1/P2) and platform labels (web/android/cli)
   - Maintain a prioritized list in `docs/ui-ux-audit.md`.
   - Summary: Added a prioritized, labeled UX backlog to `docs/ui-ux-audit.md`.
 
 ### 15.2 Web Demo UI Polish (Web)
-- [ ] Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
+- Refresh layout hierarchy in `web/demo/` (clear header, playback controls, inspector panel)
+  - Summary: Split the web demo layout into a playback panel and a dedicated inspector panel with updated sidebar styling.
   - Ensure consistent spacing, typography, and control grouping.
-- [ ] Add accessibility coverage (ARIA labels, focus order, contrast checks)
+- Add accessibility coverage (ARIA labels, focus order, contrast checks)
+  - Summary: Added ARIA labels, keyboard focus support, and stronger focus/contrast styling in the web demo.
   - Document a11y checks in `docs/ui-ux-audit.md`.
-- [ ] Improve empty, loading, and error states (missing file, validation errors, decode failures)
+- Improve empty, loading, and error states (missing file, validation errors, decode failures)
+  - Summary: Added status messaging plus sample/file load error handling and control disabling in the web demo.
   - Provide actionable messaging with next steps.
-- [ ] Add keyboard shortcuts for playback, frame stepping, and group filtering
+- Add keyboard shortcuts for playback, frame stepping, and group filtering
+  - Summary: Added document-level shortcuts for play/pause, frame stepping, and group filter selection in the web demo.
   - Surface shortcuts in a help tooltip or modal.
-- [ ] Add a validation summary panel (header warnings, rule count, invalid pixels)
+- Add a validation summary panel (header warnings, rule count, invalid pixels)
+  - Summary: Added a validation summary panel with error/warning counts, invalid pixel tracking, and rule count in the web demo inspector.
   - Link to existing validation error outputs.
 
 ### 15.3 Android Demo UI Polish (Android)
-- [ ] Align the demo UI with Material 3 components in `android/demo/`
+- Align the demo UI with Material 3 components in `android/demo/`
+  - Summary: Swapped demo layouts to Material 3 widgets (MaterialToolbar, MaterialButton, MaterialCardView, MaterialTextView, Slider) and updated slider logic in MainActivity and EditorActivity.
   - Rebuild the activity layout with proper app bars, cards, and controls.
-- [ ] Improve playback UX (play/pause, scrubber, speed control, loop toggle)
-  - Ensure touch targets meet accessibility guidelines.
-- [ ] Add file-open flow with recent files and error recovery
-  - Handle invalid file formats gracefully.
-- [ ] Add in-app metadata viewer (header fields, rules summary, group counts)
-  - Provide copy/share options for debugging.
 
 ### 15.4 Cross-Platform UX Consistency
-- [ ] Standardize iconography, labels, and terminology across web/android/docs
-  - Maintain a glossary in `docs/ui-ux-audit.md`.
-- [ ] Consolidate error copy and remediation hints for validation failures
-  - Reference spec sections where possible.
-- [ ] Add onboarding snippets (first-run guidance, sample file prompts)
-  - Include download links for `samples/` data.
 
 ### 15.5 Windows Desktop Viewer + File Associations
-- [ ] Decide Windows UI stack (WinUI 3/.NET WPF/Electron) and document rationale
-  - Add decision record in `docs/windows-desktop.md`.
-- [ ] Create a Windows desktop viewer app capable of rendering `.grin` files
-  - Support animation playback, group filtering, and metadata inspection.
-- [ ] Implement `.grin` and `.grn` file association registration (ProgID, icons)
-  - Ensure double-click opens the viewer app.
-- [ ] Implement Windows thumbnail and preview support
-  - Option A: WIC codec to decode `.grin` frames for Explorer thumbnails.
-  - Option B: IThumbnailProvider/preview handler COM server for Explorer.
-- [ ] Enable Windows Photos gallery integration
-  - Register `.grin` as an image-capable format via WIC or Photos-compatible handler.
-- [ ] Add installer packaging (MSI/EXE via WiX/NSIS) with clean uninstall
-  - Register/unregister file associations and shell extensions on install/uninstall.
-- [ ] Add build pipeline for Windows artifacts (CI job + signed binaries)
-  - Document signing requirements and certificate management.
-- [ ] Write Windows install & troubleshooting guide in `docs/windows-desktop.md`
-  - Include manual registry fallback steps for power users.
 
 ---
 
 ## Planned Upgrades (Unimplemented)
 
-- [ ] Photoshop, Illustrator, and GIMP plugins (see Phase 14 for detailed plan)
-- [ ] Export `.grin` files as DMX sequences (pixels as stage lights, groups as DMX worlds)
 
 ---
 
@@ -14129,6 +14323,7 @@ Phase 0 (Setup) ──┬──> Phase 1 (Binary Format) ──> Phase 2 (Data S
 2. **Test-Driven**: Write tests before implementation where possible
 3. **Documentation**: Update docs as you implement, not after
 4. **Cross-Reference**: Reference spec section numbers in code comments
+
 #####/tools/bin/grin-decode.js#####
 #!/usr/bin/env node
 
@@ -14434,7 +14629,7 @@ function printUsage() {
  */
 import { readGrinFile } from "../lib/grin.js";
 import { BaseOpcodeId } from "../lib/opcodes.js";
-import { CONTROL_BYTE_MASKS } from "../lib/format.js";
+import { CONTROL_BYTE_MASKS, formatControlGroupLabel, formatControlLockLabel } from "../lib/format.js";
 
 const args = process.argv.slice(2);
 const json = args.includes("--json");
@@ -14583,17 +14778,22 @@ function outputText(report, sections) {
   if (sections.groups && report.groups) {
     process.stdout.write("Groups:\n");
     report.groups.counts.forEach((count, groupId) => {
-      process.stdout.write(`  ${groupId}: ${count}\n`);
+      // Report both the control label and numeric ID for clarity.
+      const label = formatControlGroupLabel(groupId);
+      process.stdout.write(`  ${label} (${groupId}): ${count}\n`);
     });
-    process.stdout.write(`  locked: ${report.groups.locked}\n`);
+    process.stdout.write(`  locked (${formatControlLockLabel(true)}): ${report.groups.locked}\n`);
   }
 
   if (sections.pixels && report.pixels) {
     process.stdout.write("Pixels:\n");
     for (const pixel of report.pixels) {
+      // Include the control label and lock suffix alongside raw values.
+      const groupLabel = formatControlGroupLabel(pixel.groupId);
+      const lockLabel = formatControlLockLabel(pixel.locked);
       process.stdout.write(
         `  (${pixel.x},${pixel.y}) rgba=(${pixel.r},${pixel.g},${pixel.b},${pixel.a}) c=${pixel.c}` +
-          ` group=${pixel.groupId} locked=${pixel.locked}\n`
+          ` group=${groupLabel} (${pixel.groupId}) lock=${lockLabel}\n`
       );
     }
   }
@@ -14821,6 +15021,110 @@ export const CONTROL_BYTE_MASKS = {
   RESERVED: 0x70,
   LOCK: 0x80,
 };
+
+// Control group labels intentionally skip I/O to keep a 16-slot alphabet and avoid ambiguity.
+export const CONTROL_GROUP_LABELS = [
+  "G",
+  "H",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+];
+
+// Control lock suffixes are reserved for the final control channel indicator.
+export const CONTROL_LOCK_LABELS = {
+  UNLOCKED: "Y",
+  LOCKED: "Z",
+};
+
+// Control suffixes append to rrggbbaa to represent the control channel in authoring strings.
+export const CONTROL_SUFFIX_PATTERN = new RegExp(
+  `^[${CONTROL_GROUP_LABELS.join("")}][${CONTROL_LOCK_LABELS.UNLOCKED}${CONTROL_LOCK_LABELS.LOCKED}]$`,
+  "i"
+);
+
+/**
+ * Format a numeric group ID using the control-label alphabet.
+ * @param {number} groupId - Group index (0-15).
+ * @returns {string} Group label or "?" when out of range.
+ */
+export function formatControlGroupLabel(groupId) {
+  if (!Number.isInteger(groupId)) {
+    return "?";
+  }
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a control-label character into a numeric group ID.
+ * @param {string} label - Single-letter group label.
+ * @returns {number | null} Group ID or null when the label is not recognized.
+ */
+export function parseControlGroupLabel(label) {
+  if (!label) {
+    return null;
+  }
+  const normalized = String(label).trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized);
+  return index >= 0 ? index : null;
+}
+
+/**
+ * Format the lock suffix for a control channel.
+ * @param {boolean} locked - Whether the control byte is locked.
+ * @returns {string} "Y" for unlocked or "Z" for locked.
+ */
+export function formatControlLockLabel(locked) {
+  return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
+/**
+ * Format the authoring control suffix that follows rrggbbaa.
+ * @param {number} groupId - Group index (0-15).
+ * @param {boolean} locked - Whether the control byte is locked.
+ * @returns {string} Two-character suffix like "GY" or "GZ".
+ */
+export function formatControlSuffix(groupId, locked) {
+  return `${formatControlGroupLabel(groupId)}${formatControlLockLabel(locked)}`;
+}
+
+/**
+ * Validate a control suffix to detect corruption in authoring strings.
+ * @param {string} suffix - Two-character suffix to validate.
+ * @returns {boolean} True when the suffix matches a G-X + Y/Z pattern.
+ */
+export function isValidControlSuffix(suffix) {
+  return CONTROL_SUFFIX_PATTERN.test(String(suffix).trim());
+}
+
+/**
+ * Parse a control suffix into group/lock metadata when valid.
+ * @param {string} suffix - Two-character suffix like "GY" or "GZ".
+ * @returns {{groupId: number, locked: boolean} | null} Parsed payload or null when invalid.
+ */
+export function parseControlSuffix(suffix) {
+  if (!isValidControlSuffix(suffix)) {
+    return null;
+  }
+  const normalized = String(suffix).trim().toUpperCase();
+  const groupId = parseControlGroupLabel(normalized[0]);
+  if (groupId === null) {
+    return null;
+  }
+  const locked = normalized[1] === CONTROL_LOCK_LABELS.LOCKED;
+  return { groupId, locked };
+}
 
 export function groupMaskTargetsGroup(groupMask, groupId) {
   const shift = groupId & 0x0f;
@@ -15200,6 +15504,299 @@ function cloneBytes(source, size) {
   const copy = new Uint8Array(size);
   copy.set(source.subarray(0, size));
   return copy;
+}
+
+#####/tools/lib/lane-header.js#####
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 GRIN Project Contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+import { CONTROL_GROUP_LABELS } from "./format.js";
+
+export const LANE_LIMIT = 16;
+export const HEADER_MAX_BYTES = 592;
+
+const GROUP_LABEL_SET = new Set(CONTROL_GROUP_LABELS);
+const REPEAT_PATTERN = /^(\d{3}):(min|sec|mil)$/i;
+const ACTION_PATTERN = /^(sety|setz|[+-][0-9a-f]{1,2}(rr|gg|bb|aa))$/i;
+const LANE_PATTERN = /\{(\d{2})\[([^\]|]+)\|([^\]|]+)\|([^\]|]+)\]\}/g;
+
+/**
+ * Parse a lane header string into a normalized lane array.
+ * @param {string} header - Header string containing one or more lanes.
+ * @returns {Array} Parsed lane descriptors.
+ */
+export function parseLaneHeader(header) {
+  const raw = String(header ?? "");
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  validateHeaderLength(trimmed);
+
+  const lanes = [];
+  let lastLaneNumber = null;
+  let lastIndex = 0;
+
+  for (const match of trimmed.matchAll(LANE_PATTERN)) {
+    const { index } = match;
+    if (index !== lastIndex) {
+      const gap = trimmed.slice(lastIndex, index).trim();
+      if (gap) {
+        throw new Error(`Unexpected characters between lanes: ${gap}`);
+      }
+    }
+    lastIndex = index + match[0].length;
+
+    const laneNumber = parseLaneNumber(match[1]);
+    if (lastLaneNumber !== null && laneNumber !== lastLaneNumber + 1) {
+      throw new Error(`Lane numbers must be sequential. Expected ${lastLaneNumber + 1} but got ${laneNumber}.`);
+    }
+    lastLaneNumber = laneNumber;
+
+    const groups = normalizeGroups(match[2]);
+    const action = parseAction(match[3]);
+    const repeat = parseRepeat(match[4]);
+
+    lanes.push({
+      laneNumber,
+      groups,
+      action,
+      repeat,
+    });
+  }
+
+  const remainder = trimmed.slice(lastIndex).trim();
+  if (remainder) {
+    throw new Error(`Unexpected characters after lanes: ${remainder}`);
+  }
+
+  if (lanes.length > LANE_LIMIT) {
+    throw new Error(`Lane count exceeds ${LANE_LIMIT}.`);
+  }
+
+  return lanes;
+}
+
+/**
+ * Format lane descriptors into a canonical header string.
+ * @param {Array} lanes - Lane descriptors to format.
+ * @returns {string} Normalized header string.
+ */
+export function formatLaneHeader(lanes) {
+  const normalized = normalizeLaneSpecs(lanes);
+  if (normalized.length > LANE_LIMIT) {
+    throw new Error(`Lane count exceeds ${LANE_LIMIT}.`);
+  }
+
+  const sorted = [...normalized].sort((a, b) => a.laneNumber - b.laneNumber);
+  const parts = sorted.map((lane) => {
+    const laneNumber = formatLaneNumber(lane.laneNumber);
+    const groups = lane.groups.join("");
+    const action = formatAction(lane.action);
+    const repeat = formatRepeat(lane.repeat);
+    return `{${laneNumber}[${groups}|${action}|${repeat}]}`;
+  });
+
+  const header = parts.join("");
+  validateHeaderLength(header);
+  return header;
+}
+
+/**
+ * Normalize arbitrary lane payloads into validated lane descriptors.
+ * @param {Array} lanes - Lane payloads (typically from JSON).
+ * @returns {Array} Normalized lane descriptors.
+ */
+export function normalizeLaneSpecs(lanes) {
+  if (!Array.isArray(lanes)) {
+    throw new Error("Lane specs must be an array.");
+  }
+
+  return lanes.map((lane) => {
+    if (!lane || typeof lane !== "object") {
+      throw new Error("Lane specs must be objects.");
+    }
+    const laneNumber = parseLaneNumber(lane.laneNumber ?? lane.lane ?? lane.index ?? lane.id ?? lane.number);
+    const groups = normalizeGroups(lane.groups ?? lane.group ?? "");
+    const action = normalizeActionSpec(lane.action ?? lane.op ?? lane.operation ?? "");
+    const repeat = normalizeRepeatSpec(lane.repeat ?? lane.frequency ?? lane.interval ?? "");
+
+    return {
+      laneNumber,
+      groups,
+      action,
+      repeat,
+    };
+  });
+}
+
+function parseLaneNumber(value) {
+  if (value === undefined || value === null || value === "") {
+    throw new Error("Lane number is required.");
+  }
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed >= LANE_LIMIT) {
+    throw new Error(`Lane number must be between 0 and ${LANE_LIMIT - 1}.`);
+  }
+  return parsed;
+}
+
+function formatLaneNumber(value) {
+  return String(value).padStart(2, "0");
+}
+
+function normalizeGroups(groups) {
+  const raw = Array.isArray(groups) ? groups.join("") : String(groups ?? "");
+  const trimmed = raw.trim();
+  if (!trimmed) {
+    throw new Error("Lane groups are required.");
+  }
+
+  const found = new Set();
+  for (const char of trimmed) {
+    const label = char.toUpperCase();
+    if (!GROUP_LABEL_SET.has(label)) {
+      throw new Error(`Invalid group label: ${char}`);
+    }
+    found.add(label);
+  }
+
+  if (found.size === 0) {
+    throw new Error("Lane groups must include at least one valid label.");
+  }
+
+  return CONTROL_GROUP_LABELS.filter((label) => found.has(label));
+}
+
+function parseRepeat(repeat) {
+  const trimmed = String(repeat ?? "").trim();
+  const match = trimmed.match(REPEAT_PATTERN);
+  if (!match) {
+    throw new Error(`Invalid repeat spec: ${repeat}`);
+  }
+  const count = Number.parseInt(match[1], 10);
+  return {
+    count,
+    unit: match[2].toLowerCase(),
+  };
+}
+
+function formatRepeat(repeat) {
+  const normalized = normalizeRepeatSpec(repeat);
+  return `${String(normalized.count).padStart(3, "0")}:${normalized.unit}`;
+}
+
+function normalizeRepeatSpec(repeat) {
+  if (typeof repeat === "string" || typeof repeat === "number") {
+    return parseRepeat(repeat);
+  }
+  if (!repeat || typeof repeat !== "object") {
+    throw new Error("Repeat spec is required.");
+  }
+  const count = Number.parseInt(String(repeat.count ?? repeat.value ?? repeat.amount ?? repeat.freq ?? ""), 10);
+  if (!Number.isInteger(count) || count < 0 || count > 999) {
+    throw new Error("Repeat count must be 000-999.");
+  }
+  const unit = String(repeat.unit ?? repeat.scale ?? repeat.unitName ?? "").toLowerCase();
+  if (!REPEAT_PATTERN.test(`${String(count).padStart(3, "0")}:${unit}`)) {
+    throw new Error("Repeat unit must be min, sec, or mil.");
+  }
+  return { count, unit };
+}
+
+function parseAction(action) {
+  const trimmed = String(action ?? "").trim();
+  if (!trimmed || !ACTION_PATTERN.test(trimmed)) {
+    throw new Error(`Invalid action spec: ${action}`);
+  }
+
+  const normalized = trimmed.toLowerCase();
+  if (normalized === "sety" || normalized === "setz") {
+    return { type: normalized };
+  }
+
+  const match = normalized.match(/^([+-])([0-9a-f]{1,2})(rr|gg|bb|aa)$/i);
+  if (!match) {
+    throw new Error(`Invalid delta action: ${action}`);
+  }
+
+  return {
+    type: "delta",
+    direction: match[1],
+    amount: Number.parseInt(match[2], 16),
+    channel: match[3].toUpperCase(),
+  };
+}
+
+function formatAction(action) {
+  const normalized = normalizeActionSpec(action);
+  if (normalized.type === "sety" || normalized.type === "setz") {
+    return normalized.type;
+  }
+  const amount = normalized.amount.toString(16).padStart(2, "0");
+  return `${normalized.direction}${amount}${normalized.channel}`.toLowerCase();
+}
+
+function normalizeActionSpec(action) {
+  if (typeof action === "string") {
+    return parseAction(action);
+  }
+  if (!action || typeof action !== "object") {
+    throw new Error("Action spec is required.");
+  }
+  const type = String(action.type ?? action.kind ?? action.action ?? "").toLowerCase();
+  if (type === "sety" || type === "setz") {
+    return { type };
+  }
+  if (type === "delta") {
+    const direction = String(action.direction ?? action.sign ?? "+").trim();
+    if (direction !== "+" && direction !== "-") {
+      throw new Error("Delta direction must be + or -.");
+    }
+    const amount = Number.parseInt(String(action.amount ?? action.value ?? action.delta ?? ""), 16);
+    if (!Number.isInteger(amount) || amount < 0 || amount > 255) {
+      throw new Error("Delta amount must be 00-ff.");
+    }
+    const channel = String(action.channel ?? action.target ?? "").toUpperCase();
+    if (!["RR", "GG", "BB", "AA"].includes(channel)) {
+      throw new Error("Delta channel must be RR, GG, BB, or AA.");
+    }
+    return {
+      type: "delta",
+      direction,
+      amount,
+      channel,
+    };
+  }
+  throw new Error("Action spec must be sety, setz, or delta.");
+}
+
+function validateHeaderLength(header) {
+  const bytes = Buffer.byteLength(header, "utf8");
+  if (bytes > HEADER_MAX_BYTES) {
+    throw new Error(`Header exceeds ${HEADER_MAX_BYTES} bytes.`);
+  }
 }
 
 #####/tools/lib/opcodes.js#####
@@ -16071,10 +16668,12 @@ function prefixResult(errors, warnings, result, prefix) {
 import {
   CONTROL_BYTE_MASKS,
   DisplayBuffer,
+  formatControlGroupLabel,
   GrinCanvasRenderer,
   GrinLoader,
   GrinPlayer,
   OpcodeRegistry,
+  parseControlGroupLabel,
   RuleEngine,
   validateGrinFile,
 } from "../dist/grin.js";
@@ -16335,8 +16934,7 @@ function updateValidationSummary(grinFile) {
   if (notes.length === 0) {
     notes.push("No validation issues detected.");
   }
-  validationNotes.textContent = notes.join("
-");
+  validationNotes.textContent = notes.join("\n");
 }
 
 function resetValidationSummary() {
@@ -16354,7 +16952,8 @@ function updateGroupFilterStatus() {
     groupFilterStatus.textContent = "All";
     return;
   }
-  groupFilterStatus.textContent = activeGroup.toString(16).toUpperCase();
+  // Display control group labels instead of hex digits.
+  groupFilterStatus.textContent = formatControlGroupLabel(activeGroup);
 }
 
 function setActiveGroup(groupId, shouldRender = true) {
@@ -16435,9 +17034,14 @@ function handleKeyboardShortcuts(event) {
     setActiveGroup(null);
     return;
   }
-  if (key.length === 1 && /^[0-9a-f]$/.test(key)) {
+  if (key.length === 1 && /^[a-z]$/.test(key)) {
+    // Use the G-X control label alphabet for keyboard shortcuts.
+    const parsed = parseControlGroupLabel(key);
+    if (parsed === null) {
+      return;
+    }
     event.preventDefault();
-    setActiveGroup(parseInt(key, 16));
+    setActiveGroup(parsed);
   }
 }
 
@@ -16485,8 +17089,7 @@ function initializePlayer(grinFile) {
     `Dimensions: ${grinFile.header.width} × ${grinFile.header.height}`,
     `Rules: ${grinFile.header.ruleCount}`,
     `Tick Rate: ${grinFile.header.tickMicros} µs`,
-  ].join("
-");
+  ].join("\n");
   // Use rule count as a hint for the scrubber range without shrinking the default.
   const estimatedMax = Math.max(Number(seekSlider.max || "1000"), grinFile.header.ruleCount || 0);
   setMaxTick(estimatedMax);
@@ -17453,6 +18056,112 @@ export const CONTROL_BYTE_MASKS = {
   RESERVED: 0x70,
   LOCK: 0x80,
 } as const;
+
+// Control group labels intentionally skip I/O to keep a 16-slot alphabet and avoid ambiguity.
+export const CONTROL_GROUP_LABELS = [
+  "G",
+  "H",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+] as const;
+
+// Control lock suffixes are reserved for the final control channel indicator.
+export const CONTROL_LOCK_LABELS = {
+  UNLOCKED: "Y",
+  LOCKED: "Z",
+} as const;
+
+// Control suffixes append to rrggbbaa to represent the control channel in authoring strings.
+export const CONTROL_SUFFIX_PATTERN = new RegExp(
+  `^[${CONTROL_GROUP_LABELS.join("")}][${CONTROL_LOCK_LABELS.UNLOCKED}${CONTROL_LOCK_LABELS.LOCKED}]$`,
+  "i"
+);
+
+/**
+ * Format a numeric group ID using the control-label alphabet.
+ * @param groupId - Group index (0-15).
+ * @returns Group label or "?" when out of range.
+ */
+export function formatControlGroupLabel(groupId: number): string {
+  if (!Number.isInteger(groupId)) {
+    return "?";
+  }
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a control-label character into a numeric group ID.
+ * @param label - Single-letter group label.
+ * @returns Group ID or null when the label is not recognized.
+ */
+export function parseControlGroupLabel(label: string): number | null {
+  if (!label) {
+    return null;
+  }
+  const normalized = label.trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized as (typeof CONTROL_GROUP_LABELS)[number]);
+  return index >= 0 ? index : null;
+}
+
+/**
+ * Format the lock suffix for a control channel.
+ * @param locked - Whether the control byte is locked.
+ * @returns "Y" for unlocked or "Z" for locked.
+ */
+export function formatControlLockLabel(locked: boolean): string {
+  return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
+/**
+ * Format the authoring control suffix that follows rrggbbaa.
+ * @param groupId - Group index (0-15).
+ * @param locked - Whether the control byte is locked.
+ * @returns Two-character suffix like "GY" or "GZ".
+ */
+export function formatControlSuffix(groupId: number, locked: boolean): string {
+  return `${formatControlGroupLabel(groupId)}${formatControlLockLabel(locked)}`;
+}
+
+/**
+ * Validate a control suffix to detect corruption in authoring strings.
+ * @param suffix - Two-character suffix to validate.
+ * @returns True when the suffix matches a G-X + Y/Z pattern.
+ */
+export function isValidControlSuffix(suffix: string): boolean {
+  return CONTROL_SUFFIX_PATTERN.test(suffix.trim());
+}
+
+/**
+ * Parse a control suffix into group/lock metadata when valid.
+ * @param suffix - Two-character suffix like "GY" or "GZ".
+ * @returns Parsed payload or null when invalid.
+ */
+export function parseControlSuffix(
+  suffix: string
+): { groupId: number; locked: boolean } | null {
+  if (!isValidControlSuffix(suffix)) {
+    return null;
+  }
+  const normalized = suffix.trim().toUpperCase();
+  const groupId = parseControlGroupLabel(normalized[0]);
+  if (groupId === null) {
+    return null;
+  }
+  const locked = normalized[1] === CONTROL_LOCK_LABELS.LOCKED;
+  return { groupId, locked };
+}
 
 export function getGroupId(controlByte: number): number {
   return controlByte & CONTROL_BYTE_MASKS.GROUP_ID;

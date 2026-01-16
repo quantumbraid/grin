@@ -13,10 +13,37 @@ const resolutionInput = document.getElementById("resolutionInput");
 const previewButton = document.getElementById("previewButton");
 const exportButton = document.getElementById("exportButton");
 
-const GROUP_TAG_REGEX = /\bG(1[0-5]|[0-9])\b/i;
-const GROUP_BRACKET_REGEX = /\[G(1[0-5]|[0-9])\]/i;
-const LOCK_TAG_REGEX = /\bLOCK\b|\[L\]/i;
-const UNLOCK_TAG_REGEX = /\bUNLOCK\b|\[U\]/i;
+// Control group labels (G-X, skipping I/O) and lock suffixes (Y/Z).
+const CONTROL_GROUP_LABELS = ["G", "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W", "X"];
+const CONTROL_GROUP_PATTERN = CONTROL_GROUP_LABELS.join("");
+
+const GROUP_TAG_REGEX = new RegExp(`\\bG([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\b`, "i");
+const GROUP_BRACKET_REGEX = new RegExp(`\\[G([${CONTROL_GROUP_PATTERN}]|1[0-5]|[0-9])\\]`, "i");
+const LOCK_TAG_REGEX = /\bLOCK\b|\bZ\b|\[Z\]/i;
+const UNLOCK_TAG_REGEX = /\bUNLOCK\b|\bY\b|\[Y\]/i;
+
+/**
+ * Convert a numeric group ID into the G-X label alphabet.
+ * @param {number} groupId - Group ID (0-15).
+ * @returns {string} Group label or "?" when out of range.
+ */
+function formatControlGroupLabel(groupId) {
+  return CONTROL_GROUP_LABELS[groupId] ?? "?";
+}
+
+/**
+ * Parse a single-letter control label into a numeric group ID.
+ * @param {string} label - Control label.
+ * @returns {number | null} Group ID or null when invalid.
+ */
+function parseControlGroupLabel(label) {
+  if (!label) {
+    return null;
+  }
+  const normalized = String(label).trim().toUpperCase();
+  const index = CONTROL_GROUP_LABELS.indexOf(normalized);
+  return index >= 0 ? index : null;
+}
 
 /**
  * Update the status footer with a short message.
@@ -37,7 +64,8 @@ function describeSelection() {
   const groupId = groupSelect ? Number(groupSelect.value) : 0;
   const lockState = lockToggle ? lockToggle.checked : false;
   const resolution = resolutionInput ? Number(resolutionInput.value) : 1024;
-  return `Group ${groupId} • ${lockState ? "Locked" : "Unlocked"} • ${resolution}px`;
+  const groupLabel = formatControlGroupLabel(groupId);
+  return `Group ${groupLabel} (${groupId}) • ${lockState ? "Locked" : "Unlocked"} • ${resolution}px`;
 }
 
 /**
@@ -60,6 +88,23 @@ function normalizeGroupId(groupId, fallback) {
 }
 
 /**
+ * Parse a group token that may be numeric or label-based.
+ * @param {string | null} token - Candidate group token.
+ * @param {number} fallback - Fallback group ID.
+ * @returns {number} Parsed group ID.
+ */
+function parseGroupToken(token, fallback) {
+  if (!token) {
+    return fallback;
+  }
+  if (/^\d+$/.test(token)) {
+    return normalizeGroupId(Number(token), fallback);
+  }
+  const parsed = parseControlGroupLabel(token);
+  return parsed !== null ? parsed : fallback;
+}
+
+/**
  * Parse a metadata source string into group/lock hints.
  * @param {string} sourceText - Text to inspect (name or note).
  * @param {number} fallbackGroup - Fallback group ID.
@@ -70,7 +115,7 @@ function parseMetadataTags(sourceText, fallbackGroup, fallbackLock) {
   const bracketMatch = sourceText.match(GROUP_BRACKET_REGEX);
   const inlineMatch = sourceText.match(GROUP_TAG_REGEX);
   const rawGroup = bracketMatch ? bracketMatch[1] : inlineMatch ? inlineMatch[1] : null;
-  const groupId = normalizeGroupId(rawGroup ? Number(rawGroup) : undefined, fallbackGroup);
+  const groupId = parseGroupToken(rawGroup, fallbackGroup);
   const hasLockTag = LOCK_TAG_REGEX.test(sourceText);
   const hasUnlockTag = UNLOCK_TAG_REGEX.test(sourceText);
   const locked = hasLockTag ? true : hasUnlockTag ? false : fallbackLock;
