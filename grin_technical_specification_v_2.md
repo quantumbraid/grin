@@ -68,6 +68,11 @@ This represents a deliberate 25% size increase over RGBA, paid once.
 - Bit 7: **Lock bit**
 - Bits 4–6: Reserved (must be zero)
 
+Authoring/UI control labels (not stored in the file):
+
+- Group labels: `G H J K L M N P Q R S T U V W X` (skip `I` and `O`)
+- Lock suffix: `Y` = unlocked, `Z` = locked
+
 Each pixel:
 
 - Belongs to exactly **one of 16 groups**
@@ -292,4 +297,3 @@ If a feature:
 It does not belong in GRIN.
 
 Minimalism here is **structural**, not aesthetic.
-

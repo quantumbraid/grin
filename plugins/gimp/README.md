@@ -23,7 +23,7 @@ The plugin appears under **Filters → GRIN → GRIN Export...**
 1. Paint your RGBA artwork in standard layers.
 2. Run **Filters → GRIN → GRIN Export...** to create the metadata layers.
 3. Use selections (lasso, brush selection, etc.) to mark regions and re-run the plugin with:
-   - **Active Group ID** set to the desired group (0-15).
+   - **Active Group ID** set to the desired group (0-15, labeled `G H J K L M N P Q R S T U V W X`).
    - **Lock pixels** toggled when you want the lock map filled.
 4. The plugin updates the `GRIN_GROUPS` and `GRIN_LOCK` layers, preserving your original art.
 
