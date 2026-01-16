@@ -81,6 +81,12 @@ export const CONTROL_LOCK_LABELS = {
   LOCKED: "Z",
 };
 
+// Control suffixes append to rrggbbaa to represent the control channel in authoring strings.
+export const CONTROL_SUFFIX_PATTERN = new RegExp(
+  `^[${CONTROL_GROUP_LABELS.join("")}][${CONTROL_LOCK_LABELS.UNLOCKED}${CONTROL_LOCK_LABELS.LOCKED}]$`,
+  "i"
+);
+
 /**
  * Format a numeric group ID using the control-label alphabet.
  * @param {number} groupId - Group index (0-15).
@@ -114,6 +120,43 @@ export function parseControlGroupLabel(label) {
  */
 export function formatControlLockLabel(locked) {
   return locked ? CONTROL_LOCK_LABELS.LOCKED : CONTROL_LOCK_LABELS.UNLOCKED;
+}
+
+/**
+ * Format the authoring control suffix that follows rrggbbaa.
+ * @param {number} groupId - Group index (0-15).
+ * @param {boolean} locked - Whether the control byte is locked.
+ * @returns {string} Two-character suffix like "GY" or "GZ".
+ */
+export function formatControlSuffix(groupId, locked) {
+  return `${formatControlGroupLabel(groupId)}${formatControlLockLabel(locked)}`;
+}
+
+/**
+ * Validate a control suffix to detect corruption in authoring strings.
+ * @param {string} suffix - Two-character suffix to validate.
+ * @returns {boolean} True when the suffix matches a G-X + Y/Z pattern.
+ */
+export function isValidControlSuffix(suffix) {
+  return CONTROL_SUFFIX_PATTERN.test(String(suffix).trim());
+}
+
+/**
+ * Parse a control suffix into group/lock metadata when valid.
+ * @param {string} suffix - Two-character suffix like "GY" or "GZ".
+ * @returns {{groupId: number, locked: boolean} | null} Parsed payload or null when invalid.
+ */
+export function parseControlSuffix(suffix) {
+  if (!isValidControlSuffix(suffix)) {
+    return null;
+  }
+  const normalized = String(suffix).trim().toUpperCase();
+  const groupId = parseControlGroupLabel(normalized[0]);
+  if (groupId === null) {
+    return null;
+  }
+  const locked = normalized[1] === CONTROL_LOCK_LABELS.LOCKED;
+  return { groupId, locked };
 }
 
 export function groupMaskTargetsGroup(groupMask, groupId) {

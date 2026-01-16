@@ -72,6 +72,10 @@ Authoring/UI control labels (not stored in the file):
 
 - Group labels: `G H J K L M N P Q R S T U V W X` (skip `I` and `O`)
 - Lock suffix: `Y` = unlocked, `Z` = locked
+- Authoring strings append a two-character control suffix to RGBA hex: `rrggbbaaGY` or `rrggbbaaGZ`.
+  The penultimate character must be a `G`‑`X` group label and the final character must be `Y` or `Z`.
+  Any other suffix is treated as corruption and should be normalized by rewriting suffixes with a
+  chosen lock state (`Y` or `Z`).
 
 Each pixel:
 
